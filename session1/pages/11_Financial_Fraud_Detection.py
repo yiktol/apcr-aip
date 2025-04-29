@@ -40,11 +40,14 @@ st.set_page_config(
 apply_custom_styles()
 
 # Main title and introduction
-st.title("🔍 Financial Fraud Detection System")
 st.markdown("""
-This application demonstrates how machine learning can be used to detect fraudulent financial transactions.
-Explore the dataset, see model performance, and test the fraud detection system on new transactions.
-""")
+        <div class="header-container">
+            <div class="header-title">🔍 Financial Fraud Detection System</div>
+            <div class="header-subtitle">This application demonstrates how machine learning can be used to detect fraudulent financial transactions.
+Explore the dataset, see model performance, and test the fraud detection system on new transactions.</div>
+        </div>
+            """, unsafe_allow_html=True)
+
 
     # Add timestamp (last 30 days)
 def generate_timestamps(n_samples):
@@ -1561,35 +1564,46 @@ with tabs[4]:
         else:
             st.info("Feature importance visualization is not available for this model type.")
 
-# Add a sidebar with additional information
-with st.sidebar:
-    st.header("About")
-    st.markdown("""
-    ## Financial Fraud Detection
+
+# Reset session state
+def reset_session():
+    """Reset all session state variables"""
+    for key in st.session_state.keys():
+        del st.session_state[key]
+    st.rerun()
+
+# Sidebar function
+def render_sidebar():
+    """Render the sidebar with dataset selection and session management"""
+
+    # Session management
+    st.sidebar.markdown("### Session Management")
+    if st.sidebar.button("🔄 Reset Session"):
+        reset_session()
     
-    This application demonstrates how machine learning can be used to detect fraudulent financial transactions.
+    st.sidebar.divider()
+    with st.sidebar.expander("📚 About this App", expanded=False):
+        # About section
+        st.markdown("""
+        This application demonstrates how machine learning can be used to detect fraudulent financial transactions. 
+        \n            
+        Key Features:     
+        - Synthetic transaction data generation
+        - Data exploration and visualization
+        - Multiple ML models comparison
+        - Interactive fraud detection
+        - Model explainability with SHAP
+                    
+        """)
     
-    **Key Features:**
-    - Synthetic transaction data generation
-    - Data exploration and visualization
-    - Multiple ML models comparison
-    - Interactive fraud detection
-    - Model explainability with SHAP
-    
-    **Technologies Used:**
-    - Python
-    - Streamlit
-    - scikit-learn
-    - XGBoost
-    - SHAP
-    - Plotly
-    """)
-    
-    st.markdown("---")
-    
-    st.subheader("Dataset Statistics")
-    fraud_count = df['is_fraud'].sum()
-    legitimate_count = len(df) - fraud_count
-    st.write(f"Total Transactions: {len(df):,}")
-    st.write(f"Fraudulent: {fraud_count:,} ({fraud_count/len(df):.2%})")
-    st.write(f"Legitimate: {legitimate_count:,} ({legitimate_count/len(df):.2%})")
+        st.markdown("---")
+        
+        st.subheader("Dataset Statistics")
+        fraud_count = df['is_fraud'].sum()
+        legitimate_count = len(df) - fraud_count
+        st.write(f"Total Transactions: {len(df):,}")
+        st.write(f"Fraudulent: {fraud_count:,} ({fraud_count/len(df):.2%})")
+        st.write(f"Legitimate: {legitimate_count:,} ({legitimate_count/len(df):.2%})")
+
+
+render_sidebar()

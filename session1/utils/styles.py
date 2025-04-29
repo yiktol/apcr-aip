@@ -1,5 +1,18 @@
 import streamlit as st
 
+
+# AWS color scheme
+AWS_COLORS = {
+    'primary': '#FF9900',      # AWS Orange
+    'secondary': '#232F3E',    # AWS Navy
+    'tertiary': '#1A476F',     # AWS Blue
+    'background': '#FFFFFF',   # White
+    'text': '#16191F',         # Dark gray
+    'success': '#008296',      # Teal
+    'warning': '#D13212',      # Red
+    'info': '#1E88E5'          # Blue
+}
+
 def apply_custom_styles():
     # AWS color scheme
     aws_colors = {
@@ -103,6 +116,26 @@ def apply_custom_styles():
             color: #FF9900;
             font-weight: 600;
         }}
+
+
+        .header-container {{
+            background-color: {AWS_COLORS['secondary']};
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }}
+        .header-title {{
+            color: {AWS_COLORS['primary']};
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }}
+        .header-subtitle {{
+            color: white;
+            font-size: 1.2rem;
+            font-style: italic;
+        }}
+
         .footer {{
             font-size: 0.8rem;
             color: #666;
@@ -160,3 +193,28 @@ def custom_header(text, level=1):
         return f"<h3 style='color:#232F3E; font-family:Amazon Ember, Arial, sans-serif;'>{text}</h3>"
     else:
         return f"<h4 style='color:#232F3E; font-family:Amazon Ember, Arial, sans-serif;'>{text}</h4>"
+    
+
+def create_footer():
+    """Create the application footer with AWS copyright"""
+    st.markdown(
+        f"""
+        <style>
+        .footer-container {{
+            background-color: {AWS_COLORS['secondary']};
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }}
+        .footer-text {{
+            color: white;
+            font-size: 0.8rem;
+        }}
+        </style>
+        <div class="footer-container">
+            <div class="footer-text">© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )

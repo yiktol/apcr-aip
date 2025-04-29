@@ -107,12 +107,13 @@ def reset_session():
 
 # Sidebar
 def render_sidebar():
-    st.sidebar.image("https://d1.awsstatic.com/logos/aws-logo-lockups/poweredby_aws_logo_reverse.6b07b38a0b10c4ff7c77cf457b6fdfcd0ce3941c.png", width=200)
-    st.sidebar.title("Autonomous Vehicle ML Demo")
+
+        # Session management
+    st.sidebar.markdown(f"**Session ID:** {st.session_state['session_id'][:8]}...")
+    if st.sidebar.button("Reset Session"):
+        reset_session()
     
-    st.sidebar.markdown("---")
-    
-    with st.sidebar.expander("About this App"):
+    with st.sidebar.expander("About this App", expanded=False):
         st.markdown("""
         This application demonstrates how machine learning is used in autonomous vehicles for:
         - Object detection and classification
@@ -124,14 +125,6 @@ def render_sidebar():
         """)
     
     st.sidebar.markdown("---")
-    
-    # Session management
-    st.sidebar.markdown(f"**Session ID:** {st.session_state['session_id'][:8]}...")
-    if st.sidebar.button("Reset Session"):
-        reset_session()
-    
-    st.sidebar.markdown("---")
-    
     # Detection statistics
     st.sidebar.subheader("Detection Statistics")
     st.sidebar.metric("Vehicles Detected", st.session_state['vehicles_detected'])

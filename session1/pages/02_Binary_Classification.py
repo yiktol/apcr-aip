@@ -9,7 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils.styles import apply_custom_styles
+from utils.styles import apply_custom_styles, create_footer
 
 # Set page config
 st.set_page_config(page_title="Loan Approval Predictor", layout="wide")
@@ -354,3 +354,5 @@ with st.sidebar:
     st.write(f"Total samples: {len(loan_data)}")
     st.write(f"Approved loans: {loan_data['Approved'].sum()} ({loan_data['Approved'].mean():.1%})")
     st.write(f"Rejected loans: {len(loan_data) - loan_data['Approved'].sum()} ({1 - loan_data['Approved'].mean():.1%})")
+
+create_footer()

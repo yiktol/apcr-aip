@@ -12,6 +12,7 @@ import os
 import uuid
 import datetime
 
+from utils.styles import apply_custom_styles
 
 # Initialize session state
 def init_session_state():
@@ -1160,10 +1161,15 @@ def main():
     # Configure page
     configure_page()
     
+    apply_custom_styles()
     # Application title
-    st.title("🔒 Cybersecurity Threat Detection")
-    st.markdown("Detect anomalies in network traffic using machine learning")
-    
+    st.markdown("""
+        <div class="header-container">
+            <div class="header-title">🔒 Cybersecurity Threat Detection</div>
+            <div class="header-subtitle">Detect anomalies in network traffic using machine learning</div>
+        </div>
+    """, unsafe_allow_html=True)
+
     # Create tabs with emojis
     tabs = st.tabs([
         "🏠 Home", 
