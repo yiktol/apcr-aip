@@ -14,10 +14,10 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 # Set page configuration
 st.set_page_config(
-    page_title="GenAI Learning Lab",
+    page_title="GenAI Use Cases",
     page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # Apply custom CSS for modern AWS-themed appearance
@@ -844,7 +844,7 @@ def main():
             """)
 
     # Header
-    st.markdown("<h1 class='main-header'>GenAI Learning Lab: AWS Bedrock</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>GenAI Use Cases in AWS Bedrock</h1>", unsafe_allow_html=True)
     
     st.markdown("""
     This interactive learning environment demonstrates various use cases of Generative AI using Amazon Bedrock.
