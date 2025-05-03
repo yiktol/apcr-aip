@@ -15,7 +15,7 @@ def ml_process_game():
     # ML process overview
     st.subheader("Machine Learning Development Lifecycle")
     
-    st.image("https://miro.medium.com/max/1400/1*PRkDKYyJ0AwVqyTz7qZnrg.png", caption="ML Development Lifecycle")
+    st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*_dlG-Cju5ke-DKp8DQ9hiA@2x.jpeg", caption="ML Development Lifecycle", width=600)
     
     st.markdown("""
     The ML development lifecycle typically includes these key phases:

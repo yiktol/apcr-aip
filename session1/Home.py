@@ -7,7 +7,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from utils.knowledge_check import display_knowledge_check, reset_knowledge_check
-from utils.styles import apply_custom_styles, custom_header
+from utils.styles import load_css, custom_header
+from utils.common import render_sidebar
 
 # Set page configuration
 st.set_page_config(
@@ -18,7 +19,7 @@ st.set_page_config(
 )
 
 # Apply custom styling
-apply_custom_styles()
+load_css()
 
 # Session Management
 if 'session_id' not in st.session_state:
@@ -26,18 +27,7 @@ if 'session_id' not in st.session_state:
 
 # Sidebar
 with st.sidebar:
-    # st.image("assets/aws_logo.png", width=150)
-    # st.title("AWS AI Practitioner")
-    # st.write("Partner Certification Readiness")
-    
-    # Reset Session Button
-    st.subheader("Session Management")
-    if st.button("🔄 Reset Session"):
-        for key in st.session_state.keys():
-            if key != 'session_id':  # Preserve session ID
-                del st.session_state[key]
-        st.success("Session has been reset!")
-        st.rerun()
+    render_sidebar()
     
     # About this App (collapsible)
     with st.expander("ℹ️ About this App", expanded=False):
@@ -112,7 +102,7 @@ with tab_home:
 
 # Difference between AI, ML, and generative AI
 with tab_ai_ml:
-    st.markdown(custom_header("Difference between AI, ML, and Generative AI", 2), unsafe_allow_html=True)
+    st.title("Difference between AI, ML, and Generative AI")
     
     # st.image("assets/ai_ml_genai.png", use_column_width=True)
     
@@ -195,7 +185,7 @@ with tab_ai_ml:
 
 # Traditional programming vs machine learning
 with tab_prog_ml:
-    st.markdown(custom_header("Traditional Programming vs Machine Learning", 2), unsafe_allow_html=True)
+    st.title("Traditional Programming vs Machine Learning")
     
     # st.image("assets/ml_vs_programming.png", use_column_width=True)
     

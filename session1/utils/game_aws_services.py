@@ -16,7 +16,7 @@ def aws_services_game():
     st.subheader("AWS AI Services Overview")
     
     # Show AWS AI stack
-    st.image("https://d1.awsstatic.com/diagrams/ai-ml-stack-v4.81d23a600ab3d467395f988358118dc38ca1b5c4.png", caption="AWS AI/ML Stack")
+    st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*CZKGbATn3UJJ8ofkydkSyQ.png", caption="AWS AI/ML Stack", width=800)
     
     # Show tip
     show_tip("AWS offers AI services at different levels of abstraction. AI Services (top layer) require no ML expertise, SageMaker (middle layer) simplifies ML workflow, and ML Frameworks (bottom layer) provide maximum flexibility but require more expertise.")

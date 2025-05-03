@@ -9,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from utils.styles import apply_custom_styles
-
+from utils.styles import load_css
+from utils.common import render_sidebar
 
 # Set page config
 st.set_page_config(
@@ -19,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-apply_custom_styles()
+load_css()
 # Function to generate synthetic house price data
 @st.cache_data
 def generate_house_data(n_samples=1000):
@@ -138,11 +138,11 @@ housing_data = generate_house_data()
 model_results, feature_names, scaler, X_test = train_models(housing_data)
 
 # Main application
-st.title("🏠 House Price Prediction")
-st.write("""
-This application demonstrates regression in machine learning by predicting
-house prices based on various features such as size, bedrooms, and location.
-""")
+st.markdown("<h1>🏠 House Price Prediction</h1>", unsafe_allow_html=True)
+st.markdown("""<div class='info-box'>This application demonstrates regression in machine learning by predicting
+house prices based on various features such as size, bedrooms, and location.</div>""", unsafe_allow_html=True)
+
+
 
 # Create tabs
 tab1, tab2, tab3 = st.tabs(["Predict House Price", "Model Performance", "Data Exploration"])
@@ -382,41 +382,43 @@ with tab3:
 
 # Add a sidebar with additional information
 with st.sidebar:
-    st.title("About")
-    st.info("""
-    **House Price Predictor**
+    render_sidebar()
     
-    This application demonstrates regression machine learning for predicting house prices. 
-    The model is trained on synthetic data to illustrate the core principles of machine 
-    learning regression.
-    
-    **Features used:**
-    - Square Footage
-    - Number of Bedrooms & Bathrooms
-    - Lot Size
-    - House Age
-    - Garage Spaces
-    - Pool Presence
-    - Neighborhood Type
-    - School Rating
-    
-    **Models Demonstrated:**
-    - Linear Regression
-    - Ridge Regression
-    - Lasso Regression
-    - Random Forest Regressor
-    - Gradient Boosting Regressor
-    """)
-    
-    st.subheader("How Regression Works")
-    st.write("""
-    Unlike classification which predicts categories, regression predicts continuous values:
-    
-    1. The model learns patterns between features and house prices from training data
-    2. It creates a mathematical function to map features to prices
-    3. For new houses, it uses this function to predict a price based on features
-    4. The accuracy is measured by how close predictions are to actual prices
-    """)
+    with st.expander("About this App"):
+        st.info("""
+        **House Price Predictor**
+        
+        This application demonstrates regression machine learning for predicting house prices. 
+        The model is trained on synthetic data to illustrate the core principles of machine 
+        learning regression.
+        
+        **Features used:**
+        - Square Footage
+        - Number of Bedrooms & Bathrooms
+        - Lot Size
+        - House Age
+        - Garage Spaces
+        - Pool Presence
+        - Neighborhood Type
+        - School Rating
+        
+        **Models Demonstrated:**
+        - Linear Regression
+        - Ridge Regression
+        - Lasso Regression
+        - Random Forest Regressor
+        - Gradient Boosting Regressor
+        """)
+        
+        st.subheader("How Regression Works")
+        st.write("""
+        Unlike classification which predicts categories, regression predicts continuous values:
+        
+        1. The model learns patterns between features and house prices from training data
+        2. It creates a mathematical function to map features to prices
+        3. For new houses, it uses this function to predict a price based on features
+        4. The accuracy is measured by how close predictions are to actual prices
+        """)
     
     # Dataset size information
     st.subheader("Dataset Information")

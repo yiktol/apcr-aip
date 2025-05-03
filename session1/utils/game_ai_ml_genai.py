@@ -56,7 +56,7 @@ def ai_ml_genai_game():
     
     col1, col2 = st.columns([2, 3])
     with col1:
-        st.image("https://miro.medium.com/v2/resize:fit:1400/1*n-KSTngf-Pg00r_Y9q52Aw.jpeg", 
+        st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*zJ4VxLVli48ywq-D4ZLxmQ.png", 
                 caption="AI, ML, and Generative AI Relationship")
     
     with col2:

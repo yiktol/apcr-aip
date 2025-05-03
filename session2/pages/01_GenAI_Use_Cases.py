@@ -669,7 +669,7 @@ def create_use_case_interface(use_case, model_id, params, api_method):
             st.warning("Please enter your input first.")
             return
             
-        with st.status(f"Processing your {use_case} request...") as status:
+        with st.status(f"Processing your {use_case} request...",expanded=True) as status:
             # Setup the system prompts and messages
             system_prompts_list = [{"text": system_prompt}]
             message = {
@@ -802,7 +802,7 @@ def image_analysis_interface(model_id):
             st.warning("Please enter a question about the image.")
             return
         
-        with st.status("Analyzing image...") as status:
+        with st.status("Analyzing image...",expanded=True) as status:
             try:
                 # Get Bedrock client
                 bedrock_client = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')

@@ -15,11 +15,13 @@ def learning_types_game():
     # Visual overview of learning types
     st.subheader("Types of Machine Learning")
     
+    st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*xz5baytHfiB2Ex8iclS4XA.png", caption="Machine Learning Types", width=800)
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("### Supervised Learning")
-        st.image("https://miro.medium.com/max/1400/1*JUliPcZRC_qppP5XqXQCHw.png", caption="Supervised Learning")
+        # st.image("https://miro.medium.com/max/1400/1*JUliPcZRC_qppP5XqXQCHw.png", caption="Supervised Learning")
         st.markdown("""
         - Learning from labeled data
         - Predicting outcomes
@@ -28,7 +30,7 @@ def learning_types_game():
     
     with col2:
         st.markdown("### Unsupervised Learning")
-        st.image("https://miro.medium.com/max/1400/1*c2soUQxTXGNdrHJQMNPJhQ.png", caption="Unsupervised Learning")
+        # st.image("https://miro.medium.com/max/1400/1*c2soUQxTXGNdrHJQMNPJhQ.png", caption="Unsupervised Learning")
         st.markdown("""
         - Finding patterns in unlabeled data
         - No predefined outcomes
@@ -37,7 +39,7 @@ def learning_types_game():
     
     with col3:
         st.markdown("### Self-Supervised Learning")
-        st.image("https://miro.medium.com/max/1400/1*ySAWadPotWFlDFYPYywVgw.png", caption="Self-Supervised Learning")
+        # st.image("https://miro.medium.com/max/1400/1*ySAWadPotWFlDFYPYywVgw.png", caption="Self-Supervised Learning")
         st.markdown("""
         - Creates own supervision from data
         - Predicts parts of data from other parts

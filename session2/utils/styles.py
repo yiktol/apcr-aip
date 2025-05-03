@@ -16,6 +16,7 @@ AWS_COLORS = {
     'hover': '#FFF5E6',         # Hover State (Light Orange)
     'shadow': 'rgba(0, 0, 0, 0.05)',  # Shadow Color
     'code_bg': '#F8F9FB',       # Code Background
+    'header': '#0066cc'         # header Blue
 }
 
 def load_css():
@@ -46,19 +47,21 @@ def load_css():
         margin-bottom: 1.5rem;
         border-bottom: 1px solid {AWS_COLORS['border']};
         padding-bottom: 0.5rem;
+        color: {AWS_COLORS['header']};
     }}
     
     h2 {{
         font-size: 1.75rem;
         margin-top: 1.75rem;
         margin-bottom: 1rem;
+        color: {AWS_COLORS['header']};
     }}
     
     h3 {{
         font-size: 1.5rem;
         margin-top: 1.5rem;
         margin-bottom: 0.75rem;
-        color: {AWS_COLORS['text']};
+        color: {AWS_COLORS['header']};
     }}
     
     p {{
@@ -175,7 +178,7 @@ def load_css():
     
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {{
-        gap: 2px;
+        gap: 1px;
         border-bottom: 1px solid {AWS_COLORS['border']};
     }}
     
@@ -188,7 +191,7 @@ def load_css():
         font-weight: 600;
         transition: all 0.2s ease;
         border: none;
-        padding: 0 16px;
+        padding: 0 8px;
     }}
     
     .stTabs [aria-selected="true"] {{
@@ -449,6 +452,16 @@ def load_css():
             width: 100%;
             margin-bottom: 1rem;
         }}
+    }}
+    
+    
+        /* Info boxes */
+    .info-box {{
+        background-color: #f0f7ff;
+        border-left: 5px solid #0066cc;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
     }}
     </style>
     """, unsafe_allow_html=True)

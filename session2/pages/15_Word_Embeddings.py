@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import uuid
 from utils.common import render_sidebar
+from utils.styles import load_css, custom_header, load_css
 
 # Page configuration
 st.set_page_config(
@@ -24,111 +25,103 @@ st.set_page_config(
 )
 
 # Custom CSS for better UI
-st.markdown("""
-<style>
-    /* Main title and headers */
-    h1, h2, h3 {
-        color: #0066cc;
-        margin-bottom: 1rem;
-    }
-    h1 {
-        text-align: left;
-        padding-bottom: 1rem;
-    }
+# st.markdown("""
+# <style>
+#     /* Main title and headers */
     
-    /* Cards for content sections */
-    .card {
-        background-color: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    }
+#     /* Cards for content sections */
+#     .card {
+#         background-color: white;
+#         border-radius: 10px;
+#         padding: 20px;
+#         margin-bottom: 20px;
+#         box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+#     }
     
-    /* Info boxes */
-    .info-box {
-        background-color: #f0f7ff;
-        border-left: 5px solid #0066cc;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-    }
+#     /* Info boxes */
+#     .info-box {
+#         background-color: #f0f7ff;
+#         border-left: 5px solid #0066cc;
+#         padding: 15px;
+#         margin-bottom: 20px;
+#         border-radius: 5px;
+#     }
     
-    /* Success boxes */
-    .success-box {
-        background-color: #e6f4ea;
-        border-left: 5px solid #34a853;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-    }
+#     /* Success boxes */
+#     .success-box {
+#         background-color: #e6f4ea;
+#         border-left: 5px solid #34a853;
+#         padding: 15px;
+#         margin-bottom: 20px;
+#         border-radius: 5px;
+#     }
     
-    /* Button styling */
-    .stButton > button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        font-weight: 500;
-    }
+#     /* Button styling */
+#     .stButton > button {
+#         width: 100%;
+#         border-radius: 5px;
+#         height: 3em;
+#         font-weight: 500;
+#     }
     
-    /* Metric styling */
-    div[data-testid="stMetric"] {
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        padding: 10px !important;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
-    }
+#     /* Metric styling */
+#     div[data-testid="stMetric"] {
+#         background-color: #f9f9f9;
+#         border-radius: 8px;
+#         padding: 10px !important;
+#         box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+#     }
     
-    /* Footer styling */
-    .footer {
-        text-align: center;
-        margin-top: 3rem;
-        padding-top: 1rem;
-        border-top: 1px solid #f0f2f6;
-        color: #888;
-        font-size: 0.8rem;
-    }
+#     /* Footer styling */
+#     .footer {
+#         text-align: center;
+#         margin-top: 3rem;
+#         padding-top: 1rem;
+#         border-top: 1px solid #f0f2f6;
+#         color: #888;
+#         font-size: 0.8rem;
+#     }
     
-    /* Custom tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        padding: 10px 16px;
-        background-color: #f0f2f6;
-        border-radius: 4px 4px 0 0;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #0066cc !important;
-        color: white !important;
-    }
+#     /* Custom tab styling */
+#     .stTabs [data-baseweb="tab-list"] {
+#         gap: 8px;
+#     }
+#     .stTabs [data-baseweb="tab"] {
+#         padding: 10px 16px;
+#         background-color: #f0f2f6;
+#         border-radius: 4px 4px 0 0;
+#     }
+#     .stTabs [aria-selected="true"] {
+#         background-color: #0066cc !important;
+#         color: white !important;
+#     }
     
-    /* Custom multiselect */
-    div[data-testid="stMultiSelect"] div[data-testid="stVerticalBlock"] {
-        max-height: 300px;
-        overflow-y: auto;
-    }
+#     /* Custom multiselect */
+#     div[data-testid="stMultiSelect"] div[data-testid="stVerticalBlock"] {
+#         max-height: 300px;
+#         overflow-y: auto;
+#     }
     
-    /* Session info box styling */
-    .session-info {
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        padding: 10px;
-        margin-bottom: 15px;
-        font-size: 0.9em;
-    }
+#     /* Session info box styling */
+#     .session-info {
+#         background-color: #f8f9fa;
+#         border-radius: 5px;
+#         padding: 10px;
+#         margin-bottom: 15px;
+#         font-size: 0.9em;
+#     }
     
-    /* AWS Footer */
-    .aws-footer {
-        text-align: center;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #f0f2f6;
-        color: #555;
-        font-size: 0.8rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+#     /* AWS Footer */
+#     .aws-footer {
+#         text-align: center;
+#         margin-top: 1rem;
+#         padding-top: 1rem;
+#         border-top: 1px solid #f0f2f6;
+#         color: #555;
+#         font-size: 0.8rem;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
 
 # Initialize session state
 def initialize_session_state():
@@ -147,6 +140,7 @@ def initialize_session_state():
 # Initialize session
 initialize_session_state()
 
+load_css()
 # Function to reset session
 def reset_session():
     st.session_state.session_id = str(uuid.uuid4())[:8]

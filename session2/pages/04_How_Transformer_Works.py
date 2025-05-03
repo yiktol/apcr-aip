@@ -20,8 +20,18 @@ def main():
     initialize_session_state()
     
     # App title and header
-    st.title("🤖 Transformer Model Sentence Completion")
-    st.markdown("### Learn how transformer models process and complete sentences")
+    
+    st.markdown("""
+    <div class="element-animation">
+        <h1>🤖 Transformer Model Sentence Completion</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    
+    st.markdown("""<div class="info-box">
+Transformer models complete sentences by leveraging their attention mechanisms to analyze existing text patterns and predict the most contextually appropriate words to follow, considering both local and long-range dependencies in the input sequence.
+    </div>""",unsafe_allow_html=True)
+
     
     # Sidebar
     with st.sidebar:

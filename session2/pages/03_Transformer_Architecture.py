@@ -1302,7 +1302,19 @@ def main():
             about_app()
     
     # Main content
-    st.title("🤖 Transformer Architecture")
+    
+    st.markdown("""
+    <div class="element-animation">
+        <h1>🤖 Transformer Architecture</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    
+    st.markdown("""<div class="info-box">
+The Transformer architecture revolutionized machine learning through its self-attention mechanism that allows parallel processing of sequential data by dynamically weighing the importance of different input elements, enabling efficient modeling of long-range dependencies in tasks like language processing without relying on recurrent connections.
+    </div>""",unsafe_allow_html=True)
+    
+
     
     # Create tabbed interface with emojis
     tabs = st.tabs([

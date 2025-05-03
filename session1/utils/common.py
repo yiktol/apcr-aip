@@ -2,6 +2,40 @@ import streamlit as st
 import uuid
 from datetime import datetime
 
+
+def reset_session():
+    """Reset the session state"""
+    for key in st.session_state.keys():
+        if key != "session_id":
+            del st.session_state[key]
+    
+    # Re-initialize with default values
+    st.session_state.knowledge_check_started = False
+    st.session_state.current_question = 0
+    st.session_state.answers = {}
+    st.session_state.score = 0
+    st.session_state.knowledge_check_started = False
+    st.session_state.knowledge_check_progress = 0
+    st.session_state.knowledge_check_answers = {}
+    st.session_state.user_id = str(uuid.uuid4())
+    st.session_state.conversation_history = []
+    st.session_state.messages = []
+    
+    
+def render_sidebar():
+    """Render the sidebar with session information and reset button"""
+    st.markdown("#### 🔑 Session Info")
+    st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
+
+    if st.button("🔄 Reset Session"):
+        reset_session()
+        st.success("Session has been reset successfully!")
+        st.rerun()  # Force a rerun to refresh the page
+
+
+
+
+
 def initialize_session_state():
     """Initialize session state variables if they don't exist."""
     
@@ -59,17 +93,17 @@ def initialize_session_state():
     if "game8_submitted" not in st.session_state:
         st.session_state.game8_submitted = [False] * 5
 
-def reset_session():
-    """Reset all session state variables."""
+# def reset_session():
+#     """Reset all session state variables."""
     
-    # Keep only the session ID but generate a new one
-    st.session_state.session_id = str(uuid.uuid4())[:8]
-    st.session_state.start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#     # Keep only the session ID but generate a new one
+#     st.session_state.session_id = str(uuid.uuid4())[:8]
+#     st.session_state.start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # Reset all game scores and submissions
-    for i in range(1, 9):  # 8 games
-        st.session_state[f"game{i}_score"] = 0
-        st.session_state[f"game{i}_submitted"] = [False] * 5
+#     # Reset all game scores and submissions
+#     for i in range(1, 9):  # 8 games
+#         st.session_state[f"game{i}_score"] = 0
+#         st.session_state[f"game{i}_submitted"] = [False] * 5
 
 def display_progress(game_number):
     """Display progress for the specified game."""

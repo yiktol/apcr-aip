@@ -29,7 +29,7 @@ def traditional_ml_vs_genai_game():
     
     with col2:
         st.subheader("Generative AI")
-        st.image("https://miro.medium.com/max/1400/1*U_YpRawOekhqrxj3UFvdIw.jpeg", caption="Generative AI Workflow")
+        st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*ezeHvs0HWAUjyjhH8Yd9Yg.png", caption="Generative AI Workflow",width=400)
         st.markdown("""
         **Best for:**
         - Content creation

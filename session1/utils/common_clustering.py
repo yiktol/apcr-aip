@@ -23,10 +23,7 @@ def reset_session():
 def create_sidebar():
     """Create and configure the sidebar"""
     with st.sidebar:
-        st.image("https://d1.awsstatic.com/logos/aws-logo-lockups/poweredby_aws_logo_horiz_RGB.7aa2b0c0f81686aa23fa77e9a1928abe4c725196.png", width=200)
-        
-        st.markdown("### About this App")
-        with st.expander("Learn More", expanded=False):
+        with st.expander("About this App", expanded=False):
             st.write("""
             This application demonstrates unsupervised machine learning through customer segmentation.
             
@@ -40,10 +37,6 @@ def create_sidebar():
             Based on AWS Partner Certification Readiness materials for AI Practitioner.
             """)
         
-        st.markdown("### Session Management")
-        st.write(f"Session ID: `{st.session_state.session_id[:8]}`")
-        st.button("Reset Session", on_click=reset_session)
-
 def display_footer():
     """Display the AWS footer"""
     st.markdown("""

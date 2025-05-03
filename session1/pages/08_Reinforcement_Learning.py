@@ -15,7 +15,8 @@ import io
 import base64
 from streamlit_drawable_canvas import st_canvas
 import copy
-
+from utils.styles import load_css
+from utils.common import render_sidebar
 
 # Set page config
 st.set_page_config(
@@ -133,13 +134,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title and introduction
-st.title('Reinforcement Learning')
-
-st.write("""
-Learn how reinforcement learning works by training an AI agent to navigate through a customizable environment! 
+load_css()
+st.markdown("<h1>🎮 Reinforcement Learning</h1>", unsafe_allow_html=True)
+st.markdown("""<div class='info-box'>
+            Learn how reinforcement learning works by training an AI agent to navigate through a customizable environment! 
 This interactive demo uses Q-learning, a foundational RL algorithm, to show how agents learn by trial and error.
-
-""")
+            </div>
+            """, unsafe_allow_html=True)
 
 # Initialize session state
 if 'env' not in st.session_state:
@@ -591,6 +592,9 @@ def metric_with_tooltip(label, value, tooltip, delta=None):
 
 # Main app content
 def main():
+        
+    with st.sidebar:
+        render_sidebar()
     # Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["🛠️ Setup & Train", "📊 Analyze Results", "🎮 Interactive Testing", "📚 Learn About RL"])
     

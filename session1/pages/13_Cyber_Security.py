@@ -12,7 +12,7 @@ import os
 import uuid
 import datetime
 
-from utils.styles import apply_custom_styles
+from utils.styles import load_css
 
 # Initialize session state
 def init_session_state():
@@ -96,7 +96,7 @@ def configure_page():
 
 # Home tab content
 def show_home_tab():
-    st.markdown("<h2 class='aws-header'>Welcome to Cybersecurity Threat Detection</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Welcome to Cybersecurity Threat Detection</h2>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 2])
     
@@ -112,7 +112,7 @@ def show_home_tab():
         """)
         
     with col2:
-        st.image("https://d1.awsstatic.com/Security/aws-security-topics.8a14930d1d65be48639e6a1d1361a0600b86b19f.png", width=300)
+        st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*riwwcReZpXEuQ-nOcKuEag.png", width=1000)
     
     # Interactive demo
     st.markdown("### Interactive Traffic Pattern Demo")
@@ -820,7 +820,7 @@ def show_learn_tab():
             """)
             
         with col2:
-            st.image("https://d1.awsstatic.com/re19/UIAssets/ML_Infographic.eef80ec2701426bd176aef180a4444ec001e2d84.png", width=300)
+            st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/0*nn0rr7EoEb3zTEsB", width=600)
             
             # Interactive element - Quiz
             st.markdown("### Quick Quiz")
@@ -1161,14 +1161,12 @@ def main():
     # Configure page
     configure_page()
     
-    apply_custom_styles()
+    load_css()
     # Application title
-    st.markdown("""
-        <div class="header-container">
-            <div class="header-title">🔒 Cybersecurity Threat Detection</div>
-            <div class="header-subtitle">Detect anomalies in network traffic using machine learning</div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<h1>🔒 Cybersecurity Threat Detection</h1>""", unsafe_allow_html=True)
+    st.markdown("<div class='info-box'>Detect anomalies in network traffic using machine learning</div>", unsafe_allow_html=True)
+
+
 
     # Create tabs with emojis
     tabs = st.tabs([

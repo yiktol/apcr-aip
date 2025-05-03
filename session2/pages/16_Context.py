@@ -83,6 +83,14 @@ st.markdown("""
         font-size: 0.8em;
         color: #666;
     }
+            /* Info boxes */
+    .info-box {
+        background-color: #f0f7ff;
+        border-left: 5px solid #0066cc;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -249,10 +257,10 @@ with controls_col:
         # Display memory status
         if memory_enabled:
             st.markdown("<div class='memory-status memory-enabled'>Memory: ENABLED</div>", unsafe_allow_html=True)
-            st.markdown("Bot will remember your conversation and maintain context.")
+            st.markdown("<div class='info-box'>Bot will remember your conversation and maintain context.</div>", unsafe_allow_html=True)
         else:
             st.markdown("<div class='memory-status memory-disabled'>Memory: DISABLED</div>", unsafe_allow_html=True)
-            st.markdown("Bot will respond to each message independently without context.")
+            st.markdown("<div class='info-box'>Bot will respond to each message independently without context.</div>", unsafe_allow_html=True)
         
         st.markdown("### Model Settings")
         

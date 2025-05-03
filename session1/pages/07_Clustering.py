@@ -12,7 +12,8 @@ import uuid
 
 # Import custom modules
 from utils.common_clustering import initialize_session_state, create_sidebar, display_footer
-from utils.styles import apply_custom_styles as load_css
+from utils.styles import load_css
+from utils.common import render_sidebar
 from utils.data import get_customer_data, create_customer_profile, preprocess_data
 from utils.model import build_kmeans_model, get_cluster_profile, predict_customer_cluster
 from utils.visualization import (
@@ -30,15 +31,20 @@ st.set_page_config(
 # Initialize session state
 initialize_session_state()
 
+with st.sidebar:
+    render_sidebar()
+    create_sidebar()
+
 # Apply custom CSS
 load_css()
 
 # Display header
-st.markdown("<h1 class='main-header'>Customer Segmentation</h1>", unsafe_allow_html=True)
-st.markdown("<h2 class='sub-header'>Unsupervised ML Demo</h2>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-header'>👥 Customer Segmentation</h1>", unsafe_allow_html=True)
+st.markdown("""<div class='info-box'>
+            Unsupervised machine learning for customer segmentation autonomously discovers natural groupings within customer data by identifying hidden patterns in purchasing behaviors, demographics, and interactions without predefined labels, enabling businesses to tailor marketing strategies to distinct customer profiles.
+            </div>
+            """, unsafe_allow_html=True)
 
-# Create sidebar
-create_sidebar()
 
 # Get data
 data = get_customer_data()

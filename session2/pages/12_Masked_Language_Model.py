@@ -6,6 +6,8 @@ from transformers import BertTokenizer, pipeline
 import plotly.graph_objects as go
 import time
 from utils.common import render_sidebar
+from utils.styles import load_css, custom_header, load_css
+
 
 # App configuration and styling
 def setup_page():
@@ -20,12 +22,6 @@ def setup_page():
     st.markdown("""
     <style>
         /* Main title styling */
-        h1 {
-            color: #4285F4;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 2.8rem !important;
-        }
         
         /* Subtitle styling */
         .subtitle {
@@ -156,9 +152,10 @@ def create_prediction_chart(results):
 def main():
     setup_page()
     
+    load_css()
     # App header
-    st.title("🤖 BERT Masked Language Model Explorer")
-    st.markdown("<p class='subtitle'>Predict masked words in sentences using BERT</p>", unsafe_allow_html=True)
+    st.markdown("<h1>🤖 BERT Masked Language Model</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='info-box'>Predict masked words in sentences using BERT</div>", unsafe_allow_html=True)
     
     # Load models
     tokenizer, unmasker = load_models()
@@ -251,7 +248,7 @@ def main():
                     st.error("Please include [MASK] token in your text.")
     
     # Footer
-    st.markdown("<div class='footer'>Built with Streamlit and Hugging Face Transformers</div>", unsafe_allow_html=True)
+    st.markdown("<div class='aws-footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

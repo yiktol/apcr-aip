@@ -23,6 +23,8 @@ import time
 import uuid
 import warnings
 from datetime import datetime
+from utils.common import render_sidebar
+from utils.styles import load_css
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -454,10 +456,7 @@ def create_header():
         }}        
         
         </style>
-        <div class="header-container">
-            <div class="header-title">🏥 Healthcare Diagnostics with Machine Learning</div>
-            <div class="header-subtitle">Explore how ML can assist in medical predictions and decision support</div>
-        </div>
+
         """, 
         unsafe_allow_html=True
     )
@@ -490,17 +489,20 @@ def setup_sidebar():
     """Configure the sidebar with navigation and controls"""
     with st.sidebar:
         
-        st.header("Navigation")
+        # st.header("Navigation")
         
         # Navigation radio buttons with emojis
-        app_mode = st.radio("Go to", 
-            ["🏠 Introduction", 
-             "❤️ Heart Disease Prediction", 
-             "🩸 Diabetes Prediction", 
-             "📊 About ML in Healthcare"])
+        # app_mode = st.radio("Go to", 
+        #     ["🏠 Introduction", 
+        #      "❤️ Heart Disease Prediction", 
+        #      "🩸 Diabetes Prediction", 
+        #      "📊 About ML in Healthcare"])
         
-        # Strip the emojis for internal logic
-        clean_mode = app_mode.split(" ", 1)[1] if " " in app_mode else app_mode
+        # # Strip the emojis for internal logic
+        # clean_mode = app_mode.split(" ", 1)[1] if " " in app_mode else app_mode
+        
+        # Session info
+        render_sidebar()
         
         # About this App section (collapsed by default)
         with st.expander("About this App"):
@@ -517,18 +519,9 @@ def setup_sidebar():
             - SHAP value analysis for model interpretability
             """)
         
-        # Session info
-        st.markdown("---")
-        st.markdown("#### Session Info")
-        st.caption(f"Session ID: {st.session_state['session_id'][:8]}...")
         
-        # Reset session button
-        if st.button("🔄 Reset Session", type="primary"):
-            reset_session()
         
-        st.markdown("---")
-        
-    return clean_mode
+    # return clean_mode
 
 # ----- Disease Prediction Page Functions -----
 
@@ -1367,7 +1360,7 @@ def explore_heart_data(df, feature_desc):
     
     with col1:
         p = patients[0]
-        if st.button(p["name"], key="patient_a", 
+        if st.button(p["name"], key="patient_a1", 
                     use_container_width=True, 
                     type="secondary"):
             selected_patient = p
@@ -1375,7 +1368,7 @@ def explore_heart_data(df, feature_desc):
     
     with col2:
         p = patients[1]
-        if st.button(p["name"], key="patient_b", 
+        if st.button(p["name"], key="patient_b1", 
                     use_container_width=True, 
                     type="secondary"):
             selected_patient = p
@@ -1383,7 +1376,7 @@ def explore_heart_data(df, feature_desc):
     
     with col3:
         p = patients[2]
-        if st.button(p["name"], key="patient_c", 
+        if st.button(p["name"], key="patient_c1", 
                     use_container_width=True, 
                     type="secondary"):
             selected_patient = p
@@ -2270,7 +2263,7 @@ def show_introduction():
         """)
     
     with col2:
-        st.image("https://img.freepik.com/premium-vector/doctor-patient-laptop-with-healthcare-medical-icons-monitor_333239-21.jpg", 
+        st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/1*JmTyrCfYsNqf9yUeCxbWtw@2x.jpeg", 
                 caption="Healthcare ML Applications", use_column_width=True)
     
     # Interactive demo section
@@ -2453,7 +2446,7 @@ def show_about_ml_healthcare():
         """)
     
     with col2:
-        st.image("https://img.freepik.com/free-vector/medical-technology-science-background-vector-blue-with-digital-healthcare_53876-117739.jpg", 
+        st.image("https://miro.medium.com/v2/resize:fit:4800/format:webp/0*fh8Qgq2cAwdEpJjR", 
                 caption="AI in Healthcare", use_column_width=True)
         
         st.markdown(f"""
@@ -2653,10 +2646,13 @@ def main():
     initialize_session_state()
     
     # Setup sidebar
-    app_mode = setup_sidebar()
+    setup_sidebar()
     
     # Create header
-    create_header()
+    # create_header()
+    st.markdown("<h1>🏥 Healthcare Diagnostics with Machine Learning</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='info-box'>Explore how ML can assist in medical predictions and decision support</div>", unsafe_allow_html=True)
+    load_css()
     
     # Load datasets
     heart_df = load_heart_disease_data()
@@ -2666,13 +2662,19 @@ def main():
     heart_desc = get_heart_disease_description()
     diabetes_desc = get_diabetes_description()
     
+    main_tabs = st.tabs(["🏠 Introduction", "❤️ Heart Disease Prediction", "🩸 Diabetes Prediction", "📊 About ML in Healthcare"])
+    
+    
     # Main content based on selected mode
-    if app_mode == "Introduction":
+    with main_tabs[0]:
         show_introduction()
     
     # Heart Disease Prediction
-    elif app_mode == "Heart Disease Prediction":
-        st.header("❤️ Heart Disease Prediction")
+    with main_tabs[1]:
+        st.markdown("""<div class='info-box'>
+                    Heart disease prediction in machine learning employs algorithms to analyze patient data including demographic information, vital signs, and clinical measurements to identify patterns and risk factors that indicate the likelihood of cardiovascular disease, enabling early intervention and personalized treatment strategies.     
+                    </div>""",unsafe_allow_html=True)
+        
         tabs = st.tabs(["🔮 Make Prediction", "📊 Explore Data", "📈 Model Performance"])
         
         # Process data and train models if not already in session state
@@ -2706,8 +2708,10 @@ def main():
             show_model_performance(heart_results, "heart disease", X_heart, X_heart_test, y_heart_test, X_heart.columns)
     
     # Diabetes Prediction
-    elif app_mode == "Diabetes Prediction":
-        st.header("🩸 Diabetes Prediction")
+    with main_tabs[2]:
+        st.markdown("""<div class='info-box'>
+                    Diabetes prediction in machine learning utilizes algorithms to analyze patient health metrics, including glucose levels, BMI, age, family history, and lifestyle factors, to identify patterns and risk indicators that accurately forecast an individual's likelihood of developing diabetes, enabling timely preventive interventions and personalized healthcare recommendations.  
+                    </div>""",unsafe_allow_html=True)
         tabs = st.tabs(["🔮 Make Prediction", "📊 Explore Data", "📈 Model Performance"])
         
         # Process data and train models if not already in session state
@@ -2741,7 +2745,7 @@ def main():
             show_model_performance(diabetes_results, "diabetes", X_diabetes, X_diabetes_test, y_diabetes_test, X_diabetes.columns)
     
     # About ML in Healthcare
-    elif app_mode == "About ML in Healthcare":
+    with main_tabs[3]:
         show_about_ml_healthcare()
     
     # Create footer

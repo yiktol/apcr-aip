@@ -25,7 +25,8 @@ import shap
 import warnings
 import datetime
 
-from utils.styles import apply_custom_styles
+from utils.styles import load_css
+from utils.common import render_sidebar
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -37,16 +38,16 @@ st.set_page_config(
     layout="wide"
 )
 
-apply_custom_styles()
+load_css()
 
 # Main title and introduction
+st.markdown("<h1>🔍 Financial Fraud Detection System</h1>", unsafe_allow_html=True)
+
 st.markdown("""
-        <div class="header-container">
-            <div class="header-title">🔍 Financial Fraud Detection System</div>
-            <div class="header-subtitle">This application demonstrates how machine learning can be used to detect fraudulent financial transactions.
-Explore the dataset, see model performance, and test the fraud detection system on new transactions.</div>
-        </div>
-            """, unsafe_allow_html=True)
+            <div class='info-box'>
+            This application demonstrates how machine learning can be used to detect fraudulent financial transactions. Explore the dataset, see model performance, and test the fraud detection system on new transactions.
+            </div>""", unsafe_allow_html=True)
+
 
 
     # Add timestamp (last 30 days)
@@ -1573,31 +1574,28 @@ def reset_session():
     st.rerun()
 
 # Sidebar function
-def render_sidebar():
+def show_sidebar():
     """Render the sidebar with dataset selection and session management"""
 
     # Session management
-    st.sidebar.markdown("### Session Management")
-    if st.sidebar.button("🔄 Reset Session"):
-        reset_session()
-    
-    st.sidebar.divider()
-    with st.sidebar.expander("📚 About this App", expanded=False):
-        # About section
-        st.markdown("""
-        This application demonstrates how machine learning can be used to detect fraudulent financial transactions. 
-        \n            
-        Key Features:     
-        - Synthetic transaction data generation
-        - Data exploration and visualization
-        - Multiple ML models comparison
-        - Interactive fraud detection
-        - Model explainability with SHAP
-                    
-        """)
-    
-        st.markdown("---")
+    with st.sidebar:
+        render_sidebar()
+
+        with st.expander("📚 About this App", expanded=False):
+            # About section
+            st.markdown("""
+            This application demonstrates how machine learning can be used to detect fraudulent financial transactions. 
+            \n            
+            Key Features:     
+            - Synthetic transaction data generation
+            - Data exploration and visualization
+            - Multiple ML models comparison
+            - Interactive fraud detection
+            - Model explainability with SHAP
+                        
+            """)
         
+        st.markdown("---")
         st.subheader("Dataset Statistics")
         fraud_count = df['is_fraud'].sum()
         legitimate_count = len(df) - fraud_count
@@ -1605,5 +1603,4 @@ def render_sidebar():
         st.write(f"Fraudulent: {fraud_count:,} ({fraud_count/len(df):.2%})")
         st.write(f"Legitimate: {legitimate_count:,} ({legitimate_count/len(df):.2%})")
 
-
-render_sidebar()
+show_sidebar()

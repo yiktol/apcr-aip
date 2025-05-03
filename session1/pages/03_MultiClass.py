@@ -16,6 +16,8 @@ import joblib
 from datetime import datetime
 import base64
 from io import BytesIO
+from utils.common import render_sidebar
+from utils.styles import load_css
 
 # Initialize session state
 def init_session_state():
@@ -60,11 +62,6 @@ def init_session_state():
             'Importance': model.feature_importances_
         }).sort_values('Importance', ascending=False)
 
-# Function to reset the session
-def reset_session():
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
 
 # Function to create an image from a matplotlib figure
 def fig_to_base64(fig):
@@ -87,7 +84,7 @@ def custom_header(text, level=1):
 
 # Topic 1: Introduction to ML Prediction Tab
 def show_prediction_tab():
-    st.markdown(custom_header("Make Your Own Iris Flower Prediction", 2), unsafe_allow_html=True)
+    st.markdown("<h2>Make Your Own Iris Flower Prediction</h2>", unsafe_allow_html=True)
     
     st.markdown("""
     This interactive tool demonstrates supervised learning with multiclass classification. 
@@ -204,8 +201,8 @@ def show_prediction_tab():
 
 # Topic 2: Model Performance Tab
 def show_model_performance():
-    st.markdown(custom_header("Model Performance Analysis", 2), unsafe_allow_html=True)
-    
+    st.markdown("<h2>Model Performance Analysis</h2>", unsafe_allow_html=True)
+        
     st.markdown("""
     This section demonstrates how to evaluate a supervised learning model. For our Iris flower classifier,
     we'll explore various metrics such as accuracy, confusion matrix, and classification report. These are
@@ -318,8 +315,7 @@ def show_model_performance():
 
 # Topic 3: Data Exploration Tab
 def show_data_exploration():
-    st.markdown(custom_header("Exploring Training Data", 2), unsafe_allow_html=True)
-    
+    st.markdown("<h2>Exploring Training Data</h2>", unsafe_allow_html=True)
     st.markdown("""
     Understanding your training data is a crucial first step in any supervised learning project. 
     This section shows how we can explore and visualize the Iris dataset to gain insights before training.
@@ -445,8 +441,7 @@ def show_data_exploration():
 
 # Topic 4: Learning ML Concepts Tab
 def show_ml_concepts():
-    st.markdown(custom_header("Understanding Supervised Learning", 2), unsafe_allow_html=True)
-    
+    st.markdown("<h2>Understanding Supervised Learning</h2>", unsafe_allow_html=True)
     st.markdown("""
     This section explains key supervised learning concepts as they apply to our Iris classification example.
     Understanding these concepts is crucial for AWS AI Practitioners.
@@ -669,56 +664,18 @@ def main():
     )
     
     # Custom CSS
-    st.markdown("""
-    <style>
-    .main {
-        background-color: #FFFFFF;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #F0F0F0;
-        border-radius: 4px 4px 0px 0px;
-        padding: 10px 16px;
-        gap: 4px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #FF9900 !important;
-        color: white !important;
-    }
-    footer {
-        visibility: hidden;
-    }
-    #MainMenu {
-        visibility: visible;
-    }
-    .stButton>button {
-        background-color: #FF9900;
-        color: white;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #E88B00;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    load_css()
     
     # Header
-    st.markdown(custom_header("Supervised Learning: MultiClass", 1), unsafe_allow_html=True)
+    st.markdown("<h1>🌺 Iris Flower Prediction</h1>", unsafe_allow_html=True)
+    st.markdown("""<div class='info-box'>The Iris flower prediction task serves as a canonical example of multi-class classification in machine learning, where models learn to distinguish between three species of Iris flowers (setosa, versicolor, and virginica) based on four features—sepal length, sepal width, petal length, and petal width—demonstrating how algorithms can effectively categorize instances into multiple distinct classes.</div>""", unsafe_allow_html=True)
+
     
     # Sidebar
     with st.sidebar:
 
         # Session info
-        st.markdown("#### Session Information")
-        st.info(f"**Session ID:** {st.session_state.session_id[:8]}...")
-        st.markdown(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}")
-        
-        # Reset button
-        if st.button("Reset Session"):
-            reset_session()
+        render_sidebar()
             
         # About accordion
         with st.expander("About this App"):
@@ -734,8 +691,7 @@ def main():
             
             Built with Streamlit and scikit-learn.
             """)
-        
-        st.markdown("---")
+
         
     
     # Main content - Tabs

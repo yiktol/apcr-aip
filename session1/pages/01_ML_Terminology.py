@@ -19,6 +19,8 @@ import json
 import uuid
 import os
 
+from utils.common import render_sidebar as render_sidebar_common
+from utils.styles import load_css
 # Configuration
 AWS_COLORS = {
     'primary': '#232F3E',      # AWS Dark Blue
@@ -45,101 +47,6 @@ def init_session_state():
     if 'session_id' not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())
 
-# CSS for styling
-def load_css():
-    """Load custom CSS for styling the app"""
-    st.markdown("""
-    <style>
-    .main {
-        background-color: #FFFFFF;
-        color: #232F3E;
-    }
-    .stApp {
-        font-family: 'Amazon Ember', Arial, sans-serif;
-    }
-    h1, h2, h3 {
-        color: #232F3E;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #FFFFFF;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #EAEDED;
-        border-radius: 5px 5px 0 0;
-        gap: 1px;
-        padding: 10px 16px;
-        color: #232F3E;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #FF9900 !important;
-        color: #232F3E !important;
-        font-weight: bold;
-    }
-    .stTabs [data-baseweb="tab-highlight"] {
-        display: none;
-    }
-    .st-eb {
-        background-color: rgb(255, 255, 255);
-    }
-    .st-c2 {
-        background-color: rgba(0, 0, 0, 0.75)
-    }
-    .st-eq {
-        background-color: rgba(0, 0, 0, 0);;
-    }
-    .st-emotion-cache-pkbazv {
-        color: #232F3E;
-    }
-    .footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #EAEDED;
-        color: #232F3E;
-        text-align: center;
-        padding: 10px 0;
-        font-size: 12px;
-    }
-    .stButton>button {
-        background-color: #FF9900;
-        color: #232F3E;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 16px;
-        font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #EC7211;
-    }
-    .card {
-        background-color: #EAEDED;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-    }
-    .metric-container {
-        background-color: #232F3E;
-        color: white;
-        padding: 16px;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 16px;
-    }
-    .metric-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #FF9900;
-    }
-    .metric-label {
-        font-size: 14px;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
 # Create a custom dataset
 @st.cache_data
@@ -2154,27 +2061,24 @@ def reset_session():
 # Sidebar function
 def render_sidebar():
     """Render the sidebar with dataset selection and session management"""
-    
-    # Dataset selection for the Explorer tab
-    if 'selected_dataset' not in st.session_state:
-        st.session_state.selected_dataset = 'California Housing'
-    
-    if 'selected_term' not in st.session_state:
-        st.session_state.selected_term = 'Dataset'
-    
-    # Session management
-    st.sidebar.divider()
-    st.sidebar.markdown("### Session Management")
-    if st.sidebar.button("🔄 Reset Session"):
-        reset_session()
-    
-    st.sidebar.divider()
-    with st.sidebar.expander("📚 About this App", expanded=False):
-        # About section
-        st.markdown("""
-        This app helps you learn machine learning terminology through interactive visualizations and examples.
+    with st.sidebar:
+        # Dataset selection for the Explorer tab
+        if 'selected_dataset' not in st.session_state:
+            st.session_state.selected_dataset = 'California Housing'
         
-        """)
+        if 'selected_term' not in st.session_state:
+            st.session_state.selected_term = 'Dataset'
+        
+        # Session management
+        render_sidebar_common()
+        
+        st.divider()
+        with st.expander("📚 About this App", expanded=False):
+            # About section
+            st.markdown("""
+            This app helps you learn machine learning terminology through interactive visualizations and examples.
+            
+            """)
 
 # Main app
 def main():
@@ -2198,9 +2102,10 @@ def main():
     # Sidebar
     render_sidebar()
     
-    st.title("📊 Machine Learning Terminology")
-    st.markdown('Learners will be able to accurately identify, define, and apply fundamental machine learning terminology by interacting with visualizations, analyzing real datasets, and demonstrating knowledge through practical examples and assessments.')
+    st.markdown("<h1>📊 Machine Learning Terminology</h1>", unsafe_allow_html=True)
+    st.markdown("""<div class='info-box'>Learners will be able to accurately identify, define, and apply fundamental machine learning terminology by interacting with visualizations, analyzing real datasets, and demonstrating knowledge through practical examples and assessments.</div>""", unsafe_allow_html=True)
     
+
     # Main content with tabs
     tabs = st.tabs([
         "🏠 Home",
@@ -2308,7 +2213,7 @@ def main():
         term_info = ml_terminology[selected_term]
         
         st.markdown(f"""
-        <div class="card">
+        <div class="info-box">
             <h3>Definition</h3>
             <p>{term_info['definition']}</p>
             <h3>Example</h3>

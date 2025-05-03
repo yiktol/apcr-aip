@@ -9,12 +9,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils.styles import apply_custom_styles, create_footer
+from utils.styles import load_css, create_footer
+from utils.common import render_sidebar
 
 # Set page config
-st.set_page_config(page_title="Loan Approval Predictor", layout="wide")
+st.set_page_config(page_title="💵 Loan Approval Predictor", layout="wide")
 
-apply_custom_styles()
+load_css()
 
 # Generate synthetic data for demonstration
 np.random.seed(42)
@@ -77,11 +78,11 @@ def train_model():
 model, scaler, X_test, y_test, y_pred, loan_data = train_model()
 
 # Main application
-st.title("Loan Approval Predictor")
-st.write("""
-This application demonstrates binary classification in machine learning by predicting
-whether a loan application will be approved based on applicant information.
-""")
+
+st.markdown("<h1>💵 Loan Approval Prediction</h1>", unsafe_allow_html=True)
+st.markdown("""<div class='info-box'>This application demonstrates binary classification in machine learning by predicting
+whether a loan application will be approved based on applicant information.</div>""", unsafe_allow_html=True)
+
 
 # Create tabs for different sections
 tab1, tab2, tab3 = st.tabs(["Make Prediction", "Model Performance", "Data Exploration"])
@@ -321,38 +322,41 @@ with tab3:
 
 # Add a sidebar with additional information
 with st.sidebar:
-    st.title("About")
-    st.info("""
-    **Loan Approval Predictor**
     
-    This application demonstrates a binary classification machine learning model for 
-    loan approval prediction. The model is trained on synthetic data to illustrate 
-    the core principles of machine learning classification.
-    
-    **Features used:**
-    - Age
-    - Income
-    - Loan Amount
-    - Credit Score
-    - Debt-to-Income Ratio
-    
-    **Model:** Logistic Regression
-    """)
-    
-    st.subheader("How it works")
-    st.write("""
-    1. The model was trained on synthetic data that mimics real loan applications
-    2. It learned patterns associated with loan approval/rejection
-    3. When you input your information, the model:
-       - Standardizes your data
-       - Calculates the probability of approval
-       - Provides a binary decision (approve/reject)
-    """)
-    
-    # Dataset size information
-    st.subheader("Dataset Information")
-    st.write(f"Total samples: {len(loan_data)}")
-    st.write(f"Approved loans: {loan_data['Approved'].sum()} ({loan_data['Approved'].mean():.1%})")
-    st.write(f"Rejected loans: {len(loan_data) - loan_data['Approved'].sum()} ({1 - loan_data['Approved'].mean():.1%})")
+    render_sidebar()
+    with st.expander("📚 About this App", expanded=False):
+
+        st.info("""
+        **Loan Approval Predictor**
+        
+        This application demonstrates a binary classification machine learning model for 
+        loan approval prediction. The model is trained on synthetic data to illustrate 
+        the core principles of machine learning classification.
+        
+        **Features used:**
+        - Age
+        - Income
+        - Loan Amount
+        - Credit Score
+        - Debt-to-Income Ratio
+        
+        **Model:** Logistic Regression
+        """)
+        
+        st.subheader("How it works")
+        st.write("""
+        1. The model was trained on synthetic data that mimics real loan applications
+        2. It learned patterns associated with loan approval/rejection
+        3. When you input your information, the model:
+        - Standardizes your data
+        - Calculates the probability of approval
+        - Provides a binary decision (approve/reject)
+        """)
+        
+        # Dataset size information
+        st.subheader("Dataset Information")
+        st.write(f"Total samples: {len(loan_data)}")
+        st.write(f"Approved loans: {loan_data['Approved'].sum()} ({loan_data['Approved'].mean():.1%})")
+        st.write(f"Rejected loans: {len(loan_data) - loan_data['Approved'].sum()} ({1 - loan_data['Approved'].mean():.1%})")
 
 create_footer()
