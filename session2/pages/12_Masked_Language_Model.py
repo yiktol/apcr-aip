@@ -5,6 +5,7 @@ import pandas as pd
 from transformers import BertTokenizer, pipeline
 import plotly.graph_objects as go
 import time
+from utils.common import render_sidebar
 
 # App configuration and styling
 def setup_page():
@@ -164,37 +165,15 @@ def main():
     
     # Sidebar with information
     with st.sidebar:
-        st.markdown("## About BERT MLM")
-        st.markdown("""
-        <div class='card'>
-            <p>BERT's Masked Language Modeling (MLM) is a technique used to train language models by randomly masking words in a sentence and then predicting those masked words.</p>
-            <p>This application demonstrates how BERT can predict words that have been masked with <code>[MASK]</code> in sentences.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        render_sidebar()
+        with st.expander("About this App", expanded=False):
+            st.markdown("""
+            <div class='card'>
+                <p>BERT's Masked Language Modeling (MLM) is a technique used to train language models by randomly masking words in a sentence and then predicting those masked words.</p>
+                <p>This application demonstrates how BERT can predict words that have been masked with <code>[MASK]</code> in sentences.</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        st.markdown("## Try Your Own")
-        custom_text = st.text_area(
-            "Enter text with [MASK] token:",
-            value="I love to [MASK] in my free time.",
-            help="Include [MASK] exactly once in your text."
-        )
-        
-        if st.button("Predict", type="primary"):
-            if "[MASK]" in custom_text:
-                with st.spinner("Generating predictions..."):
-                    results = unmasker(custom_text)
-                    
-                    st.markdown("### Predictions")
-                    df = format_predictions(results)
-                    
-                    # Display the sequences with highlighted predictions
-                    for i, row in df.iterrows():
-                        st.markdown(f"{i+1}. {row['Sequence']}", unsafe_allow_html=True)
-                    
-                    # Show probabilities chart
-                    st.plotly_chart(create_prediction_chart(results))
-            else:
-                st.error("Please include [MASK] token in your text.")
     
     # Create category filters in the main area
     categories = sorted(list(set(item["category"] for item in dataset)))

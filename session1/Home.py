@@ -104,8 +104,8 @@ with tab_home:
         st.table(pd.DataFrame(program_data))
     
     with col2:
-        st.image("https://img.freepik.com/free-vector/artificial-intelligence-concept_23-2147508247.jpg", width=300)
-        st.caption("Prepare for your AWS Certification")
+        st.image("assets/images/AWS-Certified-AI-Practitioner_badge.png", width=300)
+        st.caption("AWS Certified AI Practitioner ")
         
         progress = st.progress(0)
         st.info("Navigate through the tabs at the top to explore all topics!")

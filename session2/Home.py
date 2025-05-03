@@ -11,7 +11,8 @@ import base64
 import datetime
 import random
 import io
-from utils.styles import load_css, custom_header
+from utils.styles import load_css, custom_header, load_css
+from utils.common import render_sidebar
 
 # Set page configuration
 st.set_page_config(
@@ -106,8 +107,11 @@ if "knowledge_check_answers" not in st.session_state:
 
 load_css()
 
+
 # Sidebar
 with st.sidebar:
+    
+    render_sidebar()
     
     # About this App (collapsible)
     with st.expander("About this App", expanded=False):
@@ -126,19 +130,6 @@ with st.sidebar:
         - Knowledge Checks
         """)
     
-    # Session Management
-    st.subheader("Session Management")
-    st.write(f"Session ID: {st.session_state.session_id[:8]}...")
-    
-    if st.button("Reset Session"):
-        for key in list(st.session_state.keys()):
-            if key != 'session_id':
-                del st.session_state[key]
-        st.session_state.knowledge_check_started = False
-        st.session_state.knowledge_check_progress = 0
-        st.session_state.knowledge_check_answers = {}
-        st.rerun()
-
 # Helper functions for visualizations
 def create_transformer_architecture():
     fig = go.Figure()
@@ -594,7 +585,7 @@ with tabs[0]:
         """, unsafe_allow_html=True)
     
     with col2:
-        st.image("https://d1.awsstatic.com/training-and-certification/certification-badges/AWS-Certified-AI-Practitioner-badge_250.0f667930ba33ca3c15b388792223b88740d40ce4.png", caption="AWS Certified AI Practitioner")
+        st.image("assets/images/AWS-Certified-AI-Practitioner_badge.png", caption="AWS Certified AI Practitioner")
         
         st.markdown("""
         <div class='highlight'>

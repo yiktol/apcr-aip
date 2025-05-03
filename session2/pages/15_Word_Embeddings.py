@@ -13,6 +13,7 @@ import base64
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import uuid
+from utils.common import render_sidebar
 
 # Page configuration
 st.set_page_config(
@@ -33,8 +34,6 @@ st.markdown("""
     h1 {
         text-align: left;
         padding-bottom: 1rem;
-        border-bottom: 2px solid #f0f2f6;
-        margin-bottom: 2rem;
     }
     
     /* Cards for content sections */
@@ -160,13 +159,7 @@ def reset_session():
 
 with st.sidebar:
     # Session information
-    st.markdown("<div class='session-info'>", unsafe_allow_html=True)
-    st.markdown("### 🔑 Session Info")
-    st.markdown(f"**User ID:** {st.session_state.session_id}")
-    
-    if st.button("🔄 Reset Session"):
-        reset_session()
-    st.markdown("</div>", unsafe_allow_html=True)
+    render_sidebar()
 
     # About section (collapsible)
     with st.expander("About this Application", expanded=False):
@@ -333,7 +326,7 @@ with left_column:
     # Generate embeddings form
     # st.markdown("<div class='card'>", unsafe_allow_html=True)
     with st.form("embedding_form"):
-        st.markdown("## Generate Word Embeddings")
+        st.markdown("### Generate Word Embeddings")
         st.markdown("Selected words for embedding generation:")
         
         # Display selected words in columns for better UI
@@ -402,7 +395,7 @@ with left_column:
         
         with tab1:
             # st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("## 2D Vector Space Visualization")
+            st.markdown("### 2D Vector Space Visualization")
             st.markdown("""
             <div class='info-box'>
             This visualization projects high-dimensional word embeddings onto a 2D space using PCA (Principal Component Analysis).
@@ -456,7 +449,7 @@ with left_column:
             
         with tab2:
             # st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("## 3D Vector Space Visualization")
+            st.markdown("### 3D Vector Space Visualization")
             st.markdown("""
             <div class='info-box'>
             This 3D visualization gives a more detailed view of word relationships.
@@ -474,7 +467,7 @@ with left_column:
                 
         with tab3:
             # st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("## Word Similarity Analysis")
+            st.markdown("### Word Similarity Analysis")
             
             # Word similarity metrics
             st.markdown("""
@@ -517,7 +510,7 @@ with left_column:
             
         with tab4:
             # st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("## Raw Vector Data")
+            st.markdown("### Raw Vector Data")
             
             # Display the raw vector data
             st.markdown("""

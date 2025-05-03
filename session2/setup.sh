@@ -7,6 +7,7 @@ cd $directory
 if [ -d $directory/.env ]; 
     then
         echo "Directory exists."
+        pip install -r requirements.txt
         source $directory/.env/bin/activate
     else
         echo "Directory does not exists."

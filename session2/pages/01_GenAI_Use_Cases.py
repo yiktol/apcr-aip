@@ -7,6 +7,8 @@ from botocore.exceptions import ClientError
 from io import BytesIO
 from PIL import Image
 import time
+from utils.styles import load_css, custom_header, load_css
+from utils.common import render_sidebar
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -20,175 +22,200 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Apply custom CSS for modern AWS-themed appearance
-st.markdown("""
-    <style>
-    :root {
-        --aws-color-primary: #232F3E;
-        --aws-color-secondary: #FF9900;
-        --aws-color-light: #FAFAFA;
-        --aws-color-gray: #D5DBDB;
-        --aws-color-link: #0073BB;
-    }
+
+# Load the custom CSS
+load_css()
+
+# # Apply custom CSS for modern AWS-themed appearance
+# st.markdown("""
+#     <style>
+#     :root {
+#         --aws-color-primary: #232F3E;
+#         --aws-color-secondary: #FF9900;
+#         --aws-color-light: #FAFAFA;
+#         --aws-color-gray: #D5DBDB;
+#         --aws-color-link: #0073BB;
+#     }
     
-    .stApp {
-        margin: 0 auto;
-    }
+#     .stApp {
+#         margin: 0 auto;
+#     }
     
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: var(--aws-color-primary);
-    }
+#     .main-header {
+#         font-size: 2.5rem;
+#         font-weight: 700;
+#         margin-bottom: 1rem;
+#         color: var(--aws-color-primary);
+#     }
     
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: var(--aws-color-primary);
-    }
+#     .sub-header {
+#         font-size: 1.5rem;
+#         font-weight: 600;
+#         margin-bottom: 0.5rem;
+#         color: var(--aws-color-primary);
+#     }
     
-    .side-header {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: var(--aws-color-primary);
-        border-bottom: 1px solid var(--aws-color-gray);
-        padding-bottom: 0.5rem;
-    }
+#     .side-header {
+#         font-size: 1.2rem;
+#         font-weight: 600;
+#         margin-bottom: 0.5rem;
+#         color: var(--aws-color-primary);
+#         border-bottom: 1px solid var(--aws-color-gray);
+#         padding-bottom: 0.5rem;
+#     }
     
-    .tab-subheader {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--aws-color-primary);
-        margin-top: 1rem;
-    }
+#     .tab-subheader {
+#         font-size: 1.25rem;
+#         font-weight: 600;
+#         color: var(--aws-color-primary);
+#         margin-top: 1rem;
+#     }
     
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        margin-bottom: 1rem;
-    }
+#     .card {
+#         padding: 1.5rem;
+#         border-radius: 0.5rem;
+#         background-color: #FFFFFF;
+#         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+#         margin-bottom: 1rem;
+#     }
     
-    .side-panel {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        height: calc(100vh - 2rem);
-        overflow-y: auto;
-        position: sticky;
-        top: 1rem;
-    }
+#     .side-panel {
+#         background-color: #f8f9fa;
+#         padding: 1rem;
+#         border-radius: 0.5rem;
+#         height: calc(100vh - 2rem);
+#         overflow-y: auto;
+#         position: sticky;
+#         top: 1rem;
+#     }
     
-    .aws-button {
-        background-color: var(--aws-color-secondary);
-        color: var(--aws-color-primary);
-        font-weight: 600;
-    }
+#     .aws-button {
+#         background-color: var(--aws-color-secondary);
+#         color: var(--aws-color-primary);
+#         font-weight: 600;
+#     }
     
-    .aws-button:hover {
-        background-color: #EC7211;
-    }
+#     .aws-button:hover {
+#         background-color: #EC7211;
+#     }
     
-    .output-container {
-        background-color: var(--aws-color-light);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-        border: 1px solid var(--aws-color-gray);
-    }
+#     .output-container {
+#         background-color: var(--aws-color-light);
+#         padding: 1rem;
+#         border-radius: 0.5rem;
+#         margin-top: 1rem;
+#         border: 1px solid var(--aws-color-gray);
+#     }
     
-    .response-block {
-        background-color: var(--aws-color-light);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid var(--aws-color-secondary);
-        margin-top: 1rem;
-    }
+#     .response-block {
+#         background-color: var(--aws-color-light);
+#         padding: 1rem;
+#         border-radius: 0.5rem;
+#         border-left: 4px solid var(--aws-color-secondary);
+#         margin-top: 1rem;
+#     }
     
-    .explanation-box {
-        background-color: rgba(35, 47, 62, 0.05);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
+#     .explanation-box {
+#         background-color: rgba(35, 47, 62, 0.05);
+#         padding: 1rem;
+#         border-radius: 0.5rem;
+#         margin-bottom: 1rem;
+#     }
     
-    footer {
-        text-align: center;
-        padding: 1rem;
-        color: var(--aws-color-primary);
-        font-size: 0.8rem;
-        margin-top: 2rem;
-    }
+#     footer {
+#         text-align: center;
+#         padding: 1rem;
+#         color: var(--aws-color-primary);
+#         font-size: 0.8rem;
+#         margin-top: 2rem;
+#     }
     
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 1px;
-    }
+#     .stTabs [data-baseweb="tab-list"] {
+#         gap: 1px;
+#     }
     
-    .stTabs [data-baseweb="tab"] {
-        padding: 10px 16px;
-        background-color: #f8f9fa;
-    }
+#     .stTabs [data-baseweb="tab"] {
+#         padding: 10px 16px;
+#         background-color: #f8f9fa;
+#     }
     
-    .stTabs [aria-selected="true"] {
-        background-color: var(--aws-color-light);
-        border-top: 2px solid var(--aws-color-secondary);
-        font-weight: bold;
-    }
+#     .stTabs [aria-selected="true"] {
+#         background-color: var(--aws-color-light);
+#         border-top: 2px solid var(--aws-color-secondary);
+#         font-weight: bold;
+#     }
     
-    .topic-description {
-        color: #555;
-        margin-bottom: 1.5rem;
-    }
+#     .topic-description {
+#         color: #555;
+#         margin-bottom: 1.5rem;
+#     }
     
-    a {
-        color: var(--aws-color-link);
-        text-decoration: none;
-    }
+#     a {
+#         color: var(--aws-color-link);
+#         text-decoration: none;
+#     }
     
-    a:hover {
-        text-decoration: underline;
-    }
+#     a:hover {
+#         text-decoration: underline;
+#     }
     
-    .aws-info-box {
-        background-color: #f2f8fd;
-        border: 1px solid #d1e4f5;
-        border-left: 4px solid #0073bb;
-        padding: 1rem;
-        border-radius: 0.25rem;
-        margin-bottom: 1rem;
-    }
+#     .aws-info-box {
+#         background-color: #f2f8fd;
+#         border: 1px solid #d1e4f5;
+#         border-left: 4px solid #0073bb;
+#         padding: 1rem;
+#         border-radius: 0.25rem;
+#         margin-bottom: 1rem;
+#     }
     
-    /* Session reset button */
-    .reset-button {
-        background-color: #FFFFFF;
-        color: #D13212;
-        border: 1px solid #D13212;
-        border-radius: 3px;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-        cursor: pointer;
-    }
+#     /* Session reset button */
+#     .reset-button {
+#         background-color: #FFFFFF;
+#         color: #D13212;
+#         border: 1px solid #D13212;
+#         border-radius: 3px;
+#         padding: 0.25rem 0.5rem;
+#         font-size: 0.8rem;
+#         cursor: pointer;
+#     }
     
-    .reset-button:hover {
-        background-color: #FDE7E9;
-    }
+#     .reset-button:hover {
+#         background-color: #FDE7E9;
+#     }
     
-    .about-expander {
-        margin-top: 1rem;
-        border-top: 1px solid var(--aws-color-gray);
-        padding-top: 1rem;
-    }
+#     .about-expander {
+#         margin-top: 1rem;
+#         border-top: 1px solid var(--aws-color-gray);
+#         padding-top: 1rem;
+#     }
     
-    /* Smaller fonts for side panel */
-    .side-panel label, .side-panel .stSelectbox, .side-panel .stRadio {
-        font-size: 0.9rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+#     /* Smaller fonts for side panel */
+#     .side-panel label, .side-panel .stSelectbox, .side-panel .stRadio {
+#         font-size: 0.9rem;
+#     }
+    
+#     .st-key-styled_container{
+#     background-color:grey;
+#     border-radius:1rem;
+#     padding:1rem;
+#     min-height:100px;
+#     box-shadow: 3px 5px 15px 0px rgba(128, 128, 128, 0.245);
+#     }
+
+#     .st-key-styled_container div[data-testid="stText"] div{
+#         color:white;
+
+#     }
+#         /* Info boxes */
+#     .info-box {
+#         background-color: #f0f7ff;
+#         border-left: 5px solid #0066cc;
+#         padding: 15px;
+#         margin-bottom: 20px;
+#         border-radius: 5px;
+#     }
+#     </style>
+# """, unsafe_allow_html=True)
 
 # ------- SESSION MANAGEMENT FUNCTIONS -------
 
@@ -820,12 +847,14 @@ def main():
 
     with st.sidebar:
         # Session Management
-        st.markdown("<div class='side-header'>Session Management</div>", unsafe_allow_html=True)
+        # st.markdown("<div class='side-header'>Session Management</div>", unsafe_allow_html=True)
         
-        st.caption(f"ID: {st.session_state.user_id[:8]}...")
+        # st.caption(f"ID: {st.session_state.user_id[:8]}...")
         
-        st.button("Reset Session", on_click=reset_session, key="reset_session", 
-                    help="Reset your current session and conversation history")
+        # st.button("Reset Session", on_click=reset_session, key="reset_session", 
+        #             help="Reset your current session and conversation history")
+        
+        render_sidebar()
         
         # About section
         with st.expander("About this App", expanded=False):
@@ -844,12 +873,18 @@ def main():
             """)
 
     # Header
-    st.markdown("<h1 class='main-header'>GenAI Use Cases in AWS Bedrock</h1>", unsafe_allow_html=True)
-    
+
     st.markdown("""
+    <div class="element-animation">
+        <h1>GenAI Use Cases in AWS Bedrock</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    
+    st.markdown("""<div class="info-box">
     This interactive learning environment demonstrates various use cases of Generative AI using Amazon Bedrock.
     Explore different capabilities by selecting a use case tab below and experiment with the power of foundation models.
-    """)
+    </div>""",unsafe_allow_html=True)
     
     # Create a 70/30 layout using columns
     main_col, side_col = st.columns([7, 3])

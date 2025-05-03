@@ -6,6 +6,7 @@ import uuid
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
 from langchain_aws import ChatBedrock
+from utils.common import render_sidebar
 
 # Page configuration with custom styling
 st.set_page_config(
@@ -173,13 +174,8 @@ def reset_session():
 
 # Sidebar for session management and application info
 with st.sidebar:
-    st.markdown("<div class='sidebar-title'>Session Info</div>", unsafe_allow_html=True)
     
-    st.markdown(f"**User ID:** {st.session_state.session_id}")
-    
-    if st.button("🔄 Reset Session", key="sidebar_reset"):
-        reset_session()
-        st.rerun()
+    render_sidebar()
     
     st.markdown("---")
     

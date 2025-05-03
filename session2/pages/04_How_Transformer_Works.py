@@ -2,7 +2,7 @@ import streamlit as st
 import uuid
 from utils.styles import load_css
 from utils.knowledge_check import display_knowledge_check
-from utils.common import initialize_session_state, reset_session
+from utils.common import initialize_session_state, render_sidebar
 
 def main():
     
@@ -25,13 +25,7 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        # Display session ID
-        st.markdown(f"**Session ID:** {st.session_state.session_id}")
-     
-        # Reset session button
-        if st.button("Reset Session"):
-            reset_session()
-            st.rerun()     
+        render_sidebar()
         
         # About this App - collapsed by default
         with st.expander("About this App", expanded=False):

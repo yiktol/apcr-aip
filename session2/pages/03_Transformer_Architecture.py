@@ -12,6 +12,8 @@ import time
 import uuid
 import base64
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from utils.styles import load_css, custom_header, load_css, create_footer
+from utils.common import render_sidebar
 
 # Initialize session state
 def initialize_session_state():
@@ -1290,21 +1292,14 @@ def main():
     initialize_session_state()
     
     # Apply custom CSS
-    from utils.styles import load_css
     load_css()
-    # Sidebar content
-    st.sidebar.subheader("Session Info:")
 
-    # Session ID display
-    st.sidebar.markdown(f"Session ID: `{st.session_state.session_id[:8]}`")
-    
-    # Reset session button
-    if st.sidebar.button("🔄 Reset Session"):
-        reset_session()
-        
-    # About section (collapsed by default)
-    with st.sidebar.expander("ℹ️ About this App", expanded=False):
-        about_app()
+    with st.sidebar:
+        render_sidebar()
+            
+        # About section (collapsed by default)
+        with st.expander("ℹ️ About this App", expanded=False):
+            about_app()
     
     # Main content
     st.title("🤖 Transformer Architecture")
@@ -1346,11 +1341,7 @@ def main():
         applications_tab()
     
     # Add a footer
-    st.markdown("""
-    <div class="footer">
-    © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
-    </div>
-    """, unsafe_allow_html=True)
+    create_footer()
 
 # Call the main function
 if __name__ == "__main__":
