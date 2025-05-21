@@ -35,12 +35,16 @@ st.markdown("""
         background-color: #f0f4c3;
     }
     .chat-header {
+        position: sticky;
         background: linear-gradient(to right, #4776E6, #8E54E9);
         padding: 1.5rem;
         border-radius: 10px;
         color: white;
         margin-bottom: 2rem;
         text-align: center;
+        top: 0;
+
+
     }
     .sidebar .sidebar-content {
         background-color: #f0f4f8;
@@ -134,7 +138,7 @@ def get_llm(temperature=0.7, top_p=0.8, max_tokens=1024):
     
     llm = ChatBedrock(
         client=bedrock,
-        model_id="amazon.titan-text-premier-v1:0",
+        model_id="amazon.nova-micro-v1:0",
         model_kwargs=model_kwargs
     )
     
@@ -184,7 +188,11 @@ def reset_session():
 with st.sidebar:
     
     render_sidebar()
+    clear_chat_btn = st.sidebar.button("🧹 Clear Chat History", key="clear_chat")
     
+    if clear_chat_btn:
+        st.session_state.chat_history = [{"role": "assistant", "text": "Chat history cleared. How can I help you?"}]
+        st.rerun()
     st.markdown("---")
     
     with st.expander("About this Application", expanded=False):
@@ -221,7 +229,10 @@ with chat_col:
             st.markdown(message["text"])
 
     # Chat input
-    input_text = st.chat_input("Type your message here...")
+    with st._bottom:
+        cols = st.columns([0.7, 0.3])
+        with cols[0]:
+            input_text = st.chat_input("Type your message here...")
 
     # Process user input
     if input_text:
@@ -242,6 +253,7 @@ with chat_col:
                 st.markdown(chat_response)
         
         st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
+
 
 # Controls column (30%)
 with controls_col:
@@ -279,9 +291,4 @@ with controls_col:
                              help="Maximum number of tokens in the response")
         st.session_state.max_tokens = max_tokens
         
-        st.markdown("### Chat Management")
-        clear_chat_btn = st.button("🧹 Clear Chat History", key="clear_chat")
-        
-        if clear_chat_btn:
-            st.session_state.chat_history = [{"role": "assistant", "text": "Chat history cleared. How can I help you?"}]
-            st.rerun()
+

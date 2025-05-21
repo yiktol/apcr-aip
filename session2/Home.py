@@ -11,7 +11,7 @@ import base64
 import datetime
 import random
 import io
-from utils.styles import load_css, custom_header, load_css
+from utils.styles import load_css, custom_header
 from utils.common import render_sidebar
 
 # Set page configuration
@@ -34,76 +34,6 @@ if "knowledge_check_progress" not in st.session_state:
     
 if "knowledge_check_answers" not in st.session_state:
     st.session_state.knowledge_check_answers = {}
-
-# # Custom styling
-# def load_css():
-#     st.markdown("""
-#     <style>
-#     .main {
-#         background-color: #f5f5f5;
-#         color: #232F3E;
-#     }
-#     .stButton button {
-#         background-color: #FF9900;
-#         color: white;
-#         border-radius: 4px;
-#         border: none;
-#         padding: 0.5rem 1rem;
-#     }
-#     .stButton button:hover {
-#         background-color: #EC7211;
-#         color: white;
-#     }
-#     .stProgress .st-ey {
-#         background-color: #FF9900;
-#     }
-#     h1, h2, h3 {
-#         color: #232F3E;
-#     }
-#     .block-container {
-#         padding-top: 2rem;
-#         padding-bottom: 2rem;
-#     }
-#     .st-emotion-cache-z5fcl4 {
-#         padding-top: 2rem;
-#         padding-bottom: 2rem;
-#     }
-#     .aws-card {
-#         background-color: white;
-#         border-radius: 10px;
-#         padding: 20px;
-#         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-#         margin-bottom: 20px;
-#     }
-#     .highlight {
-#         background-color: #FFFFCC;
-#         padding: 10px;
-#         border-left: 5px solid #FF9900;
-#         margin-bottom: 15px;
-#     }
-#     footer {
-#         visibility: hidden;
-#     }
-#     .concept-card {
-#         background-color: white;
-#         border-radius: 5px;
-#         padding: 15px;
-#         margin-bottom: 15px;
-#         border-left: 5px solid #FF9900;
-#     }
-#     .aws-footer {
-#         position: fixed;
-#         bottom: 0;
-#         right: 0;
-#         left: 0;
-#         background-color: #232F3E;
-#         color: white;
-#         text-align: center;
-#         padding: 10px;
-#         font-size: 12px;
-#     }
-#     </style>
-#     """, unsafe_allow_html=True)
 
 load_css()
 

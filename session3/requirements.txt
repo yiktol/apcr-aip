@@ -1,7 +1,13 @@
 streamlit==1.39.0
 boto3
 botocore
-matplotlib
 pandas
 langchain_core
 langchain
+numpy==1.26.0
+matplotlib==3.8.0
+seaborn==0.13.0
+pillow==10.1.0
+plotly==5.18.0
+streamlit-lottie==0.0.5
+requests==2.31.0
