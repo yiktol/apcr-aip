@@ -47,7 +47,7 @@ st.markdown("""
     .sub-header {
         font-size: 1.25rem;
         font-weight: 600;
-        margin-top: 1.5rem;
+        margin-top: 0.25rem;
         margin-bottom: 1rem;
         color: #0a58ca;
     }
@@ -149,7 +149,6 @@ def parameter_sidebar():
             "maxTokens": max_tokens
         }
         
-    with st.container(border=True):    
         st.markdown("<div class='sub-header'>Guardrail Configuration</div>", unsafe_allow_html=True)
         
         guardrail_id = st.text_input("Guardrail ID", value="wibfn4fa6ifg", key="guardrail_id")

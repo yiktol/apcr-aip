@@ -4,6 +4,9 @@ botocore
 pandas
 langchain_core
 langchain
+langchain_community
+pypdf
+faiss-cpu
 numpy==1.26.0
 matplotlib==3.8.0
 seaborn==0.13.0

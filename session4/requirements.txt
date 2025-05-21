@@ -1,3 +1,15 @@
 streamlit==1.39.0
 boto3
 botocore
+matplotlib
+langchain
+langchain_aws
+seaborn
+pandas
+scikit-learn
+jsonlines
+shap
+nest_asyncio
+plotly
+networkx
+streamlit_lottie
