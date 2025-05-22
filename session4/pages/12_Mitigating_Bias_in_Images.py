@@ -10,6 +10,7 @@ from langchain_core.runnables import RunnablePassthrough
 import utils.sdxl as sdxl
 import nest_asyncio  # Added for nested event loops support
 import threading
+import uuid
 
 # Apply nest_asyncio to allow nested event loops
 nest_asyncio.apply()
@@ -36,6 +37,10 @@ st.set_page_config(
 )
 
 # Initialize session states - Make sure this runs first 
+
+if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())[:8]
+
 if "memory" not in st.session_state:
     st.session_state.memory = ConversationBufferMemory(
         return_messages=True,
@@ -152,6 +157,7 @@ with st.sidebar:
     st.title("⚙️ Options")
     
     st.subheader("Session Management")
+    st.caption(f"Session ID: {st.session_state.session_id}")
     
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = [{"role": "Assistant", "content": "Hello! I can help you generate unbiased image prompts. What kind of image would you like to create?"}]
@@ -162,7 +168,8 @@ with st.sidebar:
 
     if st.button("🔄 Reset Session", use_container_width=True):
         for key in list(st.session_state.keys()):
-            del st.session_state[key]
+            if key != "session_id":
+                del st.session_state[key]
         st.rerun()
     
     with st.expander("ℹ️ About this app"):

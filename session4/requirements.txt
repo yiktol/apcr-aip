@@ -13,3 +13,8 @@ nest_asyncio
 plotly
 networkx
 streamlit_lottie
+markdown==3.5
+markdownify==0.11.6
+pillow==10.2.0
+uuid==1.30
+html-sanitizer==2.2.0
