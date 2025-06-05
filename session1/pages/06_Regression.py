@@ -1,3 +1,4 @@
+
 # House Price Prediction with Machine Learning Regression - Streamlit App
 import streamlit as st
 import pandas as pd
@@ -10,16 +11,9 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from utils.styles import load_css
-from utils.common import render_sidebar
+import utils.common as common
+import utils.authenticate as authenticate
 
-# Set page config
-st.set_page_config(
-    page_title="House Price Predictor", 
-    page_icon="🏠",
-    layout="wide"
-)
-
-load_css()
 # Function to generate synthetic house price data
 @st.cache_data
 def generate_house_data(n_samples=1000):
@@ -71,6 +65,7 @@ def generate_house_data(n_samples=1000):
     data['Price'] = price
     
     return data
+
 
 # Function to train models and return the best one
 @st.cache_resource
@@ -131,23 +126,9 @@ def train_models(data):
     # Return results, feature names, and scaler
     return results, X_train.columns.tolist(), scaler, X_test
 
-# Generate data
-housing_data = generate_house_data()
 
-# Train models
-model_results, feature_names, scaler, X_test = train_models(housing_data)
-
-# Main application
-st.markdown("<h1>🏠 House Price Prediction</h1>", unsafe_allow_html=True)
-st.markdown("""<div class='info-box'>This application demonstrates regression in machine learning by predicting
-house prices based on various features such as size, bedrooms, and location.</div>""", unsafe_allow_html=True)
-
-
-
-# Create tabs
-tab1, tab2, tab3 = st.tabs(["Predict House Price", "Model Performance", "Data Exploration"])
-
-with tab1:
+def render_prediction_tab(model_results, feature_names, scaler):
+    """Render the prediction tab content"""
     st.header("House Price Calculator")
     
     st.write("Enter the details of the house to get an estimated price.")
@@ -243,7 +224,9 @@ with tab1:
             
             st.write("These coefficients show how much the price changes for each unit increase in the feature.")
 
-with tab2:
+
+def render_performance_tab(model_results):
+    """Render the model performance tab content"""
     st.header("Model Performance Comparison")
     
     # Convert results to DataFrame for comparison
@@ -312,7 +295,9 @@ with tab2:
     The ideal model would have high R² and low RMSE/MAE.
     """)
 
-with tab3:
+
+def render_exploration_tab(housing_data):
+    """Render the data exploration tab content"""
     st.header("Dataset Exploration")
     
     # Show dataset sample
@@ -339,7 +324,6 @@ with tab3:
     numeric_data = housing_data.select_dtypes(include=['number'])
     corr_matrix = numeric_data.corr()
     
-
     # Plot correlation heatmap
     fig, ax = plt.subplots(figsize=(12, 8))
     mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
@@ -380,9 +364,10 @@ with tab3:
         plt.suptitle('Relationships Between Key Features', y=1.02)
         st.pyplot(fig)
 
-# Add a sidebar with additional information
-with st.sidebar:
-    render_sidebar()
+
+def render_sidebar(housing_data):
+    """Render the sidebar content"""
+    common.render_sidebar()
     
     with st.expander("About this App"):
         st.info("""
@@ -425,3 +410,73 @@ with st.sidebar:
     st.write(f"Total houses in dataset: {len(housing_data)}")
     st.write(f"Average house price: ${housing_data['Price'].mean():,.2f}")
     st.write(f"Price range: ${housing_data['Price'].min():,.2f} to ${housing_data['Price'].max():,.2f}")
+
+
+def setup_page():
+    """Configure the Streamlit page settings"""
+    st.set_page_config(
+        page_title="House Price Predictor", 
+        page_icon="🏠",
+        layout="wide"
+    )
+    load_css()
+
+
+def login():
+    """Handle user authentication."""
+    authenticate.set_st_state_vars()
+    
+    if st.session_state["authenticated"]:
+        authenticate.button_logout()
+        return True
+    else:
+        authenticate.button_login()
+        login_link = authenticate.login_link
+        st.markdown(f"Please [log in]({login_link}) to access the application.")
+        return False
+
+
+def main():
+    """Main application function"""
+       
+    # Generate data
+    housing_data = generate_house_data()
+
+    # Train models
+    model_results, feature_names, scaler, X_test = train_models(housing_data)
+
+    # Main application
+    st.markdown("<h1>🏠 House Price Prediction</h1>", unsafe_allow_html=True)
+    st.markdown("""<div class='info-box'>This application demonstrates regression in machine learning by predicting
+    house prices based on various features such as size, bedrooms, and location.</div>""", unsafe_allow_html=True)
+
+    # Create tabs
+    tab1, tab2, tab3 = st.tabs(["Predict House Price", "Model Performance", "Data Exploration"])
+
+    with tab1:
+        render_prediction_tab(model_results, feature_names, scaler)
+
+    with tab2:
+        render_performance_tab(model_results)
+
+    with tab3:
+        render_exploration_tab(housing_data)
+
+    # Add a sidebar with additional information
+    with st.sidebar:
+        render_sidebar(housing_data)
+
+
+# Main execution flow
+if __name__ == "__main__":
+    setup_page()
+    # First check authentication
+    try:
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()
+    except ImportError:
+        # If authentication module is not available, run the app directly
+        main()

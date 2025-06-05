@@ -18,6 +18,15 @@ import base64
 from io import BytesIO
 from utils.common import render_sidebar
 from utils.styles import load_css
+import utils.authenticate as authenticate
+
+
+# Set page config
+st.set_page_config(
+    page_title="Supervised Learning: MultiClass",
+    page_icon="🤖",
+    layout="wide"
+)
 
 # Initialize session state
 def init_session_state():
@@ -656,13 +665,6 @@ def main():
     # Initialize session state
     init_session_state()
     
-    # Set page config
-    st.set_page_config(
-        page_title="Supervised Learning: MultiClass",
-        page_icon="🤖",
-        layout="wide"
-    )
-    
     # Custom CSS
     load_css()
     
@@ -721,6 +723,13 @@ def main():
         unsafe_allow_html=True
     )
 
+
 # Run the application
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
+

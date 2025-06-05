@@ -1,7 +1,7 @@
 import streamlit as st
 import uuid
 from datetime import datetime
-
+import utils.authenticate as authenticate
 
 def reset_session():
     """Reset the session state"""
@@ -25,7 +25,9 @@ def reset_session():
 def render_sidebar():
     """Render the sidebar with session information and reset button"""
     st.markdown("#### 🔑 Session Info")
-    st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
+    # st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
+    st.caption(f"**Session ID:** {st.session_state["auth_code"][:8]}")
+    
 
     if st.button("🔄 Reset Session"):
         reset_session()

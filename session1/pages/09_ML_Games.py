@@ -12,7 +12,7 @@ from utils.game_ml_terms import ml_terms_game
 from utils.game_learning_types import learning_types_game
 from utils.game_ml_process import ml_process_game
 from utils.game_aws_services import aws_services_game
-
+import utils.authenticate as authenticate
 
 def main():
     # Apply custom styling
@@ -31,8 +31,6 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        
-        render_sidebar()
         
         with st.expander("ℹ️ About this App", expanded=False):
             st.markdown("""
@@ -98,4 +96,12 @@ def main():
     st.caption("© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
 if __name__ == "__main__":
-    main()
+    with st.sidebar:
+        render_sidebar()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
+

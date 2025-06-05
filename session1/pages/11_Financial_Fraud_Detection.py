@@ -1,5 +1,3 @@
-# Financial Fraud Detection System - Streamlit Application (Fixed)
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -27,31 +25,13 @@ import datetime
 
 from utils.styles import load_css
 from utils.common import render_sidebar
+import utils.authenticate as authenticate
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
-# Configure the page
-st.set_page_config(
-    page_title="Financial Fraud Detection System",
-    page_icon="🔍",
-    layout="wide"
-)
-
-load_css()
-
-# Main title and introduction
-st.markdown("<h1>🔍 Financial Fraud Detection System</h1>", unsafe_allow_html=True)
-
-st.markdown("""
-            <div class='info-box'>
-            This application demonstrates how machine learning can be used to detect fraudulent financial transactions. Explore the dataset, see model performance, and test the fraud detection system on new transactions.
-            </div>""", unsafe_allow_html=True)
-
-
-
-    # Add timestamp (last 30 days)
 def generate_timestamps(n_samples):
+    """Generate random timestamps within the last 30 days."""
     end_date = pd.Timestamp.now().normalize()  # Normalize to midnight
     start_date = end_date - pd.Timedelta(days=30)
     
@@ -69,7 +49,6 @@ def generate_timestamps(n_samples):
     
     return shuffled_timestamps
 
-# Function to generate synthetic financial transaction data
 @st.cache_data
 def generate_transaction_data(n_samples=10000, fraud_ratio=0.02):
     """
@@ -167,18 +146,7 @@ def generate_transaction_data(n_samples=10000, fraud_ratio=0.02):
     df.loc[df['is_fraud'] == 1, 'unusual_device'] = np.random.binomial(1, 0.7, n_fraud)  # 70% of fraudulent transactions from unusual devices
     
     # Add timestamp (last 30 days)
-    # end_date = pd.Timestamp.now()
-    # start_date = end_date - pd.Timedelta(days=30)
-    # timestamps = pd.date_range(start=start_date, end=end_date, periods=n_samples)
-    # np.random.shuffle(timestamps)
-    # df['timestamp'] = timestamps
-    
-        
-
-
-    # Apply to dataframe
     df['timestamp'] = generate_timestamps(n_samples)
-
 
     # Add some final processing
     df['amount'] = df['amount'].clip(0)  # No negative amounts
@@ -191,8 +159,6 @@ def generate_transaction_data(n_samples=10000, fraud_ratio=0.02):
     
     return df
 
-
-# Function to preprocess data
 def preprocess_data(df):
     """
     Preprocess the transaction data for modeling.
@@ -221,8 +187,6 @@ def preprocess_data(df):
     
     return X, y, feature_names
 
-
-# Function to train and evaluate fraud detection models
 @st.cache_resource
 def train_fraud_models(X, y):
     """
@@ -306,8 +270,6 @@ def train_fraud_models(X, y):
     
     return trained_models, results, X_test_scaled, y_test, scaler
 
-
-# Function to get model explanation using SHAP
 @st.cache_resource
 def get_shap_values(_model, X_sample, _model_name, feature_names):
     """
@@ -352,21 +314,43 @@ def get_shap_values(_model, X_sample, _model_name, feature_names):
         dummy_shap = np.random.normal(0, 0.1, (X_sample.shape[0], X_sample.shape[1]))
         return dummy_shap, None
 
+def reset_session():
+    """Reset all session state variables"""
+    for key in st.session_state.keys():
+        del st.session_state[key]
+    st.rerun()
 
-# Generate or load data
-try:
-    df = pd.read_csv("financial_fraud_data.csv")
-    st.sidebar.success("Loaded existing transaction data.")
-except:
-    df = generate_transaction_data(n_samples=10000, fraud_ratio=0.02)
-    df.to_csv("financial_fraud_data.csv", index=False)
-    st.sidebar.success("Generated new synthetic transaction data.")
+def show_sidebar(df):
+    """Render the sidebar with dataset selection and session management"""
 
-# Create tabs for different sections
-tabs = st.tabs(["Overview", "Data Exploration", "Model Performance", "Fraud Detection", "Model Explanation"])
+    # Session management
+    with st.sidebar:
+        render_sidebar()
 
-# Overview Tab
-with tabs[0]:
+        with st.expander("📚 About this App", expanded=False):
+            # About section
+            st.markdown("""
+            This application demonstrates how machine learning can be used to detect fraudulent financial transactions. 
+            \n            
+            Key Features:     
+            - Synthetic transaction data generation
+            - Data exploration and visualization
+            - Multiple ML models comparison
+            - Interactive fraud detection
+            - Model explainability with SHAP
+                        
+            """)
+        
+        st.markdown("---")
+        st.subheader("Dataset Statistics")
+        fraud_count = df['is_fraud'].sum()
+        legitimate_count = len(df) - fraud_count
+        st.write(f"Total Transactions: {len(df):,}")
+        st.write(f"Fraudulent: {fraud_count:,} ({fraud_count/len(df):.2%})")
+        st.write(f"Legitimate: {legitimate_count:,} ({legitimate_count/len(df):.2%})")
+
+def display_overview_tab(df):
+    """Display the Overview tab content"""
     st.header("Financial Fraud Detection Overview")
     
     col1, col2 = st.columns(2)
@@ -434,8 +418,8 @@ with tabs[0]:
     that distinguish between them.
     """)
 
-# Data Exploration Tab
-with tabs[1]:
+def display_data_exploration_tab(df):
+    """Display the Data Exploration tab content"""
     st.header("Data Exploration")
     
     # Show a sample of the data
@@ -498,13 +482,7 @@ with tabs[1]:
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        # Hour of day analysis - Using value_counts for safer aggregation
-        # hour_counts = pd.DataFrame({
-        #     'hour_of_day': df['hour_of_day'].repeat(df['is_fraud'] + 1),
-        #     'is_fraud': np.concatenate([np.zeros(len(df)), df['is_fraud'].values])
-        # })
-        
-        # Create hour counts DataFrame with matching array lengths
+        # Hour of day analysis
         fraud_mask = df['is_fraud'] == 1
         non_fraud_count = len(df)
         fraud_count = fraud_mask.sum()
@@ -519,7 +497,6 @@ with tabs[1]:
                 np.ones(fraud_count)                         # ones for fraud transactions
             ])
         })
-
         
         hour_fraud = hour_counts.groupby(['hour_of_day', 'is_fraud']).size().unstack(fill_value=0)
         
@@ -545,20 +522,14 @@ with tabs[1]:
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        # Day of week analysis - Using value_counts for safer aggregation
+        # Day of week analysis
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         
-        # day_counts = pd.DataFrame({
-        #     'day_of_week': df['day_of_week'].repeat(df['is_fraud'] + 1),
-        #     'is_fraud': np.concatenate([np.zeros(len(df)), df['is_fraud'].values])
-        # })
-        
         day_counts = pd.DataFrame({
-    'day_of_week': df['day_of_week'],
-    'is_fraud': df['is_fraud']
-})
+            'day_of_week': df['day_of_week'],
+            'is_fraud': df['is_fraud']
+        })
         day_fraud = day_counts.groupby(['day_of_week', 'is_fraud']).size().unstack(fill_value=0)
-
         
         # Normalize to make it a proportion
         for col in day_fraud.columns:
@@ -595,6 +566,7 @@ with tabs[1]:
         
         st.plotly_chart(fig, use_container_width=True)
     
+    # More data exploration code continues as in the original...
     # Security indicators
     st.subheader("Security Risk Indicators")
     col1, col2 = st.columns([1, 1])
@@ -761,18 +733,14 @@ with tabs[1]:
     These patterns help our models learn to identify suspicious activities.
     """)
 
-# Model Performance Tab
-with tabs[2]:
+def display_model_performance_tab(df, X, y, feature_names):
+    """Display the Model Performance tab content"""
     st.header("Model Performance")
-    
-    # Preprocess data
-    X, y, feature_names = preprocess_data(df)
     
     # Train and evaluate models if not already done
     with st.spinner("Training models... This may take a moment."):
         models, results, X_test_scaled, y_test, scaler = train_fraud_models(X, y)
     
-
     # Display model comparison
     st.subheader("Model Comparison")
     
@@ -962,9 +930,11 @@ with tabs[2]:
     **Note**: This impact analysis is based on assumptions about fraud amounts and investigation costs.
     In a real implementation, these figures would be based on actual business data.
     """)
+    
+    return models, metrics_df, scaler
 
-# Fraud Detection Tab
-with tabs[3]:
+def display_fraud_detection_tab(df, models, metrics_df, feature_names, scaler):
+    """Display the Fraud Detection tab content"""
     st.header("Fraud Detection System")
     
     st.markdown("""
@@ -1163,7 +1133,6 @@ with tabs[3]:
         submit = st.button("Analyze Transaction", type='primary')
        
     with st.container(border=False):
-
         # Detect fraud with the trained model
         if submit:
             # Scale the features
@@ -1249,8 +1218,8 @@ with tabs[3]:
                 2. **No additional action** required
                 """)
 
-# Model Explanation Tab
-with tabs[4]:
+def display_model_explanation_tab(models, X_test_scaled, y_test, feature_names):
+    """Display the Model Explanation tab content"""
     st.header("Model Explainability")
     
     st.markdown("""
@@ -1364,7 +1333,6 @@ with tabs[4]:
             labels={'SHAP Value': 'Impact on Model Output', 'Feature Value': 'Feature Value (normalized)'}
         )
         
-        
         fig.update_layout(height=600)
         st.plotly_chart(fig, use_container_width=True)
         
@@ -1396,8 +1364,8 @@ with tabs[4]:
         if explanation_type == "Fraudulent Transaction":
             if len(fraud_indices) > 0:
                 # Get results for the current model
-                model_result = results[model_to_explain]
-                y_pred = model_result['y_pred']
+                model_result = models[model_to_explain]
+                y_pred = model_result.predict(X_test_scaled)
                 
                 # Correctly predicted fraud cases
                 correct_fraud = np.where((y_test_array == 1) & (y_pred == 1))[0]
@@ -1476,7 +1444,6 @@ with tabs[4]:
                 feature = row['Feature']
                 contribution = row['Contribution']
                 
-
                 if contribution > 0:
                     st.markdown(f"🔴 **{feature}** pushed toward a fraud prediction (contribution: +{contribution:.4f})")
                 else:
@@ -1565,42 +1532,65 @@ with tabs[4]:
         else:
             st.info("Feature importance visualization is not available for this model type.")
 
+def main():
+    """Main function to run the Streamlit application"""
 
-# Reset session state
-def reset_session():
-    """Reset all session state variables"""
-    for key in st.session_state.keys():
-        del st.session_state[key]
-    st.rerun()
+    load_css()
 
-# Sidebar function
-def show_sidebar():
-    """Render the sidebar with dataset selection and session management"""
+    # Main title and introduction
+    st.markdown("<h1>🔍 Financial Fraud Detection System</h1>", unsafe_allow_html=True)
 
-    # Session management
-    with st.sidebar:
-        render_sidebar()
+    st.markdown("""
+                <div class='info-box'>
+                This application demonstrates how machine learning can be used to detect fraudulent financial transactions. Explore the dataset, see model performance, and test the fraud detection system on new transactions.
+                </div>""", unsafe_allow_html=True)
+    
+    # Generate or load data
+    try:
+        df = pd.read_csv("financial_fraud_data.csv")
+        st.sidebar.success("Loaded existing transaction data.")
+    except:
+        df = generate_transaction_data(n_samples=10000, fraud_ratio=0.02)
+        df.to_csv("financial_fraud_data.csv", index=False)
+        st.sidebar.success("Generated new synthetic transaction data.")
+    
+    # Preprocess data
+    X, y, feature_names = preprocess_data(df)
+    
+    # Show sidebar
+    show_sidebar(df)
+    
+    # Create tabs for different sections
+    tabs = st.tabs(["Overview", "Data Exploration", "Model Performance", "Fraud Detection", "Model Explanation"])
+    
+    # Display content for each tab
+    with tabs[0]:
+        display_overview_tab(df)
+    
+    with tabs[1]:
+        display_data_exploration_tab(df)
+    
+    with tabs[2]:
+        models, metrics_df, scaler = display_model_performance_tab(df, X, y, feature_names)
+    
+    with tabs[3]:
+        display_fraud_detection_tab(df, models, metrics_df, feature_names, scaler)
+    
+    with tabs[4]:
+        # Get X_test_scaled and y_test for model explanation
+        _, results, X_test_scaled, y_test, _ = train_fraud_models(X, y)
+        display_model_explanation_tab(models, X_test_scaled, y_test, feature_names)
 
-        with st.expander("📚 About this App", expanded=False):
-            # About section
-            st.markdown("""
-            This application demonstrates how machine learning can be used to detect fraudulent financial transactions. 
-            \n            
-            Key Features:     
-            - Synthetic transaction data generation
-            - Data exploration and visualization
-            - Multiple ML models comparison
-            - Interactive fraud detection
-            - Model explainability with SHAP
-                        
-            """)
-        
-        st.markdown("---")
-        st.subheader("Dataset Statistics")
-        fraud_count = df['is_fraud'].sum()
-        legitimate_count = len(df) - fraud_count
-        st.write(f"Total Transactions: {len(df):,}")
-        st.write(f"Fraudulent: {fraud_count:,} ({fraud_count/len(df):.2%})")
-        st.write(f"Legitimate: {legitimate_count:,} ({legitimate_count/len(df):.2%})")
-
-show_sidebar()
+if __name__ == "__main__":
+    # Configure the page
+    st.set_page_config(
+        page_title="Financial Fraud Detection System",
+        page_icon="🔍",
+        layout="wide"
+    )
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

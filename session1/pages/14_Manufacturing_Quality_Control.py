@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import base64
 from PIL import Image
 import io
-
+import utils.authenticate as authenticate
 # Initialize session state
 def initialize_session_state():
     if 'session_id' not in st.session_state:
@@ -823,13 +823,7 @@ def main():
     # Initialize session state
     initialize_session_state()
     
-    # Page setup
-    st.set_page_config(
-        page_title="Manufacturing Quality Control ML",
-        page_icon="🏭",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+
     
     # Custom CSS
     st.markdown("""
@@ -958,4 +952,16 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # Page setup
+    st.set_page_config(
+        page_title="Manufacturing Quality Control ML",
+        page_icon="🏭",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )    
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

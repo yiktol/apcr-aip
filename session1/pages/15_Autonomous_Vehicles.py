@@ -10,7 +10,7 @@ import time
 import base64
 from PIL import Image
 import io
-
+import utils.authenticate as authenticate
 # Set page configuration
 st.set_page_config(
     page_title="Autonomous Vehicles: ML for Object Detection",
@@ -103,7 +103,7 @@ def reset_session():
     st.session_state['vehicles_detected'] = 0
     st.session_state['pedestrians_detected'] = 0
     st.session_state['traffic_signs_detected'] = 0
-    st.experimental_rerun()
+    st.rerun()
 
 # Sidebar
 def render_sidebar():
@@ -1128,4 +1128,9 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

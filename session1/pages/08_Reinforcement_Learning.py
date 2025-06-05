@@ -17,7 +17,7 @@ from streamlit_drawable_canvas import st_canvas
 import copy
 from utils.styles import load_css
 from utils.common import render_sidebar
-
+import utils.authenticate as authenticate
 # Set page config
 st.set_page_config(
     page_title="Interactive Reinforcement Learning", 
@@ -135,12 +135,7 @@ st.markdown("""
 
 # Title and introduction
 load_css()
-st.markdown("<h1>🎮 Reinforcement Learning</h1>", unsafe_allow_html=True)
-st.markdown("""<div class='info-box'>
-            Learn how reinforcement learning works by training an AI agent to navigate through a customizable environment! 
-This interactive demo uses Q-learning, a foundational RL algorithm, to show how agents learn by trial and error.
-            </div>
-            """, unsafe_allow_html=True)
+
 
 # Initialize session state
 if 'env' not in st.session_state:
@@ -592,7 +587,12 @@ def metric_with_tooltip(label, value, tooltip, delta=None):
 
 # Main app content
 def main():
-        
+    st.markdown("<h1>🎮 Reinforcement Learning</h1>", unsafe_allow_html=True)
+    st.markdown("""<div class='info-box'>
+                Learn how reinforcement learning works by training an AI agent to navigate through a customizable environment! 
+    This interactive demo uses Q-learning, a foundational RL algorithm, to show how agents learn by trial and error.
+                </div>
+                """, unsafe_allow_html=True)
     with st.sidebar:
         render_sidebar()
     # Tabs
@@ -793,7 +793,7 @@ def main():
                         st.session_state.rewards_history = []
                         st.session_state.steps_history = []
                         st.session_state.current_episode = 0
-                        st.experimental_rerun()
+                        st.rerun()
             
             with col2:
                 if st.session_state.training_complete:
@@ -1046,7 +1046,7 @@ def main():
                     
                     # Re-render
                     time.sleep(0.5 - min(0.4, st.session_state.simulation_speed))
-                    st.experimental_rerun()
+                    st.rerun()
                 
                 elif interactive_mode == "Step-by-Step":
                     # Manual stepping
@@ -1076,14 +1076,14 @@ def main():
                                 st.session_state.test_done = done
                                 
                                 # Re-render
-                                st.experimental_rerun()
+                                st.rerun()
                     
                     with col2:
                         if reset_button.button("Reset Test"):
                             # Reset the test
                             if 'test_running' in st.session_state:
                                 del st.session_state.test_running
-                            st.experimental_rerun()
+                            st.rerun()
             
             # Display path details if a test has been run
             if 'test_running' in st.session_state and len(st.session_state.agent_path) > 1:
@@ -1267,4 +1267,11 @@ def main():
 
 # Run the app
 if __name__ == "__main__":
-    main()
+    
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
+

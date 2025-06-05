@@ -18,9 +18,20 @@ from datetime import datetime
 import json
 import uuid
 import os
+import utils.authenticate as authenticate
+
 
 from utils.common import render_sidebar as render_sidebar_common
 from utils.styles import load_css
+
+
+# Page config
+st.set_page_config(
+    page_title="ML Terminology",
+    page_icon="📊",
+    layout="wide"
+)
+
 # Configuration
 AWS_COLORS = {
     'primary': '#232F3E',      # AWS Dark Blue
@@ -2083,24 +2094,16 @@ def render_sidebar():
 # Main app
 def main():
     """Main function to run the Streamlit app"""
-    # Page config
-    st.set_page_config(
-        page_title="ML Terminology",
-        page_icon="📊",
-        layout="wide"
-    )
-    
+  
     # Initialize session state
     init_session_state()
+    
     
     # Load CSS
     load_css()
     
     # Load datasets
     datasets = load_datasets()
-    
-    # Sidebar
-    render_sidebar()
     
     st.markdown("<h1>📊 Machine Learning Terminology</h1>", unsafe_allow_html=True)
     st.markdown("""<div class='info-box'>Learners will be able to accurately identify, define, and apply fundamental machine learning terminology by interacting with visualizations, analyzing real datasets, and demonstrating knowledge through practical examples and assessments.</div>""", unsafe_allow_html=True)
@@ -2261,4 +2264,14 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        render_sidebar()
+        main()
+
+
+    

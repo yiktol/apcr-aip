@@ -25,7 +25,7 @@ import warnings
 from datetime import datetime
 from utils.common import render_sidebar
 from utils.styles import load_css
-
+import utils.authenticate as authenticate
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
@@ -2635,12 +2635,7 @@ def show_about_ml_healthcare():
 
 def main():
     """Main application function"""
-    # Set page configuration
-    st.set_page_config(
-        page_title="AWS Healthcare ML Diagnostics",
-        page_icon="🏥",
-        layout="wide"
-    )
+
     
     # Initialize session state
     initialize_session_state()
@@ -2752,4 +2747,15 @@ def main():
     create_footer()
 
 if __name__ == "__main__":
-    main()
+    # Set page configuration
+    st.set_page_config(
+        page_title="AWS Healthcare ML Diagnostics",
+        page_icon="🏥",
+        layout="wide"
+    )
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

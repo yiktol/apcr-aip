@@ -13,7 +13,7 @@ import uuid
 import datetime
 
 from utils.styles import load_css
-
+import utils.authenticate as authenticate
 # Initialize session state
 def init_session_state():
     if "session_id" not in st.session_state:
@@ -36,12 +36,7 @@ def reset_session():
 
 # Set page configuration with AWS color scheme
 def configure_page():
-    st.set_page_config(
-        page_title="Cybersecurity Threat Detection",
-        page_icon="🔒",
-        layout="wide"
-    )
-    
+   
     # Custom CSS with AWS color scheme
     st.markdown("""
     <style>
@@ -367,7 +362,7 @@ def show_detect_tab():
             
             st.session_state.model = model
             st.session_state.scaler = scaler
-            st.experimental_rerun()
+            st.rerun()
     else:
         # Tabs for different threat detection methods
         detect_tabs = st.tabs([
@@ -1126,7 +1121,7 @@ def create_sidebar():
         
         if st.button("🔄 Reset Session"):
             reset_session()
-            st.experimental_rerun()
+            st.rerun()
         
         st.markdown("---")
         
@@ -1244,4 +1239,14 @@ def train_model(X_train, contamination=0.2):
 
 # Run the application
 if __name__ == "__main__":
-    main()
+    st.set_page_config(
+        page_title="Cybersecurity Threat Detection",
+        page_icon="🔒",
+        layout="wide"
+    )
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

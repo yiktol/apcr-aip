@@ -20,51 +20,30 @@ from utils.visualization import (
     plot_cluster_distribution, plot_cluster_radar_chart, plot_pca_clusters, 
     plot_age_income_clusters, plot_feature_importance
 )
-
-# Set page configuration
-st.set_page_config(
-    page_title="Customer Segmentation",
-    page_icon="🔍",
-    layout="wide"
-)
-
-# Initialize session state
-initialize_session_state()
-
-with st.sidebar:
-    render_sidebar()
-    create_sidebar()
-
-# Apply custom CSS
-load_css()
-
-# Display header
-st.markdown("<h1 class='main-header'>👥 Customer Segmentation</h1>", unsafe_allow_html=True)
-st.markdown("""<div class='info-box'>
-            Unsupervised machine learning for customer segmentation autonomously discovers natural groupings within customer data by identifying hidden patterns in purchasing behaviors, demographics, and interactions without predefined labels, enabling businesses to tailor marketing strategies to distinct customer profiles.
-            </div>
-            """, unsafe_allow_html=True)
+import utils.authenticate as authenticate
 
 
-# Get data
-data = get_customer_data()
+def setup_page():
+    """Set up the page configuration and styles."""
+    st.set_page_config(
+        page_title="Customer Segmentation",
+        page_icon="🔍",
+        layout="wide"
+    )
+    load_css()
 
-# Build model (cached)
-model_data = build_kmeans_model(data)
 
-# Get cluster profiles
-cluster_profiles = get_cluster_profile(model_data)
+def display_header():
+    """Display the application header."""
+    st.markdown("<h1 class='main-header'>👥 Customer Segmentation</h1>", unsafe_allow_html=True)
+    st.markdown("""<div class='info-box'>
+                Unsupervised machine learning for customer segmentation autonomously discovers natural groupings within customer data by identifying hidden patterns in purchasing behaviors, demographics, and interactions without predefined labels, enabling businesses to tailor marketing strategies to distinct customer profiles.
+                </div>
+                """, unsafe_allow_html=True)
 
-# Create tabs
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Data Explorer", 
-    "🧩 Segmentation Model", 
-    "👤 Customer Predictor",
-    "📈 Model Performance"
-])
 
-# Tab 1: Data Explorer
-with tab1:
+def display_data_explorer_tab(data):
+    """Display the Data Explorer tab content."""
     st.markdown("<h3>Customer Data Exploration</h3>", unsafe_allow_html=True)
     
     st.markdown("""
@@ -125,8 +104,9 @@ with tab1:
         sns.heatmap(corr, annot=True, cmap='YlOrBr', fmt=".2f", linewidths=.5, ax=ax)
         st.pyplot(fig)
 
-# Tab 2: Segmentation Model
-with tab2:
+
+def display_segmentation_model_tab(model_data, cluster_profiles):
+    """Display the Segmentation Model tab content."""
     st.markdown("<h3>Customer Segmentation Model</h3>", unsafe_allow_html=True)
     
     st.markdown("""
@@ -204,8 +184,9 @@ with tab2:
     age_income_fig = plot_age_income_clusters(model_data['data_with_clusters'])
     st.plotly_chart(age_income_fig, use_container_width=True)
 
-# Tab 3: Customer Predictor
-with tab3:
+
+def display_customer_predictor_tab(model_data, cluster_profiles):
+    """Display the Customer Predictor tab content."""
     st.markdown("<h3>Customer Segment Predictor</h3>", unsafe_allow_html=True)
     
     st.markdown("""
@@ -238,60 +219,79 @@ with tab3:
     
     # If form is submitted, make prediction
     if submitted:
-        # Create customer profile
-        customer = create_customer_profile(
+        display_prediction_results(
             age, income, gender, location, purchase_history,
-            website_visits, email_clicks, days_since_last_purchase, spending_score
+            website_visits, email_clicks, days_since_last_purchase, 
+            spending_score, model_data, cluster_profiles
         )
-        
-        # Predict cluster
-        cluster = predict_customer_cluster(customer, model_data)
-        
-        # Get profile for the predicted cluster
-        profile = next(p for p in cluster_profiles if p['cluster'] == cluster)
-        
-        # Store in session state for history
-        st.session_state.prediction_history.append({
-            'age': age,
-            'income': income,
-            'gender': gender,
-            'cluster': cluster,
-            'description': profile['description']
-        })
-        
-        # Display results
-        st.success(f"Customer assigned to Segment {cluster}: **{profile['description']}**")
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.subheader("Customer Profile")
-            st.json({
-                'age': age,
-                'income': f"${income:,}",
-                'gender': gender,
-                'location': location,
-                'purchase_history': purchase_history,
-                'website_visits': website_visits,
-                'email_clicks': f"{email_clicks:.1f}%",
-                'days_since_last_purchase': days_since_last_purchase,
-                'spending_score': spending_score
-            })
-        
-        with col2:
-            st.subheader("Segment Characteristics")
-            radar_fig = plot_cluster_radar_chart(cluster_profiles, cluster)
-            st.plotly_chart(radar_fig, use_container_width=True)
-        
-        st.subheader("Marketing Strategy")
-        st.markdown(f"""
-        <div class="feature-card">
-            <p><b>Recommended approach for this customer:</b></p>
-            <p>{profile['strategy']}</p>
-        </div>
-        """, unsafe_allow_html=True)
     
     # Display prediction history
+    display_prediction_history()
+    
+    # Example customers for quick testing
+    display_example_customers(model_data, cluster_profiles)
+
+
+def display_prediction_results(age, income, gender, location, purchase_history,
+                              website_visits, email_clicks, days_since_last_purchase, 
+                              spending_score, model_data, cluster_profiles):
+    """Display the prediction results for a customer."""
+    # Create customer profile
+    customer = create_customer_profile(
+        age, income, gender, location, purchase_history,
+        website_visits, email_clicks, days_since_last_purchase, spending_score
+    )
+    
+    # Predict cluster
+    cluster = predict_customer_cluster(customer, model_data)
+    
+    # Get profile for the predicted cluster
+    profile = next(p for p in cluster_profiles if p['cluster'] == cluster)
+    
+    # Store in session state for history
+    st.session_state.prediction_history.append({
+        'age': age,
+        'income': income,
+        'gender': gender,
+        'cluster': cluster,
+        'description': profile['description']
+    })
+    
+    # Display results
+    st.success(f"Customer assigned to Segment {cluster}: **{profile['description']}**")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.subheader("Customer Profile")
+        st.json({
+            'age': age,
+            'income': f"${income:,}",
+            'gender': gender,
+            'location': location,
+            'purchase_history': purchase_history,
+            'website_visits': website_visits,
+            'email_clicks': f"{email_clicks:.1f}%",
+            'days_since_last_purchase': days_since_last_purchase,
+            'spending_score': spending_score
+        })
+    
+    with col2:
+        st.subheader("Segment Characteristics")
+        radar_fig = plot_cluster_radar_chart(cluster_profiles, cluster)
+        st.plotly_chart(radar_fig, use_container_width=True)
+    
+    st.subheader("Marketing Strategy")
+    st.markdown(f"""
+    <div class="feature-card">
+        <p><b>Recommended approach for this customer:</b></p>
+        <p>{profile['strategy']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def display_prediction_history():
+    """Display the prediction history."""
     if st.session_state.prediction_history:
         st.subheader("Prediction History")
         
@@ -302,8 +302,10 @@ with tab3:
         
         # Display as table
         st.table(history_df)
-    
-    # Example customers for quick testing
+
+
+def display_example_customers(model_data, cluster_profiles):
+    """Display example customers for quick testing."""
     st.subheader("Try Example Customers")
     
     example_col1, example_col2, example_col3, example_col4 = st.columns(4)
@@ -373,8 +375,27 @@ with tab3:
                 # Reload page to show prediction
                 st.rerun()
 
-# Tab 4: Model Performance
-with tab4:
+
+def compute_inertia():
+    """Compute inertia for different numbers of clusters."""
+    data = get_customer_data()
+    inertia = []
+    silhouette = []
+    k_values = list(range(2, 11))  # Starting from 2 for silhouette score
+    
+    X_scaled, _, _ = preprocess_data(data)
+    
+    for k in k_values:
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans.fit(X_scaled)
+        inertia.append(kmeans.inertia_)
+        silhouette.append(silhouette_score(X_scaled, kmeans.labels_))
+    
+    return k_values, inertia, silhouette
+
+
+def display_model_performance_tab(model_data, data):
+    """Display the Model Performance & Evaluation tab content."""
     st.markdown("<h3>Model Performance & Evaluation</h3>", unsafe_allow_html=True)
     
     st.markdown("""
@@ -407,22 +428,6 @@ with tab4:
         # Create plot showing inertia vs number of clusters (elbow method)
         st.subheader("Finding Optimal Number of Clusters")
         
-        @st.cache_data
-        def compute_inertia():
-            inertia = []
-            silhouette = []
-            k_values = list(range(2, 11))  # Starting from 2 for silhouette score
-            
-            X_scaled, _, _ = preprocess_data(data)
-            
-            for k in k_values:
-                kmeans = KMeans(n_clusters=k, random_state=42)
-                kmeans.fit(X_scaled)
-                inertia.append(kmeans.inertia_)
-                silhouette.append(silhouette_score(X_scaled, kmeans.labels_))
-            
-            return k_values, inertia, silhouette
-        
         k_values, inertia_values, silhouette_values = compute_inertia()
         
         # Plot elbow curve
@@ -436,7 +441,7 @@ with tab4:
 
         # Plot silhouette scores
         plt.subplot(1, 2, 2)
-        plt.plot(k_values, silhouette_values, 'ro-')  # Now dimensions match
+        plt.plot(k_values, silhouette_values, 'ro-')
         plt.xlabel('Number of Clusters (k)')
         plt.ylabel('Silhouette Score')
         plt.title('Silhouette Method')
@@ -524,5 +529,57 @@ with tab4:
         A/B testing of targeted marketing strategies.
         """)
 
-# Display footer
-display_footer()
+
+def main():
+    """Main execution flow of the application."""
+    
+    # Initialize session state
+    initialize_session_state()
+    
+    # Render sidebar
+    with st.sidebar:
+        render_sidebar()
+        create_sidebar()
+    
+    # Display header
+    display_header()
+    
+    # Get data and build model
+    data = get_customer_data()
+    model_data = build_kmeans_model(data)
+    cluster_profiles = get_cluster_profile(model_data)
+    
+    # Create tabs
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Data Explorer", 
+        "🧩 Segmentation Model", 
+        "👤 Customer Predictor",
+        "📈 Model Performance"
+    ])
+    
+    # Display content for each tab
+    with tab1:
+        display_data_explorer_tab(data)
+    
+    with tab2:
+        display_segmentation_model_tab(model_data, cluster_profiles)
+    
+    with tab3:
+        display_customer_predictor_tab(model_data, cluster_profiles)
+    
+    with tab4:
+        display_model_performance_tab(model_data, data)
+    
+    # Display footer
+    display_footer()
+
+
+# Main execution flow
+if __name__ == "__main__":
+    setup_page()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
