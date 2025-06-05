@@ -294,7 +294,7 @@ def login() -> bool:
         )
         logout_url = (
             f"{config['domain']}/logout?client_id={config['client_id']}"
-            f"&logout_uri={config['logout_uri']}"
+            f"&logout_uri={config['redirect_uri']}"
         )
         
         # Check for authorization code in URL
