@@ -1536,7 +1536,7 @@ def main():
 # Main execution flow
 if __name__ == "__main__":
     # First check authentication
-    is_authenticated = authenticate.login()
+    is_authenticated = authenticate.login('/aip-session-1/')
     
     # If authenticated, show the main app content
     if is_authenticated:

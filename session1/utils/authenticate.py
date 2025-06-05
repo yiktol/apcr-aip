@@ -269,7 +269,7 @@ def render_logout_button(logout_url: str) -> None:
     html = css + f"<a href='{logout_url}' class='aws-button' target='_self'>Sign Out</a>"
     st.sidebar.markdown(html, unsafe_allow_html=True)
 
-def login() -> bool:
+def login(endpoint) -> bool:
     """
     Main authentication function to handle Cognito auth flow.
     
@@ -290,10 +290,12 @@ def login() -> bool:
         login_url = (
             f"{config['domain']}/login?client_id={config['client_id']}"
             f"&response_type=code&scope=email+openid&redirect_uri={config['redirect_uri']}"
+            f"{endpoint}"
         )
         logout_url = (
             f"{config['domain']}/logout?client_id={config['client_id']}"
             f"&logout_uri={config['redirect_uri']}"
+            f"{endpoint}"
         )
         
         # Check for authorization code in URL
