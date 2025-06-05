@@ -33,7 +33,10 @@ def get_cognito_credentials(secret_name="CognitoCredentials",region_name="us-eas
                 'COGNITO_APP_CLIENT_SECRET': secret.get('COGNITO_APP_CLIENT_SECRET'),
                 'COGNITO_APP_CLIENT_ID': secret.get('COGNITO_APP_CLIENT_ID'),
                 'COGNITO_REDIRECT_URI': secret.get('COGNITO_REDIRECT_URI'),
-                'LOGOUT_URI': secret.get('LOGOUT_URI')
+                'COGNITO_REDIRECT_URI_AIP_1': secret.get('COGNITO_REDIRECT_URI_AIP_1'),
+                'COGNITO_REDIRECT_URI_AIP_2': secret.get('COGNITO_REDIRECT_URI_AIP_2'),
+                'COGNITO_REDIRECT_URI_AIP_3': secret.get('COGNITO_REDIRECT_URI_AIP_3'),
+                'COGNITO_REDIRECT_URI_AIP_4': secret.get('COGNITO_REDIRECT_URI_AIP_4')
             }
             
             return cognito_credentials
