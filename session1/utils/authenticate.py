@@ -63,7 +63,7 @@ def load_cognito_config() -> Dict[str, str]:
         # Log successful credential retrieval with masked values
         logger.info("Successfully retrieved Cognito credentials")
         required_keys = ["COGNITO_DOMAIN", "COGNITO_APP_CLIENT_ID", 
-                         "COGNITO_APP_CLIENT_SECRET", "COGNITO_REDIRECT_URI"]
+                         "COGNITO_APP_CLIENT_SECRET", "COGNITO_REDIRECT_URI","LOGOUT_URI"]
         
         # Check for required keys
         missing_keys = [key for key in required_keys if not credentials.get(key)]
@@ -74,7 +74,8 @@ def load_cognito_config() -> Dict[str, str]:
             "domain": credentials.get("COGNITO_DOMAIN"),
             "client_id": credentials.get("COGNITO_APP_CLIENT_ID"),
             "client_secret": credentials.get("COGNITO_APP_CLIENT_SECRET"),
-            "redirect_uri": credentials.get("COGNITO_REDIRECT_URI")
+            "redirect_uri": credentials.get("COGNITO_REDIRECT_URI"),
+            "logout_uri": credentials.get("LOGOUT_URI")
         }
     except Exception as e:
         logger.error(f"Failed to retrieve Cognito credentials: {str(e)}")
@@ -293,7 +294,7 @@ def login() -> bool:
         )
         logout_url = (
             f"{config['domain']}/logout?client_id={config['client_id']}"
-            f"&logout_uri={config['redirect_uri']}"
+            f"&logout_uri={config['logout_uri']}"
         )
         
         # Check for authorization code in URL
