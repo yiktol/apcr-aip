@@ -10,7 +10,7 @@ import uuid
 import time
 import json
 from typing import List, Dict, Any, Optional
-
+import utils.authenticate as authenticate
 # LangChain imports
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
@@ -802,4 +802,9 @@ def main():
     st.markdown('<div class="footer">© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

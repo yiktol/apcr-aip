@@ -5,6 +5,7 @@ from datetime import datetime
 import pandas as pd
 import uuid
 import utils.common as common
+import utils.authenticate as authenticate
 # --- Constants ---
 AWS_ORANGE = "#FF9900"
 AWS_BLUE = "#232F3E"
@@ -856,4 +857,9 @@ def main():
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

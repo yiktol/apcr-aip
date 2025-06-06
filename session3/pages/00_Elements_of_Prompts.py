@@ -10,7 +10,7 @@ import uuid
 import time
 import json
 import utils.common as common
-
+import utils.authenticate as authenticate
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -1325,10 +1325,7 @@ def main():
     
     # Add sidebar content
     sidebar_content()
-    
 
-    
-    
     # Header
     st.markdown("<h1 class='main-header'>Effective Prompt Components</h1>", unsafe_allow_html=True)
     
@@ -1371,4 +1368,9 @@ def main():
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

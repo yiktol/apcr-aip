@@ -16,3 +16,4 @@ langchain_aws
 torch
 seaborn>=0.12.0
 amazon_transcribe
+nest_asyncio

@@ -6,7 +6,7 @@ import uuid
 import random
 from datetime import datetime
 import matplotlib.pyplot as plt
-
+import utils.authenticate as authenticate
 
 # Page configuration for a modern look and feel
 st.set_page_config(
@@ -839,4 +839,9 @@ def main():
     st.caption("Created for foundation model fine-tuning - For educational purposes only")
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
