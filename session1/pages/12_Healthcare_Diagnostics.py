@@ -60,8 +60,8 @@ def initialize_session_state():
 
 def reset_session():
     """Reset all session state variables"""
-    for key in list(st.session_state.keys()):
-        if key != 'session_id':  # Keep the same session ID
+    for key in st.session_state.keys():
+        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
             del st.session_state[key]
     
     # Reinitialize essential variables

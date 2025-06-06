@@ -26,13 +26,9 @@ def init_session_state():
         st.session_state.last_activity = datetime.datetime.now()
 
 def reset_session():
-    for key in list(st.session_state.keys()):
-        if key != "session_id":
+    for key in st.session_state.keys():
+        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
             del st.session_state[key]
-    st.session_state.session_id = str(uuid.uuid4())
-    st.session_state.last_activity = datetime.datetime.now()
-    st.session_state.model = None
-    st.session_state.scaler = None
 
 # Set page configuration with AWS color scheme
 def configure_page():

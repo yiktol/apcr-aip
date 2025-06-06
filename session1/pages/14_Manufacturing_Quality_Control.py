@@ -76,8 +76,9 @@ def initialize_session_state():
         }).sort_values('Importance', ascending=False)
 
 def reset_session():
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
+    for key in st.session_state.keys():
+        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
+            del st.session_state[key]
     initialize_session_state()
     st.rerun()
 

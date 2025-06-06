@@ -167,7 +167,7 @@ def render_sidebar():
             logger.info("Resetting entire session")
             session_id = st.session_state.session_id  # Preserve session ID
             for key in list(st.session_state.keys()):
-                if key != "session_id":
+                if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
                     del st.session_state[key]
             st.session_state.session_id = session_id
             st.rerun()

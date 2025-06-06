@@ -317,7 +317,8 @@ def get_shap_values(_model, X_sample, _model_name, feature_names):
 def reset_session():
     """Reset all session state variables"""
     for key in st.session_state.keys():
-        del st.session_state[key]
+        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
+            del st.session_state[key]
     st.rerun()
 
 def show_sidebar(df):
