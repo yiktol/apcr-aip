@@ -154,7 +154,7 @@ def render_sidebar():
         st.title("⚙️ Options")
         
         st.subheader("Session Management")
-        st.caption(f"Session ID: {st.session_state.session_id}")
+        st.caption(f"Session ID: {st.session_state['auth_code'][:8]}")
         
         if st.button("🗑️ Clear Chat", use_container_width=True):
             logger.info("Clearing chat history")

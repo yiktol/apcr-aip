@@ -20,7 +20,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from streamlit.components.v1 import html
 import utils.authenticate as authenticate
-
+import utils.common as common
 # Set page configuration
 st.set_page_config(
     page_title="ML Governance with Amazon SageMaker",
@@ -1957,14 +1957,7 @@ def main():
     
     # Sidebar content
     with st.sidebar:
-        st.title("Session Management")
-        st.info(f"User ID: {st.session_state.user_id}")
-        
-        if st.button("Reset Session"):
-            reset_session()
-            st.rerun()
-        
-        st.divider()
+        common.render_sidebar()
         # Information about the application
         with st.expander("About this application", expanded=False):
             st.markdown("""
