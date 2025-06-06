@@ -21,7 +21,7 @@ def initialize_session_state():
 def reset_session():
     """Reset the session state"""
     for key in st.session_state.keys():
-        if key != "session_id":
+        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
             del st.session_state[key]
     
     
