@@ -11,7 +11,7 @@ import datetime
 import random
 import io
 from utils.styles import load_css, custom_header
-from utils.common import render_sidebar
+import utils.common as common
 import utils.authenticate as authenticate
 
 
@@ -1448,7 +1448,7 @@ def setup_page():
 def render_sidebar():
     """Render the sidebar content."""
     with st.sidebar:
-        render_sidebar()
+        common.render_sidebar()
         
         # About this App (collapsible)
         with st.expander("About this App", expanded=False):

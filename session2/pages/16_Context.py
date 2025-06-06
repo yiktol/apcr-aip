@@ -5,7 +5,7 @@ import uuid
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
 from langchain_aws import ChatBedrock
-from utils.common import render_sidebar
+import utils.common as common
 import utils.authenticate as authenticate
 
 # Configure the page
@@ -183,7 +183,7 @@ def reset_session():
 
 def render_sidebar():
     """Render the sidebar content."""
-    render_sidebar()  # From utils.common
+    common.render_sidebar()  # From utils.common
     clear_chat_btn = st.sidebar.button("🧹 Clear Chat History", key="clear_chat")
     
     if clear_chat_btn:
