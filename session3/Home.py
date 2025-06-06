@@ -11,14 +11,16 @@ from utils.styles import load_css, custom_header
 from utils.common import render_sidebar, initialize_session_state
 import utils.authenticate as authenticate
 
+st.set_page_config(
+    page_title="AWS AI Practitioner - Domain 3",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+
 # Set page configuration
 def configure_page():
-    st.set_page_config(
-        page_title="AWS AI Practitioner - Domain 3",
-        page_icon="🤖",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
     
     # AWS color scheme
     AWS_COLORS = {

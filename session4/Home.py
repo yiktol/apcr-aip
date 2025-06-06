@@ -11,7 +11,7 @@ import plotly.express as px
 from PIL import Image
 from utils.styles import load_css, custom_header
 import utils.common as common
-
+import utils.authenticate as authenticate
 # Set page configuration
 st.set_page_config(
     page_title="AWS AI Practitioner - Domain 4 & 5",
@@ -3535,4 +3535,9 @@ def main():
 
 # Run the application
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

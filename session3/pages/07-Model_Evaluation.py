@@ -7,6 +7,14 @@ import utils.model_based_grading as mbg
 import utils.common as common
 import utils.authenticate as authenticate
 
+
+st.set_page_config(
+    page_title="LLM Prompt Components Guide",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # Global constants
 MODEL_ID = 'anthropic.claude-3-sonnet-20240229-v1:0'
 
@@ -31,12 +39,6 @@ def init_session_state():
 
 def setup_page_config():
     """Configure page settings and custom styling"""
-    st.set_page_config(
-        page_title="LLM Prompt Components Guide",
-        page_icon="🧠",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
     
     # Apply custom CSS styling
     st.markdown("""

@@ -19,6 +19,15 @@ import requests
 import plotly.graph_objects as go
 import plotly.express as px
 from streamlit.components.v1 import html
+import utils.authenticate as authenticate
+
+# Set page configuration
+st.set_page_config(
+    page_title="ML Governance with Amazon SageMaker",
+    page_icon="🔐",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 
 def initialize_session_state():
@@ -1788,13 +1797,7 @@ def get_fairness_explanation(metric_name, status):
 
 # Main application
 def main():
-    # Set page configuration
-    st.set_page_config(
-        page_title="ML Governance with Amazon SageMaker",
-        page_icon="🔐",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+
     
     # Initialize session state
     initialize_session_state()
@@ -2715,4 +2718,9 @@ print(f"Model monitoring scheduled for endpoint {predictor.endpoint_name}")
 
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

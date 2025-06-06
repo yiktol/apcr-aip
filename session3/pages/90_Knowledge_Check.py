@@ -6,6 +6,16 @@ import pandas as pd
 import uuid
 import utils.common as common
 import utils.authenticate as authenticate
+
+
+# Set page configuration
+st.set_page_config(
+    page_title="AWS AI Practitioner Quiz",
+    page_icon="☁️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # --- Constants ---
 AWS_ORANGE = "#FF9900"
 AWS_BLUE = "#232F3E"
@@ -805,13 +815,6 @@ def get_quiz_data():
 # --- Main App ---
 def main():
     """Main application entry point."""
-    # Set page configuration
-    st.set_page_config(
-        page_title="AWS AI Practitioner Quiz",
-        page_icon="☁️",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
     
     # Initialize session state
     initialize_session_state()

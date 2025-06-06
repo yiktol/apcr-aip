@@ -14,7 +14,7 @@ import time
 from PIL import Image
 import random
 import hashlib
-
+import utils.authenticate as authenticate
 # Set page config
 st.set_page_config(
     page_title="Responsible AI Explorer",
@@ -1332,4 +1332,9 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
