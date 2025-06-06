@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,55 +12,11 @@ import random
 import io
 from utils.styles import load_css, custom_header
 from utils.common import render_sidebar
-
-# Set page configuration
-st.set_page_config(
-    page_title="AWS Gen AI Learning Hub",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Initialize session state
-if "session_id" not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
-    
-if "knowledge_check_started" not in st.session_state:
-    st.session_state.knowledge_check_started = False
-
-if "knowledge_check_progress" not in st.session_state:
-    st.session_state.knowledge_check_progress = 0
-    
-if "knowledge_check_answers" not in st.session_state:
-    st.session_state.knowledge_check_answers = {}
-
-load_css()
+import utils.authenticate as authenticate
 
 
-# Sidebar
-with st.sidebar:
-    
-    render_sidebar()
-    
-    # About this App (collapsible)
-    with st.expander("About this App", expanded=False):
-        st.write("""
-        This application is an interactive e-learning tool for AWS Certified AI Practitioner 
-        candidates focusing on Domain 2: Fundamentals of Generative AI.
-        
-        **Topics Covered:**
-        - Foundation Models
-        - Transformer Architecture
-        - FM Inference Parameters
-        - Context in Foundation Models
-        - Concerns of Generative AI
-        - AWS Generative AI Stack
-        - Model Training and Fine Tuning
-        - Knowledge Checks
-        """)
-    
-# Helper functions for visualizations
 def create_transformer_architecture():
+    """Create a visual representation of the transformer architecture."""
     fig = go.Figure()
     
     # Add encoder block
@@ -100,7 +55,6 @@ def create_transformer_architecture():
         arrowsize=1,
         arrowwidth=2
     )
-
     
     # Add labels
     fig.add_annotation(x=0.25, y=0.95, text="Encoder", showarrow=False)
@@ -124,7 +78,9 @@ def create_transformer_architecture():
     
     return fig
 
+
 def create_temperature_plot():
+    """Create a plot showing the effect of temperature on token probability distribution."""
     # Create data for the plot
     x = np.linspace(1, 10, 100)
     
@@ -165,7 +121,9 @@ def create_temperature_plot():
     
     return fig
 
+
 def create_top_k_p_visual():
+    """Create a visualization of top-k and top-p sampling parameters."""
     # Create dummy data for token probabilities
     tokens = ["cat", "dog", "bird", "fish", "lion", "tiger", "elephant", "zebra"]
     probabilities = [0.30, 0.25, 0.15, 0.10, 0.08, 0.06, 0.04, 0.02]
@@ -215,6 +173,7 @@ def create_top_k_p_visual():
 
 
 def create_aws_gen_ai_stack():
+    """Create a Sankey diagram to represent the AWS Gen AI stack."""
     # Create a Sankey diagram to represent the AWS Gen AI stack
     labels = [
         # Infrastructure Layer
@@ -264,7 +223,9 @@ def create_aws_gen_ai_stack():
     
     return fig
 
+
 def create_model_customization_approaches():
+    """Create a radar chart of different model customization approaches."""
     # Create data
     approaches = ["Prompt Engineering", "RAG", "Fine-tuning", "Continued Pretraining"]
     
@@ -300,7 +261,9 @@ def create_model_customization_approaches():
     
     return fig
 
+
 def create_knowledge_check():
+    """Create an interactive knowledge check quiz."""
     # If knowledge check hasn't been started yet
     if not st.session_state.knowledge_check_started:
         st.subheader("Test Your Knowledge")
@@ -466,22 +429,10 @@ def create_knowledge_check():
             st.session_state.knowledge_check_answers = {}
             st.rerun()
 
-# Main page content with tabs
-tabs = st.tabs([
-    "🏠 Home", 
-    "🧠 Foundation Models", 
-    "⚙️ Transformer Architecture",
-    "🎛️ FM Inference Parameters",
-    "📝 Context",
-    "⚠️ Concerns",
-    "☁️ AWS Gen AI Stack",
-    "🔄 Model Training",
-    "❓ Knowledge Checks"
-])
 
-# Home tab
-with tabs[0]:
-    st.markdown(custom_header("Fundamentals of Generative AI", 1 ), unsafe_allow_html=True)
+def render_home_tab():
+    """Render the home tab content."""
+    st.markdown(custom_header("Fundamentals of Generative AI", 1), unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
@@ -525,8 +476,9 @@ with tabs[0]:
         </div>
         """, unsafe_allow_html=True)
 
-# Foundation Models tab
-with tabs[1]:
+
+def render_foundation_models_tab():
+    """Render the foundation models tab content."""
     st.title("Foundation Models")
     
     col1, col2 = st.columns([3, 2])
@@ -614,8 +566,9 @@ with tabs[1]:
             st.success(f"{prompt} cat.")
             st.info("The foundation model understands relationships between concepts - in this case, that a kitten is a young cat, just as a puppy is a young dog.")
 
-# Transformer Architecture tab
-with tabs[2]:
+
+def render_transformer_architecture_tab():
+    """Render the transformer architecture tab content."""
     st.title("Transformer Architecture")
     
     col1, col2 = st.columns([2, 2])
@@ -780,8 +733,9 @@ with tabs[2]:
                 return self.dropout(x)
         """)
 
-# Inference Parameters tab
-with tabs[3]:
+
+def render_inference_parameters_tab():
+    """Render the inference parameters tab content."""
     st.title("Foundation Model Inference Parameters")
     
     st.markdown("""
@@ -920,8 +874,9 @@ with tabs[3]:
         print(result)
         """)
 
-# Context tab
-with tabs[4]:
+
+def render_context_tab():
+    """Render the context tab content."""
     st.title("Context in Foundation Models")
     
     col1, col2 = st.columns([3, 2])
@@ -1034,8 +989,8 @@ with tabs[4]:
         st.plotly_chart(fig, use_container_width=True)
 
 
-# Concerns tab
-with tabs[5]:
+def render_concerns_tab():
+    """Render the concerns tab content."""
     st.title("Concerns of Generative AI")
     
     st.markdown("""
@@ -1164,8 +1119,9 @@ with tabs[5]:
     
     st.plotly_chart(fig, use_container_width=True)
 
-# AWS Gen AI Stack tab
-with tabs[6]:
+
+def render_aws_gen_ai_stack_tab():
+    """Render the AWS Gen AI Stack tab content."""
     st.title("AWS Generative AI Stack")
     
     st.markdown("""
@@ -1300,8 +1256,9 @@ with tabs[6]:
         print(completion)
         """)
 
-# Model Training tab
-with tabs[7]:
+
+def render_model_training_tab():
+    """Render the model training tab content."""
     st.title("Model Training and Fine Tuning")
     
     st.markdown("""
@@ -1454,14 +1411,130 @@ with tabs[7]:
             Use Amazon SageMaker for training on financial texts and implement secure RAG with Amazon Bedrock Knowledge Bases
             """)
 
-# Knowledge Checks tab
-with tabs[8]:
+
+def render_knowledge_checks_tab():
+    """Render the knowledge checks tab content."""
     st.title("Knowledge Checks")
     create_knowledge_check()
 
-# Footer
-st.markdown("""
-<div class='aws-footer'>
-© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
-</div>
-""", unsafe_allow_html=True)
+
+def initialize_session_state():
+    """Initialize session state variables."""
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+        
+    if "knowledge_check_started" not in st.session_state:
+        st.session_state.knowledge_check_started = False
+
+    if "knowledge_check_progress" not in st.session_state:
+        st.session_state.knowledge_check_progress = 0
+        
+    if "knowledge_check_answers" not in st.session_state:
+        st.session_state.knowledge_check_answers = {}
+
+
+def setup_page():
+    """Set up the page configuration."""
+    st.set_page_config(
+        page_title="AWS Gen AI Learning Hub",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
+    load_css()
+
+
+def render_sidebar():
+    """Render the sidebar content."""
+    with st.sidebar:
+        render_sidebar()
+        
+        # About this App (collapsible)
+        with st.expander("About this App", expanded=False):
+            st.write("""
+            This application is an interactive e-learning tool for AWS Certified AI Practitioner 
+            candidates focusing on Domain 2: Fundamentals of Generative AI.
+            
+            **Topics Covered:**
+            - Foundation Models
+            - Transformer Architecture
+            - FM Inference Parameters
+            - Context in Foundation Models
+            - Concerns of Generative AI
+            - AWS Generative AI Stack
+            - Model Training and Fine Tuning
+            - Knowledge Checks
+            """)
+
+
+def render_footer():
+    """Render the footer content."""
+    st.markdown("""
+    <div class='aws-footer'>
+    © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def main():
+    """Main function to run the application."""
+    # Setup page and initialize session state
+    initialize_session_state()
+    
+    # Render sidebar
+    render_sidebar()
+    
+    # Main page content with tabs
+    tabs = st.tabs([
+        "🏠 Home", 
+        "🧠 Foundation Models", 
+        "⚙️ Transformer Architecture",
+        "🎛️ FM Inference Parameters",
+        "📝 Context",
+        "⚠️ Concerns",
+        "☁️ AWS Gen AI Stack",
+        "🔄 Model Training",
+        "❓ Knowledge Checks"
+    ])
+    
+    # Render each tab's content
+    with tabs[0]:
+        render_home_tab()
+    
+    with tabs[1]:
+        render_foundation_models_tab()
+    
+    with tabs[2]:
+        render_transformer_architecture_tab()
+    
+    with tabs[3]:
+        render_inference_parameters_tab()
+    
+    with tabs[4]:
+        render_context_tab()
+    
+    with tabs[5]:
+        render_concerns_tab()
+    
+    with tabs[6]:
+        render_aws_gen_ai_stack_tab()
+    
+    with tabs[7]:
+        render_model_training_tab()
+    
+    with tabs[8]:
+        render_knowledge_checks_tab()
+    
+    # Render footer
+    render_footer()
+
+
+if __name__ == "__main__":
+    setup_page()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

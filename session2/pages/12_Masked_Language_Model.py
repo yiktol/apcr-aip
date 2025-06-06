@@ -7,17 +7,18 @@ import plotly.graph_objects as go
 import time
 from utils.common import render_sidebar
 from utils.styles import load_css, custom_header, load_css
+import utils.authenticate as authenticate
 
+st.set_page_config(
+    page_title="BERT Masked Language Prediction",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # App configuration and styling
 def setup_page():
-    st.set_page_config(
-        page_title="BERT Masked Language Prediction",
-        page_icon="🤖",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-    
+   
     # Custom CSS for enhanced UI
     st.markdown("""
     <style>
@@ -251,4 +252,9 @@ def main():
     st.markdown("<div class='aws-footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

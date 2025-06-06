@@ -9,7 +9,7 @@ from PIL import Image
 import time
 from utils.styles import load_css, custom_header, load_css
 from utils.common import render_sidebar
-
+import utils.authenticate as authenticate
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -942,4 +942,9 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

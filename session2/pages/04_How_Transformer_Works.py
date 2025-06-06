@@ -3,16 +3,18 @@ import uuid
 from utils.styles import load_css
 from utils.knowledge_check import display_knowledge_check
 from utils.common import initialize_session_state, render_sidebar
+import utils.authenticate as authenticate
+
+# Set page configuration
+st.set_page_config(
+    page_title="How Transformer Works",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 
 def main():
-    
-    # Set page configuration
-    st.set_page_config(
-        page_title="How Transformer Works",
-        page_icon="🧠",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
     # Load CSS
     load_css()
     
@@ -557,4 +559,9 @@ def display_output_generation(input_text, temperature, max_tokens):
 
 
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()

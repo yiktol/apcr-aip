@@ -14,6 +14,14 @@ import base64
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from utils.styles import load_css, custom_header, load_css, create_footer
 from utils.common import render_sidebar
+import utils.authenticate as authenticate
+
+# Set page configuration
+st.set_page_config(
+    page_title="Transformer Architecture",
+    page_icon="🤖",
+    layout="wide"
+)
 
 # Initialize session state
 def initialize_session_state():
@@ -1282,12 +1290,6 @@ def about_app():
 # Main app
 def main():
     
-    # Set page configuration
-    st.set_page_config(
-        page_title="Transformer Architecture",
-        page_icon="🤖",
-        layout="wide"
-    )
     # Initialize session state
     initialize_session_state()
     
@@ -1357,4 +1359,9 @@ The Transformer architecture revolutionized machine learning through its self-at
 
 # Call the main function
 if __name__ == "__main__":
-    main()
+    # First check authentication
+    is_authenticated = authenticate.login()
+    
+    # If authenticated, show the main app content
+    if is_authenticated:
+        main()
