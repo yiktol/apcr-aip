@@ -17,3 +17,8 @@ torch
 seaborn>=0.12.0
 amazon_transcribe
 nest_asyncio
+gensim
+nltk
+jsonlines
+scipy
+stqdm
