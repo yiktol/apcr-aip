@@ -214,7 +214,7 @@ def main() -> None:
         prompt_data = st.text_area(
             "Enter text to vectorize",
             placeholder="Write me a poem about apples...",
-            value="Write me a poem about apples",
+            value="A puppy is to dog as kitten is to cat.",
             height=150,
             help="Text will be converted to a 1536-dimensional vector"
         )

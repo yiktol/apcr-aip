@@ -770,7 +770,7 @@ def image_analysis_interface(model_id):
             
             # Display the uploaded image
             image = Image.open(BytesIO(image_bytes))
-            st.image(image, caption="Uploaded Image", use_column_width=True)
+            st.image(image, caption="Uploaded Image", use_container_width=True)
     else:
         # Sample image
         sample_image_path = "images/sg_skyline.jpeg"
@@ -778,7 +778,7 @@ def image_analysis_interface(model_id):
             with open(sample_image_path, "rb") as f:
                 image_bytes = f.read()
             image_format = "jpeg"
-            st.image(sample_image_path, caption="Sample Image", use_column_width=True)
+            st.image(sample_image_path, caption="Sample Image", use_container_width=True)
         else:
             st.error("Sample image not found. Please use the upload option.")
     

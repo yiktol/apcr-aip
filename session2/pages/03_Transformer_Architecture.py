@@ -164,7 +164,7 @@ def sentence_completion_tab():
     with col1:
         prompt = st.text_area(
             "Enter a prompt:", 
-            "The artificial intelligence revolution has led to",
+            "A puppy is to dog as kitten is to",
             height=100
         )
         submit = st.button("✨ Generate Completion", use_container_width=True)
@@ -252,7 +252,7 @@ def tokenization_tab():
     
     demo_text = st.text_input(
         "Enter text to tokenize:", 
-        "Transformers are powerful neural networks for NLP tasks."
+        "A puppy is to dog as kitten is to cat."
     )
     
     if demo_text:
@@ -536,7 +536,7 @@ def attention_tab():
     # Input for attention visualization
     attention_demo_text = st.text_input(
         "Enter a sentence to visualize attention:",
-        "The cat sat on the mat because it was comfortable."
+        "A puppy is to dog as kitten is to cat."
     )
     
     if attention_demo_text:

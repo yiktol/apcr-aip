@@ -234,7 +234,7 @@ def display_word_similarities(model, vocab):
 def main():
     """Main application function."""
     st.markdown('<h1 class="main-header">Word2Vec Text Vectorizer</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Transform text into numerical vectors using Word2Vec</p>', unsafe_allow_html=True)
+    st.markdown('<p class="info-box">Transform text into numerical vectors using Word2Vec</p>', unsafe_allow_html=True)
     
     # Download dependencies
     with st.spinner("Loading required resources..."):
@@ -289,7 +289,7 @@ def main():
                 "Enter text to vectorize:",
                 height=150,
                 placeholder="Example: A puppy is to dog as kitten is to cat.",
-                value="Natural language processing is a subfield of artificial intelligence."
+                value="A puppy is to dog as kitten is to cat."
             )
             submitted = st.form_submit_button("Vectorize Text", use_container_width=True)
         

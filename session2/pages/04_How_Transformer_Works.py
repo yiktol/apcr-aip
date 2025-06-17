@@ -95,7 +95,7 @@ def tokenization_tab():
     # Example sentence input
     example_sentence = st.text_input(
         "Enter a sentence to tokenize:", 
-        value="A puppy is to dog as kitten is to ...",
+        value="A puppy is to dog as kitten is to",
         key="tokenization_input"
     )
     
