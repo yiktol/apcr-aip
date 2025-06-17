@@ -195,7 +195,19 @@ def initialize_session() -> None:
 
 def render_sidebar() -> None:
     """Render the sidebar with settings and controls"""
-    common.render_sidebar()
+    with st.sidebar:
+        common.render_sidebar()
+        st.write(st.session_state["user_cognito_groups"])
+        
+        if st.button("🗑️ Clear Chat", use_container_width=True):
+            current_time = datetime.now().strftime("%H:%M")
+            st.session_state.chat_history = [{
+                "role": "assistant", 
+                "text": "Chat history has been cleared. How can I help you?",
+                "timestamp": current_time
+            }]
+            st.rerun()
+    
     
     # st.sidebar.markdown("## 👟 Assistant Settings")
     
@@ -219,27 +231,7 @@ def render_sidebar() -> None:
         except Exception as e:
             st.error(f"Error creating download: {e}")
     
-    st.sidebar.markdown("### Actions")
-    
-    col1, col2 = st.sidebar.columns(2)
-    
-    with col1:
-        if st.button("🗑️ Clear Chat", use_container_width=True):
-            current_time = datetime.now().strftime("%H:%M")
-            st.session_state.chat_history = [{
-                "role": "assistant", 
-                "text": "Chat history has been cleared. How can I help you?",
-                "timestamp": current_time
-            }]
-            st.rerun()
-    
-    with col2:
-        if st.button("🔄 Reset Session", use_container_width=True):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            logger.info("Session reset")
-            st.rerun()
-    
+
     if st.session_state["user_cognito_groups"] == 'Admins':
         st.sidebar.markdown("### Debug Options")
         show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
