@@ -199,7 +199,7 @@ def render_sidebar() -> None:
         common.render_sidebar()
         # st.write(st.session_state["user_cognito_groups"])
         
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        if st.button("🗑️ Clear Chat", use_container_width=False):
             current_time = datetime.now().strftime("%H:%M")
             st.session_state.chat_history = [{
                 "role": "assistant", 
