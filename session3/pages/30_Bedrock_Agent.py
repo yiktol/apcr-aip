@@ -208,13 +208,13 @@ def render_sidebar() -> None:
             }]
             st.rerun()
     
-    
-    # st.sidebar.markdown("## 👟 Assistant Settings")
-    
-    # with st.sidebar.expander("Session Information", expanded=False):
-    #     st.code(f"Session ID: {st.session_state.session_id}")
-    #     st.text(f"Messages: {len(st.session_state.chat_history)}")
-        
+        if st.session_state["user_cognito_groups"][0] == 'Admins':
+            st.sidebar.markdown("### Debug Options")
+            show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
+            if show_debug != st.session_state.get('show_debug'):
+                st.session_state.show_debug = show_debug
+                st.rerun()
+                       
         if st.session_state.get('show_debug', False):
             try:
                 history_json = json.dumps(
@@ -230,14 +230,6 @@ def render_sidebar() -> None:
                 )
             except Exception as e:
                 st.error(f"Error creating download: {e}")
-        
-
-        if st.session_state["user_cognito_groups"][0] == 'Admins':
-            st.sidebar.markdown("### Debug Options")
-            show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
-            if show_debug != st.session_state.get('show_debug'):
-                st.session_state.show_debug = show_debug
-                st.rerun()
         
         st.sidebar.markdown("---")
         st.sidebar.info(
