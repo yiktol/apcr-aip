@@ -4,6 +4,7 @@ import boto3
 import uuid
 import os
 from botocore.exceptions import ClientError
+from botocore.client import Config
 from io import BytesIO
 from PIL import Image
 import time
@@ -44,17 +45,26 @@ def reset_session():
 
 # ------- API FUNCTIONS -------
 
-def text_conversation(bedrock_client, model_id, messages, **params):
+def text_conversation(bedrock_client, model_id, messages, system_prompts=None, **params):
     """Sends messages to a model."""
     logger.info(f"Generating message with model {model_id}")
     
     try:
-        response = bedrock_client.converse(
-            modelId=model_id,
-            messages=messages,
-            inferenceConfig=params,
-            additionalModelRequestFields={}
-        )
+        # For DeepSeek model, include system prompts
+        if "deepseek" in model_id.lower():
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=messages,
+                system=system_prompts if system_prompts else [{"text": "You are a helpful AI assistant."}],
+                inferenceConfig=params,
+            )
+        else:
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=messages,
+                inferenceConfig=params,
+                additionalModelRequestFields={}
+            )
         
         # Log token usage
         token_usage = response['usage']
@@ -63,31 +73,68 @@ def text_conversation(bedrock_client, model_id, messages, **params):
         logger.info(f"Total tokens: {token_usage['totalTokens']}")
         logger.info(f"Stop reason: {response['stopReason']}")
         
+        # Process the output for DeepSeek model to remove reasoning content if needed
+        if "deepseek" in model_id.lower():
+            output_message = response['output']['message']
+            output_contents = []
+            for content in output_message["content"]:
+                if content.get("reasoningContent"):
+                    # Keep track of reasoning for display purposes
+                    response['reasoning'] = content.get("reasoningContent", {}).get("reasoningText", {}).get("text", "")
+                    continue
+                else:
+                    output_contents.append(content)
+            output_message["content"] = output_contents
+        
         return response
     except ClientError as err:
         st.error(f"Error: {err.response['Error']['Message']}")
         logger.error(f"A client error occurred: {err.response['Error']['Message']}")
         return None
 
-def stream_conversation(bedrock_client, model_id, messages, inference_config):
+def stream_conversation(bedrock_client, model_id, messages, inference_config, system_prompts=None):
     """Simulates streaming by displaying the response gradually."""
     logger.info(f"Simulating streaming for model {model_id}")
     
     try:
-        # Make a regular synchronous call
-        response = bedrock_client.converse(
-            modelId=model_id,
-            messages=messages,
-            inferenceConfig=inference_config,
-            additionalModelRequestFields={}
-        )
-        
-        # Get the full response text
-        output_message = response['output']['message']
-        full_text = ""
-        for content in output_message['content']:
-            if 'text' in content:
-                full_text += content['text']
+        # Make a regular synchronous call, adding system for DeepSeek model
+        if "deepseek" in model_id.lower():
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=messages,
+                system=system_prompts if system_prompts else [{"text": "You are a helpful AI assistant."}],
+                inferenceConfig=inference_config,
+            )
+            
+            # Process the output for DeepSeek model
+            output_message = response['output']['message']
+            full_text = ""
+            reasoning_text = ""
+            
+            for content in output_message['content']:
+                if 'text' in content:
+                    full_text += content['text']
+                elif content.get("reasoningContent"):
+                    reasoning_content = content.get("reasoningContent", {})
+                    if reasoning_content.get("reasoningText", {}).get("text"):
+                        reasoning_text = reasoning_content["reasoningText"]["text"]
+            
+        else:
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=messages,
+                inferenceConfig=inference_config,
+                additionalModelRequestFields={}
+            )
+            
+            # Get the full response text
+            output_message = response['output']['message']
+            full_text = ""
+            reasoning_text = ""
+            
+            for content in output_message['content']:
+                if 'text' in content:
+                    full_text += content['text']
         
         # Simulate streaming by displaying the text gradually
         placeholder = st.empty()
@@ -114,9 +161,16 @@ def stream_conversation(bedrock_client, model_id, messages, inference_config):
         col3.metric("Total Tokens", token_usage['totalTokens'])
         st.caption(f"Stop reason: {response['stopReason']}")
         
+        # Show reasoning if available (for DeepSeek model) - using a container instead of expander
+        if reasoning_text:
+            st.markdown("### AI Reasoning")
+            with st.container():
+                st.markdown(reasoning_text)
+        
         # Return the data
         return {
             'response': full_text,
+            'reasoning': reasoning_text if reasoning_text else "",
             'tokens': {
                 'input': token_usage['inputTokens'],
                 'output': token_usage['outputTokens'],
@@ -144,6 +198,7 @@ def model_selection_panel():
         "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
         "Anthropic": ["anthropic.claude-v2:1", "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0"],
         "Cohere": ["cohere.command-text-v14:0", "cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
+        "DeepSeek": ["us.deepseek.r1-v1:0"],  # Added DeepSeek model
         "Meta": ["meta.llama3-70b-instruct-v1:0", "meta.llama3-8b-instruct-v1:0"],
         "Mistral": ["mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
                    "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"]
@@ -163,6 +218,17 @@ def model_selection_panel():
         help="Streaming provides real-time responses, while Synchronous waits for complete response",
         key="side_api_method"
     )
+    
+    # Add system prompt field for DeepSeek models
+    system_prompt = None
+    if "deepseek" in model_id.lower():
+        st.markdown("<div class='side-header'>System Prompt</div>", unsafe_allow_html=True)
+        system_prompt = st.text_area(
+            "System Prompt", 
+            value="You are a helpful AI assistant with strong ethical guardrails. You respond factually and accurately.",
+            key="side_system_prompt",
+            help="Instructions that guide the model's behavior throughout the conversation"
+        )
     
     st.markdown("<div class='side-header'>Parameter Tuning</div>", unsafe_allow_html=True)
     
@@ -202,7 +268,7 @@ def model_selection_panel():
         "maxTokens": max_tokens
     }
     
-    return model_id, params, api_method
+    return model_id, params, api_method, system_prompt
 
 def display_concern_explanation(concern):
     """Display explanation for specific AI concerns"""
@@ -307,7 +373,7 @@ def display_concern_explanation(concern):
     else:
         st.warning(f"No explanation available for {concern}")
 
-def create_concern_interface(concern, model_id, params, api_method):
+def create_concern_interface(concern, model_id, params, api_method, system_prompt=None):
     """Create interface for a specific AI concern"""
     
     # Display explanation for this concern
@@ -386,18 +452,36 @@ def create_concern_interface(concern, model_id, params, api_method):
             messages = [message]
             
             try:
-                # Get Bedrock client
-                bedrock_client = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')
+                # Create system prompts array if using DeepSeek model
+                system_prompts = None
+                if "deepseek" in model_id.lower() and system_prompt:
+                    system_prompts = [{"text": system_prompt}]
+                
+                # Get Bedrock client with extended timeout for potential long responses
+                custom_config = Config(connect_timeout=840, read_timeout=840)
+                bedrock_client = boto3.client(service_name='bedrock-runtime', config=custom_config, region_name='us-east-1')
                 
                 # Send request to the model
                 if api_method == "Streaming":
-                    response_data = stream_conversation(bedrock_client, model_id, messages, params)
+                    response_data = stream_conversation(
+                        bedrock_client, 
+                        model_id, 
+                        messages, 
+                        params, 
+                        system_prompts=system_prompts
+                    )
                     
                     if response_data:
                         status.update(label="Response received!", state="complete")
                 else:
                     # Synchronous API call
-                    response = text_conversation(bedrock_client, model_id, messages, **params)
+                    response = text_conversation(
+                        bedrock_client, 
+                        model_id, 
+                        messages, 
+                        system_prompts=system_prompts, 
+                        **params
+                    )
                     
                     if response:
                         status.update(label="Response received!", state="complete")
@@ -410,6 +494,11 @@ def create_concern_interface(concern, model_id, params, api_method):
                         st.markdown(f"**{output_message['role'].title()}**")
                         for content in output_message['content']:
                             st.markdown(content['text'])
+                        
+                        # Show reasoning content if available (for DeepSeek model) - using container instead of expander
+                        if 'reasoning' in response and response['reasoning']:
+                            st.markdown("### AI Reasoning")
+                            st.markdown(response['reasoning'])
                         
                         # Show token usage
                         st.markdown("### Response Details")
@@ -472,7 +561,7 @@ def main():
     # Side panel for model selection and parameters
     with side_col:
         with st.container(border=True):
-            model_id, params, api_method = model_selection_panel()
+            model_id, params, api_method, system_prompt = model_selection_panel()
     
     # Main content area with concern tabs
     with main_col:
@@ -486,16 +575,16 @@ def main():
         
         # Populate each tab
         with tabs[0]:
-            create_concern_interface("toxicity", model_id, params, api_method)
+            create_concern_interface("toxicity", model_id, params, api_method, system_prompt)
         
         with tabs[1]:
-            create_concern_interface("hallucinations", model_id, params, api_method)
+            create_concern_interface("hallucinations", model_id, params, api_method, system_prompt)
         
         with tabs[2]:
-            create_concern_interface("intellectual_property", model_id, params, api_method)
+            create_concern_interface("intellectual_property", model_id, params, api_method, system_prompt)
         
         with tabs[3]:
-            create_concern_interface("plagiarism", model_id, params, api_method)
+            create_concern_interface("plagiarism", model_id, params, api_method, system_prompt)
     
     # Footer
     st.markdown("""
