@@ -36,7 +36,7 @@ def setup_page_config():
     """Configure the Streamlit page settings and styles"""
     # Page configuration
     st.set_page_config(
-        page_title="Multimodal Embedding Explorer",
+        page_title="Multimodal Embedding",
         page_icon="🔍",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -298,7 +298,7 @@ def main():
     create_sidebar()
 
     # Main content
-    st.title("🔍 Multimodal Embedding Explorer")
+    st.title("🔍 Multimodal Embedding")
 
     try:
         # Load dataset
@@ -318,18 +318,15 @@ def main():
             """)
             
             # Search form
-            with st.form("search_form", border=False):
+            with st.form("search_form", border=True):
                 st.subheader("🔎 Search Products")
                 prompt_data = st.text_area(
                     "Enter a text description:", 
                     value="suede sneaker",
                     help="Describe the product you're looking for"
                 )
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    k = st.slider("Number of results", min_value=1, max_value=min(10, len(dataset)), value=3)
-                with col2:
-                    submit = st.form_submit_button("Search", type="primary", use_container_width=True)
+                k = st.slider("Number of results", min_value=1, max_value=min(10, len(dataset)), value=3)
+                submit = st.form_submit_button("Search", type="primary", use_container_width=True)
         
             # Handle search
             if submit:
