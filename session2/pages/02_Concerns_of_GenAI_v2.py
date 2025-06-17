@@ -495,9 +495,9 @@ def create_concern_interface(concern, model_id, params, api_method, system_promp
                             st.markdown(content['text'])
                         
                         # Show reasoning content if available (for DeepSeek model)
-                        if 'reasoning' in response:
-                            with st.expander("View AI Reasoning", expanded=False):
-                                st.markdown(response['reasoning'])
+                        # if 'reasoning' in response:
+                        #     with st.expander("View AI Reasoning", expanded=False):
+                        #         st.markdown(response['reasoning'])
                         
                         # Show token usage
                         st.markdown("### Response Details")
