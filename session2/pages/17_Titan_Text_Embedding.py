@@ -169,26 +169,25 @@ def display_additional_info() -> None:
     with st.sidebar:
         
         common.render_sidebar()
-        st.subheader("About Titan Embeddings")
-        st.markdown("""
-        **Model**: Amazon Titan Embed G1 - Text v1.2
+        with st.expander("ℹ️ About Titan Embeddings", expanded=False):
+            st.markdown("""
+            **Model**: Titan Embeddings G1 - Text v1.2
+
+            **Key Features**:
+            - 1,536 dimensional vectors
+            - Support for 25+ languages
+            - Handles up to 8,192 tokens
+            - Optimized for text retrieval and semantic similarity
+
+            **Use Cases**:
+            - Semantic search
+            - Document retrieval
+            - Text clustering
+            - Similarity detection
+            - Classification tasks
+            """)
         
-        **Key Features**:
-        - 1,536 dimensional vectors
-        - Support for 25+ languages
-        - Handles up to 8,192 tokens
-        - Optimized for text retrieval and semantic similarity
-        
-        **Use Cases**:
-        - Semantic search
-        - Document retrieval
-        - Text clustering
-        - Similarity detection
-        - Classification tasks
-        """)
-        
-        st.markdown("---")
-        st.caption("© 2023 Amazon Web Services")
+    
 
 def main() -> None:
     """Main application function."""
