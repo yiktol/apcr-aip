@@ -197,7 +197,7 @@ def render_sidebar() -> None:
     """Render the sidebar with settings and controls"""
     with st.sidebar:
         common.render_sidebar()
-        st.write(st.session_state["user_cognito_groups"])
+        # st.write(st.session_state["user_cognito_groups"])
         
         if st.button("🗑️ Clear Chat", use_container_width=True):
             current_time = datetime.now().strftime("%H:%M")
@@ -215,35 +215,35 @@ def render_sidebar() -> None:
     #     st.code(f"Session ID: {st.session_state.session_id}")
     #     st.text(f"Messages: {len(st.session_state.chat_history)}")
         
-    if st.session_state.get('show_debug', False):
-        try:
-            history_json = json.dumps(
-                st.session_state.chat_history,
-                indent=2,
-                cls=DateTimeEncoder
-            )
-            st.download_button(
-                "Download Chat History", 
-                history_json, 
-                "chat_history.json", 
-                "application/json"
-            )
-        except Exception as e:
-            st.error(f"Error creating download: {e}")
-    
+        if st.session_state.get('show_debug', False):
+            try:
+                history_json = json.dumps(
+                    st.session_state.chat_history,
+                    indent=2,
+                    cls=DateTimeEncoder
+                )
+                st.download_button(
+                    "Download Chat History", 
+                    history_json, 
+                    "chat_history.json", 
+                    "application/json"
+                )
+            except Exception as e:
+                st.error(f"Error creating download: {e}")
+        
 
-    if st.session_state["user_cognito_groups"] == 'Admins':
-        st.sidebar.markdown("### Debug Options")
-        show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
-        if show_debug != st.session_state.get('show_debug'):
-            st.session_state.show_debug = show_debug
-            st.rerun()
-    
-    st.sidebar.markdown("---")
-    st.sidebar.info(
-        "This assistant helps customers find the perfect shoes based on their preferences, "
-        "activities, and needs. Ask about running shoes, casual footwear, or specific brands."
-    )
+        if st.session_state["user_cognito_groups"][0] == 'Admins':
+            st.sidebar.markdown("### Debug Options")
+            show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
+            if show_debug != st.session_state.get('show_debug'):
+                st.session_state.show_debug = show_debug
+                st.rerun()
+        
+        st.sidebar.markdown("---")
+        st.sidebar.info(
+            "This assistant helps customers find the perfect shoes based on their preferences, "
+            "activities, and needs. Ask about running shoes, casual footwear, or specific brands."
+        )
 
 
 def render_chat_interface() -> None:
