@@ -174,7 +174,7 @@ def render_cosine_similarity_explanation():
     col1, col2, col3 = st.columns([0.2, 0.2, 0.6])
     
     try:
-        col1.image("dot-product-a-cos.svg", caption="Vector representation")
+        col1.image("images/dot-product-a-cos.svg", caption="Vector representation")
     except Exception as e:
         logger.warning(f"Failed to load image: {e}")
         col1.error("Image not found.")
@@ -196,11 +196,10 @@ def render_cosine_similarity_explanation():
     """, unsafe_allow_html=True)
 
 def main():
-    
+    """Main function to run the Streamlit application."""
     with st.sidebar:
         common.render_sidebar()
-    
-    """Main function to run the Streamlit application."""
+        
     render_cosine_similarity_explanation()
     
     # Initialize Bedrock client

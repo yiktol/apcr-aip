@@ -192,7 +192,6 @@ def display_additional_info() -> None:
 
 def main() -> None:
     """Main application function."""
-    setup_page_config()
     
     try:
         bedrock_client = initialize_bedrock_client()
@@ -264,6 +263,7 @@ def main() -> None:
 
 # Main execution flow
 if __name__ == "__main__":
+    setup_page_config()
     # First check authentication
     is_authenticated = authenticate.login()
     

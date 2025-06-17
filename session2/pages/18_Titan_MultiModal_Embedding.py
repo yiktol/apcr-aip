@@ -310,7 +310,6 @@ def main():
         
         with left_col:
             st.markdown("""
-            ### About
             Amazon Titan Multimodal Embedding Models can be used for enterprise tasks such as image search and similarity-based recommendations.
             
             - Generate embeddings for images and text

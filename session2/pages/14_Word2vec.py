@@ -255,11 +255,11 @@ def main():
     # Sidebar configuration
     with st.sidebar:
         common.render_sidebar()
-        st.markdown('### About')
-        st.info(
-            "This tool generates vector representations of words using the Word2Vec algorithm. "
-            "These vectors capture the semantic relationships between words."
-        )
+        with st.expander("About this App", expanded=False):
+            st.info(
+                "This tool generates vector representations of words using the Word2Vec algorithm. "
+                "These vectors capture the semantic relationships between words."
+            )
     
     # Main content
     col1, col2 = st.columns([3, 2])
