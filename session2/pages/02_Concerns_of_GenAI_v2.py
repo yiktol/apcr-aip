@@ -161,9 +161,10 @@ def stream_conversation(bedrock_client, model_id, messages, inference_config, sy
         col3.metric("Total Tokens", token_usage['totalTokens'])
         st.caption(f"Stop reason: {response['stopReason']}")
         
-        # Show reasoning if available (for DeepSeek model)
+        # Show reasoning if available (for DeepSeek model) - using a container instead of expander
         if reasoning_text:
-            with st.expander("View AI Reasoning", expanded=False):
+            st.markdown("### AI Reasoning")
+            with st.container():
                 st.markdown(reasoning_text)
         
         # Return the data
@@ -494,10 +495,10 @@ def create_concern_interface(concern, model_id, params, api_method, system_promp
                         for content in output_message['content']:
                             st.markdown(content['text'])
                         
-                        # Show reasoning content if available (for DeepSeek model)
-                        # if 'reasoning' in response:
-                        #     with st.expander("View AI Reasoning", expanded=False):
-                        #         st.markdown(response['reasoning'])
+                        # Show reasoning content if available (for DeepSeek model) - using container instead of expander
+                        if 'reasoning' in response and response['reasoning']:
+                            st.markdown("### AI Reasoning")
+                            st.markdown(response['reasoning'])
                         
                         # Show token usage
                         st.markdown("### Response Details")
