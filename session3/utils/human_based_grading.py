@@ -17,7 +17,7 @@ def build_input_prompt(question):
 
 # Get completions for each input.
 # Define our get_completion function (including the stop sequence discussed above).
-def get_completion(messages,model="anthropic.claude-3-sonnet-20240229-v1:0",max_tokens=2048,temperature=0.5,top_k=100,top_p=0.9):
+def get_completion(messages,model="anthropic.claude-v2:1",max_tokens=2048,temperature=0.5,top_k=100,top_p=0.9):
     body = {"max_tokens": max_tokens, 
             "temperature": temperature,
             "top_k": top_k,
