@@ -46,7 +46,7 @@ def reset_session():
 
 # ------- API FUNCTIONS -------
 
-def text_conversation(bedrock_client, model_id, system_prompts, messages, **params):
+def text_conversation(bedrock_client, model_id, system_prompts, messages, additional_model_fields, **params):
     """Sends messages to a model."""
     logger.info(f"Generating message with model {model_id}")
     
@@ -56,7 +56,7 @@ def text_conversation(bedrock_client, model_id, system_prompts, messages, **para
             messages=messages,
             system=system_prompts,
             inferenceConfig=params,
-            additionalModelRequestFields={}
+            additionalModelRequestFields=additional_model_fields
         )
         
         # Log token usage
@@ -101,7 +101,7 @@ def image_conversation(bedrock_client, model_id, input_text, image_bytes, image_
         logger.error(f"A client error occurred: {err.response['Error']['Message']}")
         return None
 
-def stream_conversation(bedrock_client, model_id, messages, system_prompts, inference_config):
+def stream_conversation(bedrock_client, model_id, messages, system_prompts, inference_config, additional_model_fields):
     """Simulates streaming by displaying the response gradually."""
     logger.info(f"Simulating streaming for model {model_id}")
     
@@ -112,7 +112,7 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
             messages=messages,
             system=system_prompts,
             inferenceConfig=inference_config,
-            additionalModelRequestFields={}
+            additionalModelRequestFields=additional_model_fields
         )
         
         # Get the full response text
@@ -171,24 +171,37 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
 
 def model_selection_panel():
     """Model selection and parameters in the side panel"""
-    st.markdown("<div class='side-header'>Model Selection</div>", unsafe_allow_html=True)
+    st.markdown("<h4>Model Selection</h4>", unsafe_allow_html=True)
     
     MODEL_CATEGORIES = {
         "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
         "Anthropic": ["anthropic.claude-v2:1", "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0"],
-        "Cohere": ["cohere.command-text-v14:0", "cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
+        "Cohere": ["cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
         "Meta": ["meta.llama3-70b-instruct-v1:0", "meta.llama3-8b-instruct-v1:0"],
-        "Mistral": ["mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
-                   "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"]
+        "Mistral": ["mistral.mistral-small-2402-v1:0", "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
+                   "mistral.mistral-7b-instruct-v0:2"],
+        "AI21":["ai21.jamba-1-5-large-v1:0", "ai21.jamba-1-5-mini-v1:0"]
     }
     
+    # Models that support Top K parameter
+    MODELS_WITH_TOP_K = [
+        "anthropic.claude-v2:1",
+        "anthropic.claude-3-sonnet-20240229-v1:0",
+        "anthropic.claude-3-haiku-20240307-v1:0",
+        "mistral.mistral-small-2402-v1:0",
+        "mistral.mistral-7b-instruct-v0:2",
+        "mistral.mixtral-8x7b-instruct-v0:1",
+        "mistral.mistral-large-2402-v1:0"
+        ]
+
+  
     # Create selectbox for provider first
     provider = st.selectbox("Select Provider", options=list(MODEL_CATEGORIES.keys()), key="side_provider")
     
     # Then create selectbox for models from that provider
     model_id = st.selectbox("Select Model", options=MODEL_CATEGORIES[provider], key="side_model")
     
-    st.markdown("<div class='side-header'>API Method</div>", unsafe_allow_html=True)
+    st.markdown("<h4>API Method</h4>", unsafe_allow_html=True)
     api_method = st.radio(
         "Select API Method", 
         ["Streaming", "Synchronous"], 
@@ -196,8 +209,8 @@ def model_selection_panel():
         help="Streaming provides real-time responses, while Synchronous waits for complete response",
         key="side_api_method"
     )
-    
-    st.markdown("<div class='side-header'>Parameter Tuning</div>", unsafe_allow_html=True)
+    st.markdown("<h4>Parameter Tuning</h4>", unsafe_allow_html=True)
+
     
     temperature = st.slider(
         "Temperature", 
@@ -218,6 +231,12 @@ def model_selection_panel():
         key="side_top_p",
         help="Controls diversity via nucleus sampling"
     )
+
+    # Add Top K parameter for models that support it
+    top_k = None
+    if model_id in MODELS_WITH_TOP_K:
+        top_k = st.slider("Top K", min_value=0, max_value=500, value=200, step=10,
+                        help="Limits vocabulary to K most likely tokens")
         
     max_tokens = st.number_input(
         "Max Tokens", 
@@ -229,13 +248,31 @@ def model_selection_panel():
         help="Maximum number of tokens in the response"
     )
         
+    stopSequences = st.text_input(
+        "Stop Sequences",
+        value="",
+        key="side_stop_sequences",
+        help="Sequences where the model stops generating further tokens"
+    )    
+        
+    # Fix here: Convert stopSequences string to a list if not empty
+    stopSequencesList = [seq.strip() for seq in stopSequences.split(",")] if stopSequences else []
+        
     params = {
         "temperature": temperature,
         "topP": top_p,
-        "maxTokens": max_tokens
+        "maxTokens": max_tokens,
+        "stopSequences": stopSequencesList,
+        
     }
     
-    return model_id, params, api_method
+    # Add topK to params only if the model supports it and it's set
+    if top_k is not None and model_id in MODELS_WITH_TOP_K:
+        additional_model_fields = {"top_k": top_k}
+    else:
+        additional_model_fields = {}
+    
+    return model_id, params, api_method, additional_model_fields
 
 def display_use_case_explanation(use_case):
     """Display explanation for specific use cases"""
@@ -417,7 +454,7 @@ def display_use_case_explanation(use_case):
     else:
         st.warning(f"No explanation available for {use_case}")
 
-def create_use_case_interface(use_case, model_id, params, api_method):
+def create_use_case_interface(use_case, model_id, params, api_method, additional_model_fields):
     """Create interface for a specific use case"""
     
     # Display explanation for this use case
@@ -494,13 +531,13 @@ def create_use_case_interface(use_case, model_id, params, api_method):
                 
                 # Send request to the model
                 if api_method == "Streaming":
-                    response_data = stream_conversation(bedrock_client, model_id, messages, system_prompts_list, params)
+                    response_data = stream_conversation(bedrock_client, model_id, messages, system_prompts_list, params, additional_model_fields)
                     
                     if response_data:
                         status.update(label="Response received!", state="complete")
                 else:
                     # Synchronous API call
-                    response = text_conversation(bedrock_client, model_id, system_prompts_list, messages, **params)
+                    response = text_conversation(bedrock_client, model_id, system_prompts_list, messages, additional_model_fields,**params)
                     
                     if response:
                         status.update(label="Response received!", state="complete")
@@ -686,7 +723,7 @@ def main():
 
     st.markdown("""
     <div class="element-animation">
-        <h1>GenAI Use Cases in AWS Bedrock</h1>
+        <h1>GenAI Use Cases</h1>
     </div>
     """, unsafe_allow_html=True)
     
@@ -702,7 +739,7 @@ def main():
     # Side panel for model selection and parameters
     with side_col:
         with st.container(border=True):
-            model_id, params, api_method = model_selection_panel()
+            model_id, params, api_method, additional_model_fields = model_selection_panel()
         # st.markdown("</div>", unsafe_allow_html=True)
     
     # Main content area with use case tabs
@@ -721,25 +758,25 @@ def main():
         
         # Populate each tab
         with tabs[0]:
-            create_use_case_interface("summarization", model_id, params, api_method)
+            create_use_case_interface("summarization", model_id, params, api_method, additional_model_fields)
         
         with tabs[1]:
-            create_use_case_interface("extraction", model_id, params, api_method)
+            create_use_case_interface("extraction", model_id, params, api_method,additional_model_fields)
         
         with tabs[2]:
-            create_use_case_interface("translation", model_id, params, api_method)
+            create_use_case_interface("translation", model_id, params, api_method,additional_model_fields)
         
         with tabs[3]:
-            create_use_case_interface("content_generation", model_id, params, api_method)
+            create_use_case_interface("content_generation", model_id, params, api_method,additional_model_fields)
         
         with tabs[4]:
-            create_use_case_interface("redaction", model_id, params, api_method)
+            create_use_case_interface("redaction", model_id, params, api_method,additional_model_fields)
         
         with tabs[5]:
-            create_use_case_interface("code_generation", model_id, params, api_method)
+            create_use_case_interface("code_generation", model_id, params, api_method,additional_model_fields)
         
         with tabs[6]:
-            create_use_case_interface("sentiment_analysis", model_id, params, api_method)
+            create_use_case_interface("sentiment_analysis", model_id, params, api_method, additional_model_fields)
             
         with tabs[7]:
             image_analysis_interface(model_id)
@@ -758,3 +795,5 @@ if __name__ == "__main__":
     # If authenticated, show the main app content
     if is_authenticated:
         main()
+# if __name__ == "__main__":
+#     main()

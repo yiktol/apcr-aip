@@ -197,11 +197,12 @@ def model_selection_panel():
     MODEL_CATEGORIES = {
         "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
         "Anthropic": ["anthropic.claude-v2:1", "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0"],
-        "Cohere": ["cohere.command-text-v14:0", "cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
+        "Cohere": ["cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
         "DeepSeek": ["us.deepseek.r1-v1:0"],  # Added DeepSeek model
         "Meta": ["meta.llama3-70b-instruct-v1:0", "meta.llama3-8b-instruct-v1:0"],
         "Mistral": ["mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
-                   "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"]
+                   "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"],
+        "AI21":["ai21.jamba-1-5-mini-v1:0","ai21.jamba-1-5-large-v1:0"]
     }
     
     # Create selectbox for provider first
