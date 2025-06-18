@@ -246,9 +246,7 @@ def display_conversation():
                         <strong>You:</strong><br>{message['content']}
                         </div>""", unsafe_allow_html=True)
         else:
-            st.markdown(f"""<div class='assistant-message'>
-                        <strong>Assistant:</strong><br>{message['content']}
-                        </div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class='assistant-message'><strong>Assistant:</strong><br>{message['content']}</div>""", unsafe_allow_html=True)
                 
             if message.get("stop_reason"):
                 st.caption(f"Stop reason: {message['stop_reason']}")
@@ -405,9 +403,7 @@ def main():
                         for chunk in stream_conversation(bedrock_client, model_id, messages, guardrail_config, inference_params):
                             if chunk["type"] == "content":
                                 current_response += chunk["text"]
-                                response_placeholder.markdown(f"""<div class='assistant-message' style="border-color: #ffc107;">
-                                                            <strong>Assistant:</strong><br>{current_response}
-                                                            </div>""", unsafe_allow_html=True)
+                                response_placeholder.markdown(f"""<div class='assistant-message' style="border-color: #ffc107;"><strong>Assistant:</strong><br>{current_response}</div>""", unsafe_allow_html=True)
                                 # Update the last assistant message in the conversation
                                 st.session_state.conversation[-1]["content"] = current_response
                             

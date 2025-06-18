@@ -23,7 +23,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-common.initialize_session_state()
 
 # Apply custom CSS for modern appearance
 st.markdown("""
@@ -211,13 +210,12 @@ def init_session_state():
         st.session_state.response_timestamps = []
     
     # Initialize chat history for each prompt component tab if not exists
-    prompt_components = [
-        "instruction", "context", "input_data", "output_indicator"
-    ]
-    
-    for component in prompt_components:
-        if component not in st.session_state.chat_history:
-            st.session_state.chat_history[component] = []
+    st.session_state.chat_history = {
+        "instruction": [],
+        "context": [],
+        "input_data": [],
+        "output_indicator": []
+    }
             
 def reset_session():
     """Reset the session by creating a new session ID and clearing history."""
