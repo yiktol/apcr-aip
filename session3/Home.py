@@ -150,7 +150,7 @@ def show_customizing_fms_tab():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/FM%20Customization%20Approaches", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/FM%20Customization%20Approaches",  use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -325,7 +325,7 @@ def show_prompt_engineering_tab():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/Prompt%20Elements", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/Prompt%20Elements",  use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -765,7 +765,7 @@ def show_rag_tab():
     2. **Text Generation Workflow**: Retrieves relevant context and generates responses
     """)
     
-    st.image("https://placeholder.pics/svg/800x400/DEDEDE/555555/RAG%20Workflow", use_column_width=True)
+    st.image("https://placeholder.pics/svg/800x400/DEDEDE/555555/RAG%20Workflow",  use_container_width=True)
     
     # RAG components explained
     display_rag_components()
@@ -797,7 +797,7 @@ def display_rag_overview():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/RAG%20Overview", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/RAG%20Overview",  use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -918,7 +918,7 @@ def display_knowledge_bases_section():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x300/DEDEDE/555555/Knowledge%20Bases", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x300/DEDEDE/555555/Knowledge%20Bases",  use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -1022,7 +1022,7 @@ def display_guardrails_section():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/Guardrails", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/Guardrails",  use_container_width=True)
         
     with col2:
         st.markdown("""
@@ -1094,7 +1094,7 @@ def display_agents_section():
     Agents for Amazon Bedrock enable generative AI applications to execute multistep tasks using company systems and data sources.
     """)
     
-    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/Agents%20for%20Amazon%20Bedrock", use_column_width=True)
+    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/Agents%20for%20Amazon%20Bedrock",  use_container_width=True)
     
     st.markdown("""
     **Key capabilities:**
@@ -1172,7 +1172,7 @@ def display_sagemaker_clarify_section():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/SageMaker%20Clarify", use_column_width=True)
+        st.image("https://placeholder.pics/svg/300x200/DEDEDE/555555/SageMaker%20Clarify",  use_container_width=True)
         
     with col2:
         st.markdown("""
@@ -1280,7 +1280,7 @@ def display_human_evaluation_tab():
     """)
     
     # Human evaluation workflow
-    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/Human%20Evaluation%20Workflow", use_column_width=True)
+    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/Human%20Evaluation%20Workflow",  use_container_width=True)
 
 def display_bedrock_evaluation_section():
     st.header("Amazon Bedrock Model Evaluation")
@@ -1425,7 +1425,7 @@ def display_bertscore_metrics_tab():
     """)
     
     # Visual explanation of BERTScore
-    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/BERTScore%20Visualization", use_column_width=True)
+    st.image("https://placeholder.pics/svg/800x300/DEDEDE/555555/BERTScore%20Visualization",  use_container_width=True)
     
     st.markdown("""
     **Advantages over traditional metrics:**

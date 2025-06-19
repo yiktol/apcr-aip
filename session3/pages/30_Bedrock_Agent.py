@@ -208,29 +208,29 @@ def render_sidebar() -> None:
             }]
             st.rerun()
     
-        if st.session_state["user_cognito_groups"][0] == 'Admins':
-            st.sidebar.markdown("### Debug Options")
-            show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
-            if show_debug != st.session_state.get('show_debug'):
-                st.session_state.show_debug = show_debug
-                st.rerun()
+        # if st.session_state["user_cognito_groups"][0] == 'Admins':
+        #     st.sidebar.markdown("### Debug Options")
+        #     show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
+        #     if show_debug != st.session_state.get('show_debug'):
+        #         st.session_state.show_debug = show_debug
+        #         st.rerun()
                        
-        if st.session_state.get('show_debug', False):
-            try:
-                history_json = json.dumps(
-                    st.session_state.chat_history,
-                    indent=2,
-                    cls=DateTimeEncoder
-                )
-                st.download_button(
-                    "Download Chat History", 
-                    history_json, 
-                    "chat_history.json", 
-                    "application/json"
-                )
-            except Exception as e:
-                st.error(f"Error creating download: {e}")
-        
+        #     if st.session_state.get('show_debug', False):
+        #         try:
+        #             history_json = json.dumps(
+        #                 st.session_state.chat_history,
+        #                 indent=2,
+        #                 cls=DateTimeEncoder
+        #             )
+        #             st.download_button(
+        #                 "Download Chat History", 
+        #                 history_json, 
+        #                 "chat_history.json", 
+        #                 "application/json"
+        #             )
+        #         except Exception as e:
+        #             st.error(f"Error creating download: {e}")
+            
         st.sidebar.markdown("---")
         st.sidebar.info(
             "This assistant helps customers find the perfect shoes based on their preferences, "
@@ -323,3 +323,6 @@ if __name__ == "__main__":
     # If authenticated, show the main app content
     if is_authenticated:
         main()
+
+# if __name__ == "__main__":
+#     main()
