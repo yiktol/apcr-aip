@@ -135,7 +135,8 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
             # Update every few words to avoid too many UI updates
             if i % 3 == 0 or i == len(words) - 1:
                 with placeholder.container():
-                    st.markdown(f"**Response:**\n{display_text}")
+                    st.markdown("**Response:**")
+                    st.markdown(display_text)
                 time.sleep(0.05)  # Small delay for streaming effect
         
         # Display token usage after streaming is complete
@@ -789,11 +790,22 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
-        main()
-# if __name__ == "__main__":
-#     main()
+    try:
+
+        if 'localhost' in st.context.headers["host"]:
+            main()
+        else:
+            # First check authentication
+            is_authenticated = authenticate.login()
+            
+            # If authenticated, show the main app content
+            if is_authenticated:
+                main()
+
+    except Exception as e:
+        logger.critical(f"Application error: {e}", exc_info=True)
+        st.error(f"An unexpected error occurred: {str(e)}")
+        
+        # Provide debugging information in an expander
+        with st.expander("Error Details"):
+            st.code(str(e))

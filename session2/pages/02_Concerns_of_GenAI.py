@@ -595,9 +595,22 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
-        main()
+    try:
+
+        if 'localhost' in st.context.headers["host"]:
+            main()
+        else:
+            # First check authentication
+            is_authenticated = authenticate.login()
+            
+            # If authenticated, show the main app content
+            if is_authenticated:
+                main()
+
+    except Exception as e:
+        logger.critical(f"Application error: {e}", exc_info=True)
+        st.error(f"An unexpected error occurred: {str(e)}")
+        
+        # Provide debugging information in an expander
+        with st.expander("Error Details"):
+            st.code(str(e))

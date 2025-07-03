@@ -456,7 +456,7 @@ def main():
         common.render_sidebar()
     
     st.markdown("""
-    <div class="main-header">🧊 Text Embedding Similarity Explorer</div>
+    <div class="main-header">🧊 Similarity Metrics</div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
