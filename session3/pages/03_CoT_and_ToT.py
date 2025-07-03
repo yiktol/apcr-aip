@@ -1,3 +1,4 @@
+
 # Refactored Chain-of-Thought Prompting App
 
 import streamlit as st
@@ -99,6 +100,9 @@ st.markdown("""
     }
     .cot-block {
         border-left: 4px solid #8B5CF6;
+    }
+    .tot-block {
+        border-left: 4px solid #059669;
     }
     .token-metrics {
         display: flex;
@@ -433,6 +437,294 @@ Algorithm: Depth-First Search (DFS)"""
     }
 ]
 
+TOT_PROMPTS = [
+    {
+        "name": "Strategy Game - Game of 24",
+        "prompt": """Solve the Game of 24 using the numbers 4, 1, 8, 7. You must use each number exactly once with the operations +, -, ×, ÷ to make 24.""",
+        
+        "tot_suffix": """
+
+I need to solve the Game of 24 using 4, 1, 8, 7 to make 24. Let me explore multiple solution paths systematically.
+
+**Possible approaches to explore:**
+
+**Approach 1: Start with multiplication to get larger numbers**
+- Path 1a: 8 × 4 = 32, then work with 32, 1, 7
+  - 32 - 7 = 25, then 25 - 1 = 24 ✓
+  - So: (8 × 4) - 7 - 1 = 24
+
+- Path 1b: 8 × 7 = 56, then work with 56, 4, 1  
+  - 56 ÷ 4 = 14, then need 14 + 1 = 15 ≠ 24
+  - 56 - 4 = 52, then need 52 + 1 = 53 ≠ 24
+
+**Approach 2: Use division to create fractions**
+- Path 2a: 8 ÷ 1 = 8, then work with 8, 4, 7
+  - 8 + 4 = 12, then 12 + 7 = 19 ≠ 24
+  - 8 × 4 = 32, then 32 - 7 = 25 ≠ 24 (close!)
+
+**Approach 3: Group operations differently**
+- Path 3a: (8 - 4) × (7 - 1) = 4 × 6 = 24 ✓
+- Path 3b: (8 + 4) × (7 - 1) = 12 × 6 = 72 ≠ 24
+- Path 3c: (8 + 7) × (4 - 1) = 15 × 3 = 45 ≠ 24
+
+**Evaluation of paths:**
+- Path 1a works: (8 × 4) - 7 - 1 = 32 - 7 - 1 = 24
+- Path 3a works: (8 - 4) × (7 - 1) = 4 × 6 = 24
+
+**Best solutions found:**
+1. (8 × 4) - 7 - 1 = 24
+2. (8 - 4) × (7 - 1) = 24"""
+    },
+    {
+        "name": "Complex Problem Solving - Water Jug Problem",
+        "prompt": """You have two water jugs: one holds 5 gallons and the other holds 3 gallons. You have access to unlimited water. How can you measure exactly 4 gallons using only these two jugs?""",
+        
+        "tot_suffix": """
+
+I need to measure exactly 4 gallons using a 5-gallon jug and a 3-gallon jug. Let me explore different solution paths systematically.
+
+**Initial state analysis:**
+- 5-gallon jug (J5): empty
+- 3-gallon jug (J3): empty
+- Goal: get exactly 4 gallons in one of the jugs
+
+**Approach 1: Start by filling the 5-gallon jug**
+- Step 1: Fill J5 completely → J5: 5, J3: 0
+- Step 2: Pour from J5 to J3 → J5: 2, J3: 3
+- Step 3: Empty J3 → J5: 2, J3: 0
+- Step 4: Pour the 2 gallons from J5 to J3 → J5: 0, J3: 2
+- Step 5: Fill J5 again → J5: 5, J3: 2
+- Step 6: Pour from J5 to J3 (can only add 1 more gallon) → J5: 4, J3: 3
+- Result: 4 gallons in J5 ✓
+
+**Approach 2: Start by filling the 3-gallon jug**
+- Step 1: Fill J3 completely → J5: 0, J3: 3
+- Step 2: Pour from J3 to J5 → J5: 3, J3: 0
+- Step 3: Fill J3 again → J5: 3, J3: 3
+- Step 4: Pour from J3 to J5 (can only add 2 more gallons) → J5: 5, J3: 1
+- Step 5: Empty J5 → J5: 0, J3: 1
+- Step 6: Pour the 1 gallon from J3 to J5 → J5: 1, J3: 0
+- Step 7: Fill J3 again → J5: 1, J3: 3
+- Step 8: Pour from J3 to J5 → J5: 4, J3: 0
+- Result: 4 gallons in J5 ✓
+
+**Approach 3: Alternative method using subtraction**
+- Fill J5, use J3 to remove 3, then remove 3 again, leaving 5-3-3 = -1 (impossible)
+- Fill J3 twice into J5: not possible since 3+3 = 6 > 5
+
+**Evaluation of approaches:**
+- Approach 1: 6 steps, efficient
+- Approach 2: 8 steps, longer but also valid
+- Approach 3: Not feasible
+
+**Optimal solution:** Approach 1 with 6 steps
+1. Fill 5-gallon jug
+2. Pour into 3-gallon jug (leaving 2 in 5-gallon)
+3. Empty 3-gallon jug
+4. Pour 2 gallons into 3-gallon jug
+5. Fill 5-gallon jug again
+6. Pour into 3-gallon jug until full (adds 1 gallon, leaving 4 in 5-gallon jug)"""
+    },
+    {
+        "name": "Logic Puzzle - Knights and Knaves",
+        "prompt": """On an island, there are two types of people: Knights (who always tell the truth) and Knaves (who always lie). You meet three people: Alice, Bob, and Charlie. Alice says "Bob is a knave." Bob says "Charlie is a knave." Charlie says "Alice and Bob are both knaves." What type is each person?""",
+        
+        "tot_suffix": """
+
+I need to determine who are Knights (truth-tellers) and who are Knaves (liars). Let me systematically explore all possibilities.
+
+**Given statements:**
+- Alice: "Bob is a knave"
+- Bob: "Charlie is a knave"  
+- Charlie: "Alice and Bob are both knaves"
+
+**Possible combinations to explore:**
+Since each person is either a Knight (K) or Knave (N), there are 2³ = 8 possibilities.
+
+**Path 1: Alice=K, Bob=K, Charlie=K**
+- Alice (K) says "Bob is a knave" → False statement → Contradiction (Knights can't lie)
+- Invalid ✗
+
+**Path 2: Alice=K, Bob=K, Charlie=N**
+- Alice (K) says "Bob is a knave" → False (Bob is K) → Contradiction
+- Invalid ✗
+
+**Path 3: Alice=K, Bob=N, Charlie=K**
+- Alice (K) says "Bob is a knave" → True ✓
+- Bob (N) says "Charlie is a knave" → False (Charlie is K) → Consistent (Knaves lie) ✓
+- Charlie (K) says "Alice and Bob are both knaves" → False → Contradiction
+- Invalid ✗
+
+**Path 4: Alice=K, Bob=N, Charlie=N**
+- Alice (K) says "Bob is a knave" → True ✓
+- Bob (N) says "Charlie is a knave" → True, but Knaves must lie → Contradiction
+- Invalid ✗
+
+**Path 5: Alice=N, Bob=K, Charlie=K**
+- Alice (N) says "Bob is a knave" → False (Bob is K) → Consistent (Knaves lie) ✓
+- Bob (K) says "Charlie is a knave" → False (Charlie is K) → Contradiction
+- Invalid ✗
+
+**Path 6: Alice=N, Bob=K, Charlie=N**
+- Alice (N) says "Bob is a knave" → False → Consistent ✓
+- Bob (K) says "Charlie is a knave" → True ✓
+- Charlie (N) says "Alice and Bob are both knaves" → False → Consistent ✓
+- Valid! ✓
+
+**Path 7: Alice=N, Bob=N, Charlie=K**
+- Alice (N) says "Bob is a knave" → True, but Knaves must lie → Contradiction
+- Invalid ✗
+
+**Path 8: Alice=N, Bob=N, Charlie=N**
+- Alice (N) says "Bob is a knave" → True, but Knaves must lie → Contradiction
+- Invalid ✗
+
+**Verification of Path 6 (Alice=N, Bob=K, Charlie=N):**
+- Alice (Knave) says "Bob is a knave" → False statement ✓ (Knaves lie)
+- Bob (Knight) says "Charlie is a knave" → True statement ✓ (Knights tell truth)
+- Charlie (Knave) says "Alice and Bob are both knaves" → False statement ✓ (Knaves lie)
+
+**Solution:**
+- Alice: Knave
+- Bob: Knight  
+- Charlie: Knave"""
+    },
+    {
+        "name": "Mathematical Proof - Number Theory",
+        "prompt": """Prove that the sum of any three consecutive integers is always divisible by 3.""",
+        
+        "tot_suffix": """
+
+I need to prove that the sum of any three consecutive integers is always divisible by 3. Let me explore multiple proof approaches.
+
+**Approach 1: Algebraic proof using general form**
+Let the three consecutive integers be n, n+1, n+2 where n is any integer.
+
+Sum = n + (n+1) + (n+2) = 3n + 3 = 3(n+1)
+
+Since the sum equals 3(n+1), it's clearly divisible by 3 for any integer n. ✓
+
+**Approach 2: Modular arithmetic approach**
+Consider any integer n modulo 3. There are three cases:
+
+Case 1: n ≡ 0 (mod 3)
+- Three consecutive integers: n, n+1, n+2
+- n ≡ 0 (mod 3), n+1 ≡ 1 (mod 3), n+2 ≡ 2 (mod 3)
+- Sum ≡ 0 + 1 + 2 ≡ 3 ≡ 0 (mod 3) ✓
+
+Case 2: n ≡ 1 (mod 3)
+- n ≡ 1 (mod 3), n+1 ≡ 2 (mod 3), n+2 ≡ 0 (mod 3)
+- Sum ≡ 1 + 2 + 0 ≡ 3 ≡ 0 (mod 3) ✓
+
+Case 3: n ≡ 2 (mod 3)
+- n ≡ 2 (mod 3), n+1 ≡ 0 (mod 3), n+2 ≡ 1 (mod 3)
+- Sum ≡ 2 + 0 + 1 ≡ 3 ≡ 0 (mod 3) ✓
+
+**Approach 3: Pattern recognition approach**
+Examples:
+- 1 + 2 + 3 = 6 = 3 × 2 ✓
+- 5 + 6 + 7 = 18 = 3 × 6 ✓
+- (-2) + (-1) + 0 = -3 = 3 × (-1) ✓
+- 10 + 11 + 12 = 33 = 3 × 11 ✓
+
+Pattern confirms the general rule.
+
+**Approach 4: Combinatorial/grouping approach**
+Any three consecutive integers can be grouped as:
+- One number ≡ 0 (mod 3)
+- One number ≡ 1 (mod 3)  
+- One number ≡ 2 (mod 3)
+
+Since we have exactly one representative from each residue class modulo 3, their sum must be congruent to 0 + 1 + 2 = 3 ≡ 0 (mod 3).
+
+**Evaluation of approaches:**
+- Approach 1: Most direct and elegant
+- Approach 2: Most rigorous, covers all cases
+- Approach 3: Provides intuitive evidence
+- Approach 4: Offers conceptual insight
+
+**Best proof:** Approach 1 (algebraic) is the most concise and complete.
+
+**Final proof:** For any integer n, three consecutive integers are n, n+1, n+2. Their sum is n + (n+1) + (n+2) = 3n + 3 = 3(n+1), which is divisible by 3. QED."""
+    },
+    {
+        "name": "Creative Problem Solving - Bridge Crossing",
+        "prompt": """Four people need to cross a bridge at night. They have one flashlight that must be used when crossing. The bridge can hold only two people at a time. The four people walk at different speeds: 1 minute, 2 minutes, 5 minutes, and 10 minutes to cross. When two people cross together, they must go at the speed of the slower person. What's the minimum time needed for all four to cross?""",
+        
+        "tot_suffix": """
+
+I need to find the minimum time for four people (taking 1, 2, 5, 10 minutes respectively) to cross a bridge. Let me explore different strategies systematically.
+
+**Constraints:**
+- Bridge holds max 2 people
+- One flashlight must accompany crossers
+- Speed = slower person's speed
+- Someone must bring flashlight back
+
+Let me call the people A(1min), B(2min), C(5min), D(10min).
+
+**Strategy 1: Always send fastest back**
+1. A & B cross → 2 min (total: 2)
+2. A returns → 1 min (total: 3)  
+3. C & D cross → 10 min (total: 13)
+4. B returns → 2 min (total: 15)
+5. A & B cross → 2 min (total: 17)
+Total: 17 minutes
+
+**Strategy 2: Send two fastest first, then two slowest**
+1. A & B cross → 2 min (total: 2)
+2. A returns → 1 min (total: 3)
+3. C & D cross → 10 min (total: 13)  
+4. B returns → 2 min (total: 15)
+5. A & B cross → 2 min (total: 17)
+Total: 17 minutes (same as Strategy 1)
+
+**Strategy 3: Alternative approach - fastest escorts each slow person**
+1. A & C cross → 5 min (total: 5)
+2. A returns → 1 min (total: 6)
+3. A & D cross → 10 min (total: 16)
+4. A returns → 1 min (total: 17)
+5. A & B cross → 2 min (total: 19)
+Total: 19 minutes (worse)
+
+**Strategy 4: Send two slowest together, fastest brings light back**
+1. A & B cross → 2 min (total: 2)
+2. A returns → 1 min (total: 3)
+3. C & D cross → 10 min (total: 13)
+4. B returns → 2 min (total: 15)  
+5. A & B cross → 2 min (total: 17)
+Total: 17 minutes
+
+**Strategy 5: Hybrid approach analysis**
+Let me check if there's a better combination:
+- Option 5a: Send A&C first
+  A&C cross(5) → A back(1) → A&D cross(10) → A back(1) → A&B cross(2) = 19min
+- Option 5b: Send A&D first  
+  A&D cross(10) → A back(1) → A&C cross(5) → A back(1) → A&B cross(2) = 19min
+
+**Strategy 6: Mathematical optimization approach**
+For optimal solution, compare:
+- Fast-Fast, Slow-Slow strategy: 2+1+10+2+2 = 17
+- Fast with each slow: 5+1+10+1+2 = 19
+
+The first approach is better.
+
+**Verification of optimal solution:**
+1. A(1) & B(2) cross together → 2 minutes
+2. A(1) returns with flashlight → 1 minute  
+3. C(5) & D(10) cross together → 10 minutes
+4. B(2) returns with flashlight → 2 minutes
+5. A(1) & B(2) cross together → 2 minutes
+
+**Total: 17 minutes**
+
+This is optimal because:
+- We minimize the impact of the slowest person (10min) by pairing with 5min person
+- We use the fastest people (1&2min) for return trips
+- We avoid multiple trips by the very slow people"""
+    }
+]
+
 # ------- SESSION STATE INITIALIZATION -------
 
 def init_session_state():
@@ -459,6 +751,18 @@ def init_session_state():
         st.session_state.few_shot_standard_response = None
     if 'few_shot_cot_response' not in st.session_state:
         st.session_state.few_shot_cot_response = None
+    
+    # Tree of Thoughts state variables
+    if 'tot_prompt' not in st.session_state:
+        st.session_state.tot_prompt = TOT_PROMPTS[0]["prompt"]
+    if 'tot_cot_prompt' not in st.session_state:
+        st.session_state.tot_cot_prompt = TOT_PROMPTS[0]["prompt"] + TOT_PROMPTS[0]["tot_suffix"]
+    if 'tot_system_prompt' not in st.session_state:
+        st.session_state.tot_system_prompt = "You are a helpful and knowledgeable assistant who provides accurate information and can explore multiple solution paths systematically."
+    if 'tot_standard_response' not in st.session_state:
+        st.session_state.tot_standard_response = None
+    if 'tot_tot_response' not in st.session_state:
+        st.session_state.tot_tot_response = None
     
     # Common state variables
     if 'analysis_shown' not in st.session_state:
@@ -507,25 +811,28 @@ def parameter_sidebar():
     with st.sidebar:
         common.render_sidebar()
         
-        with st.expander("About Chain-of-Thought", expanded=False):
+        with st.expander("About Prompting Techniques", expanded=False):
             st.markdown("""
-            ### Chain-of-Thought (CoT) Prompting
+            ### Chain-of-Thought (CoT) & Tree of Thoughts (ToT)
             
-            CoT prompting is a technique that enhances reasoning in AI models by 
-            encouraging them to generate step-by-step explanations before providing
-            the final answer.
+            Advanced prompting techniques that enhance reasoning in AI models:
+            
+            **Chain-of-Thought (CoT):**
+            - Encourages step-by-step reasoning
+            - Improves multi-step problem solving
+            - Two types: Zero-Shot and Few-Shot
+            
+            **Tree of Thoughts (ToT):**
+            - Explores multiple reasoning paths
+            - Systematically evaluates different approaches
+            - Combines and compares solution strategies
+            - Best for complex problems with multiple solutions
             
             **Key Benefits:**
-            - Improves reasoning abilities in foundation models
-            - Addresses multi-step problem-solving challenges
-            - Generates intermediate reasoning steps, mimicking human thought
-            - Enhances model performance compared to standard methods
-            
-            **Types of CoT Prompting:**
-            
-            1. **Zero-Shot CoT**: Adding "Think step by step" or similar instruction
-            
-            2. **Few-Shot CoT**: Showing examples of step-by-step reasoning before the query
+            - Enhanced reasoning capabilities
+            - Better problem decomposition
+            - More thorough analysis
+            - Higher accuracy on complex tasks
             """)
         
         params = {
@@ -535,20 +842,6 @@ def parameter_sidebar():
         }
         
     return model_id, params
-
-# def display_sample_prompts(prompts, current_prompt, key_prefix):
-#     """Display sample prompts as a selectbox."""
-#     prompt_names = [p["name"] for p in prompts]
-#     selected_name = st.selectbox(
-#         "Select a sample prompt:", 
-#         options=prompt_names, 
-#         key=f"{key_prefix}_select",
-#         index=0 if current_prompt == prompts[0]["prompt"] else 
-#             prompt_names.index(next((p["name"] for p in prompts if p["prompt"] == current_prompt), prompt_names[0]))
-#     )
-    
-#     selected_prompt = next(p for p in prompts if p["name"] == selected_name)
-#     return selected_prompt
 
 def display_sample_prompts(prompts, current_prompt, key_prefix):
     """Display sample prompts as a selectbox."""
@@ -573,15 +866,12 @@ def display_sample_prompts(prompts, current_prompt, key_prefix):
     selected_prompt = next(p for p in prompts if p["name"] == selected_name)
     return selected_prompt
 
-
-
-def display_responses(standard_response, cot_response):
-    """Display the standard and CoT responses side by side."""
+def display_responses(standard_response, enhanced_response, enhanced_type="CoT"):
+    """Display the standard and enhanced responses side by side."""
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("<div class='comparison-header'>Standard Prompting</div>", unsafe_allow_html=True)
-        # st.markdown("<div class='output-container'>", unsafe_allow_html=True)
         
         if standard_response:
             output_message = standard_response['output']['message']
@@ -593,47 +883,44 @@ def display_responses(standard_response, cot_response):
         else:
             st.caption("Response will appear here...")
             
-        st.markdown("</div>", unsafe_allow_html=True)
-        
     with col2:
-        st.markdown("<div class='comparison-header'>Chain-of-Thought Prompting</div>", unsafe_allow_html=True)
-        # st.markdown("<div class='output-container'>", unsafe_allow_html=True)
+        header_text = "Tree of Thoughts Prompting" if enhanced_type == "ToT" else "Chain-of-Thought Prompting"
+        st.markdown(f"<div class='comparison-header'>{header_text}</div>", unsafe_allow_html=True)
         
-        if cot_response:
-            output_message = cot_response['output']['message']
+        if enhanced_response:
+            output_message = enhanced_response['output']['message']
             for content in output_message['content']:
                 st.markdown(content['text'])
                 
-            token_usage = cot_response['usage']
+            token_usage = enhanced_response['usage']
             st.caption(f"Input: {token_usage['inputTokens']} | Output: {token_usage['outputTokens']} | Total: {token_usage['totalTokens']}")
         else:
             st.caption("Response will appear here...")
-            
-        st.markdown("</div>", unsafe_allow_html=True)
 
-def display_analysis(standard_response, cot_response, user_prompt, analysis_shown):
-    """Display analysis of the differences between standard and CoT responses."""
-    if standard_response and cot_response and analysis_shown:
+def display_analysis(standard_response, enhanced_response, user_prompt, analysis_shown, enhanced_type="CoT"):
+    """Display analysis of the differences between standard and enhanced responses."""
+    if standard_response and enhanced_response and analysis_shown:
         st.markdown("### Response Analysis")
         st.markdown("<div class='analysis-container'>", unsafe_allow_html=True)
         
         # Extract responses
         standard_text = standard_response['output']['message']['content'][0]['text']
-        cot_text = cot_response['output']['message']['content'][0]['text']
+        enhanced_text = enhanced_response['output']['message']['content'][0]['text']
         
         # Get token usage metrics
         standard_tokens = standard_response['usage']
-        cot_tokens = cot_response['usage']
+        enhanced_tokens = enhanced_response['usage']
         
         # Create a prompt to analyze the differences
+        technique_name = "Tree of Thoughts" if enhanced_type == "ToT" else "Chain-of-Thought"
         analysis_prompt = f"""
         Analyze the following two AI responses to the query: "{user_prompt}"
         
         RESPONSE 1 (Standard prompting):
         {standard_text}
         
-        RESPONSE 2 (Chain-of-Thought prompting):
-        {cot_text}
+        RESPONSE 2 ({technique_name} prompting):
+        {enhanced_text}
         
         Please compare these responses considering:
         1. Depth of reasoning
@@ -641,6 +928,7 @@ def display_analysis(standard_response, cot_response, user_prompt, analysis_show
         3. Accuracy of information (if applicable)
         4. Structure and organization
         5. Key differences in approach
+        6. Problem-solving methodology
         
         Provide a concise, balanced analysis highlighting the strengths and weaknesses of each approach.
         """
@@ -691,7 +979,7 @@ def display_analysis(standard_response, cot_response, user_prompt, analysis_show
             st.metric(
                 label="Input Tokens",
                 value=standard_tokens['inputTokens'],
-                delta=cot_tokens['inputTokens'] - standard_tokens['inputTokens'],
+                delta=enhanced_tokens['inputTokens'] - standard_tokens['inputTokens'],
                 delta_color="inverse"
             )
             
@@ -699,7 +987,7 @@ def display_analysis(standard_response, cot_response, user_prompt, analysis_show
             st.metric(
                 label="Output Tokens",
                 value=standard_tokens['outputTokens'],
-                delta=cot_tokens['outputTokens'] - standard_tokens['outputTokens'],
+                delta=enhanced_tokens['outputTokens'] - standard_tokens['outputTokens'],
                 delta_color="inverse"
             )
             
@@ -707,11 +995,12 @@ def display_analysis(standard_response, cot_response, user_prompt, analysis_show
             st.metric(
                 label="Total Tokens",
                 value=standard_tokens['totalTokens'],
-                delta=cot_tokens['totalTokens'] - standard_tokens['totalTokens'],
+                delta=enhanced_tokens['totalTokens'] - standard_tokens['totalTokens'],
                 delta_color="inverse"
             )
             
-        st.caption("Note: Delta shows difference between CoT and Standard (CoT - Standard)")
+        technique_abbrev = "ToT" if enhanced_type == "ToT" else "CoT"
+        st.caption(f"Note: Delta shows difference between {technique_abbrev} and Standard ({technique_abbrev} - Standard)")
         
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -751,8 +1040,6 @@ def zero_shot_tab(model_id, params):
         "zero_shot"
     )
     
-    
-    # Explanation of Zero-Shot CoT
     # User prompt input
     user_prompt = st.text_area(
         "Prompt", 
@@ -761,7 +1048,6 @@ def zero_shot_tab(model_id, params):
         placeholder="Enter your question or task here...",
         key="zero_shot_prompt"
     )
-    # st.session_state.zero_shot_prompt = user_prompt
     
     # CoT suffix
     cot_suffix = selected_prompt["cot_suffix"]
@@ -877,7 +1163,6 @@ def few_shot_tab(model_id, params):
         - ✅ Can guide specific reasoning styles or approaches
         - ✅ Often produces more consistent reasoning quality
         """)   
-    
     
     # System prompt
     system_prompt = st.text_area(
@@ -1008,6 +1293,156 @@ def few_shot_tab(model_id, params):
         st.session_state.analysis_shown
     )
 
+def tot_tab(model_id, params):
+    """Content for Tree of Thoughts tab."""
+    with st.expander("Learn more about Tree of Thoughts", expanded=False):
+        st.markdown("### Tree of Thoughts (ToT)")
+        st.markdown("""
+        <div class="key-benefit">
+        Tree of Thoughts systematically explores multiple reasoning paths and solution strategies. 
+        It encourages the model to consider various approaches, evaluate them, and find the optimal solution.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        **Key Benefits:**
+        - ✅ Explores multiple solution paths simultaneously
+        - ✅ Compares and evaluates different approaches
+        - ✅ Finds optimal solutions through systematic search
+        - ✅ Excellent for complex problems with multiple valid approaches
+        - ✅ Provides comprehensive analysis of problem space
+        """)
+    
+    # System prompt
+    system_prompt = st.text_area(
+        "System Prompt", 
+        value=st.session_state.tot_system_prompt,
+        height=80,
+        help="This defines how the AI assistant should behave",
+        key="tot_system"
+    )
+    st.session_state.tot_system_prompt = system_prompt
+    
+    # Display sample prompts
+    selected_prompt = display_sample_prompts(
+        TOT_PROMPTS, 
+        st.session_state.tot_prompt,
+        "tot"
+    )
+
+    # ToT prompts (standard and ToT)
+    st.markdown("#### Standard Prompt")
+    tot_prompt = st.text_area(
+        "Standard Prompt",
+        value=selected_prompt["prompt"],
+        height=150,
+        key="tot_prompt_standard"
+    )
+    st.session_state.tot_prompt = tot_prompt
+    
+    st.markdown("#### Tree of Thoughts Prompt")
+    tot_enhanced_prompt = st.text_area(
+        "Tree of Thoughts Prompt",
+        value=selected_prompt["prompt"] + selected_prompt["tot_suffix"],
+        height=400,
+        key="tot_prompt_enhanced"
+    )
+    st.session_state.tot_cot_prompt = tot_enhanced_prompt
+    
+    # Generate responses and analyze buttons
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        generate_button = st.button(
+            "📝 Generate Responses",
+            type="primary",
+            key="tot_generate",
+            disabled=st.session_state.processing or not tot_prompt.strip()
+        )
+    
+    with col2:
+        analyze_button = st.button(
+            "🔍 Analyze Differences",
+            key="tot_analyze",
+            disabled=not (st.session_state.tot_standard_response and st.session_state.tot_tot_response) or st.session_state.processing,
+            use_container_width=True
+        )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Process generate button click
+    if generate_button and tot_prompt.strip() and not st.session_state.processing:
+        st.session_state.processing = True
+        
+        # Standard prompt processing
+        with st.status("Generating standard response...") as status:
+            try:
+                # Get Bedrock client
+                bedrock_client = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')
+                
+                # Setup the system prompts and messages for standard prompt
+                system_prompts = [{"text": system_prompt}]
+                standard_message = {
+                    "role": "user",
+                    "content": [{"text": tot_prompt}]
+                }
+                standard_messages = [standard_message]
+                
+                # Send request to the model
+                st.session_state.tot_standard_response = text_conversation(
+                    bedrock_client, model_id, system_prompts, standard_messages, **params
+                )
+                
+                status.update(label="Standard response generated!", state="complete")
+                
+            except Exception as e:
+                status.update(label="Error occurred", state="error")
+                st.error(f"An error occurred: {str(e)}")
+        
+        # ToT prompt processing
+        with st.status("Generating Tree of Thoughts response...") as status:
+            try:
+                # Get Bedrock client
+                bedrock_client = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')
+                
+                # Setup the system prompts and messages for ToT prompt
+                system_prompts = [{"text": system_prompt}]
+                tot_message = {
+                    "role": "user",
+                    "content": [{"text": tot_enhanced_prompt}]
+                }
+                tot_messages = [tot_message]
+                
+                # Send request to the model
+                st.session_state.tot_tot_response = text_conversation(
+                    bedrock_client, model_id, system_prompts, tot_messages, **params
+                )
+                
+                status.update(label="Tree of Thoughts response generated!", state="complete")
+                
+            except Exception as e:
+                status.update(label="Error occurred", state="error")
+                st.error(f"An error occurred: {str(e)}")
+        
+        st.session_state.processing = False
+        st.rerun()
+    
+    # Process analyze button click
+    if analyze_button and st.session_state.tot_standard_response and st.session_state.tot_tot_response:
+        st.session_state.analysis_shown = True
+        st.rerun()
+    
+    # Display the responses
+    display_responses(st.session_state.tot_standard_response, st.session_state.tot_tot_response, "ToT")
+    
+    # Display analysis if available
+    display_analysis(
+        st.session_state.tot_standard_response, 
+        st.session_state.tot_tot_response, 
+        "Tree of Thoughts prompt", 
+        st.session_state.analysis_shown,
+        "ToT"
+    )
+
 def main():
     # Initialize session state
     init_session_state()
@@ -1022,7 +1457,6 @@ def main():
     </p>
     """, unsafe_allow_html=True)
     
-    
     # Create a 70/30 layout
     col1, col2 = st.columns([0.7, 0.3])     
         # Get model and parameters from the right column
@@ -1030,8 +1464,8 @@ def main():
         model_id, params = parameter_sidebar()
 
     with col1:
-        # Create tabs for zero-shot and few-shot
-        tab1, tab2 = st.tabs(["🎯 Zero-Shot", "🔄 Few-Shot"])
+        # Create tabs for zero-shot, few-shot, and tree of thoughts
+        tab1, tab2, tab3 = st.tabs(["🎯 Zero-Shot", "🔄 Few-Shot", "🌳 Tree of Thoughts"])
         
         # Populate each tab
         with tab1:
@@ -1039,7 +1473,9 @@ def main():
         
         with tab2:
             few_shot_tab(model_id, params)
-        
+            
+        with tab3:
+            tot_tab(model_id, params)
 
     # Footer
     st.markdown("---")
@@ -1047,9 +1483,22 @@ def main():
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
-        main()
+    try:
+
+        if 'localhost' in st.context.headers["host"]:
+            main()
+        else:
+            # First check authentication
+            is_authenticated = authenticate.login()
+            
+            # If authenticated, show the main app content
+            if is_authenticated:
+                main()
+
+    except Exception as e:
+        logger.critical(f"Application error: {e}", exc_info=True)
+        st.error(f"An unexpected error occurred: {str(e)}")
+        
+        # Provide debugging information in an expander
+        with st.expander("Error Details"):
+            st.code(str(e))
