@@ -1,6 +1,0 @@
-streamlit
-boto3
-dotenv
-fastapi
-langchain_mcp_adapters
-pydantic
