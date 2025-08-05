@@ -3,6 +3,7 @@
 log/
 pid
 generated_image.png
+*/mcp_client/output/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
