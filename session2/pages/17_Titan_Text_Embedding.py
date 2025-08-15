@@ -17,6 +17,15 @@ import streamlit as st
 from botocore.exceptions import ClientError
 import utils.authenticate as authenticate
 import utils.common as common
+from utils.styles import load_css, custom_header
+
+st.set_page_config(
+    page_title="Titan Text Embedding",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -31,38 +40,6 @@ CONTENT_TYPE = "application/json"
 VECTOR_DIMENSION = 1536
 DISPLAY_ROWS = 128
 DISPLAY_COLS = 12
-
-def setup_page_config() -> None:
-    """Configure the Streamlit page settings."""
-    st.set_page_config(
-        page_title="Titan Text Embedding Explorer",
-        page_icon="🧠",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-    
-    # Apply custom CSS for better UI
-    st.markdown("""
-        <style>
-        .stApp {
-            margin: 0 auto;
-        }
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-        .info-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-        .stButton button {
-            border-radius: 6px;
-            font-weight: 600;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
 def initialize_bedrock_client() -> boto3.client:
     """
@@ -192,6 +169,8 @@ def display_additional_info() -> None:
 def main() -> None:
     """Main application function."""
     
+    load_css()
+    
     try:
         bedrock_client = initialize_bedrock_client()
     except Exception as e:
@@ -199,15 +178,13 @@ def main() -> None:
         st.stop()
     
     # Main UI
-    st.markdown('<h1 class="main-header">Titan Text Embedding Explorer</h1>', unsafe_allow_html=True)
+    st.markdown("""
+        <h1>🔠 Titan Text Embedding</h1>
+        <div class="info-box">
+        The Titan Embeddings G1 - Text v1.2 model converts text into numerical vectors that capture semantic meaning. These embeddings enable powerful natural language processing capabilities like semantic search, clustering, and similarity detection across 25+ languages.
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown(
-        '<p class="info-text">The Titan Embeddings G1 - Text v1.2 model converts text into '
-        'numerical vectors that capture semantic meaning. These embeddings enable powerful '
-        'natural language processing capabilities like semantic search, clustering, and '
-        'similarity detection across 25+ languages.</p>',
-        unsafe_allow_html=True
-    )
     
     # Input form with improved styling
     with st.form(key="embedding_form"):

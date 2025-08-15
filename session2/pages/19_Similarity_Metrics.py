@@ -21,7 +21,7 @@ from sklearn.decomposition import PCA
 from typing import List, Dict, Tuple, Optional, Union, Any
 import utils.authenticate as authenticate
 import utils.common as common
-
+from utils.styles import load_css
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -37,53 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom styling
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        color: #FF5733;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        color: #3366FF;
-    }
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        background-color: #f8f9fa;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1.5rem;
-    }
-    .info-text {
-        font-size: 1rem;
-        line-height: 1.6;
-    }
-    .metric-card {
-        text-align: center;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem;
-    }
-    .cosine-card {
-        background-color: #e8f5e8;
-        border: 2px solid #4CAF50;
-    }
-    .euclidean-card {
-        background-color: #e8f0ff;
-        border: 2px solid #2196F3;
-    }
-    .dot-product-card {
-        background-color: #fff3e0;
-        border: 2px solid #FF9800;
-    }
-</style>
-""", unsafe_allow_html=True)
+load_css()
 
 # Create a cache for the Bedrock client
 @st.cache_resource
@@ -454,17 +408,16 @@ def main():
     """Main function to run the Streamlit application."""
     with st.sidebar:
         common.render_sidebar()
-    
+        
     st.markdown("""
-    <div class="main-header">🧊 Similarity Metrics</div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="info-text">
+    <h1>🧊 Similarity Metrics</h1>
+    <div class="info-box">
     Compare text embeddings using different similarity and distance metrics. 
     Each metric provides unique insights into semantic relationships between texts.
     </div>
     """, unsafe_allow_html=True)
+    
+    
     
     # Initialize Bedrock client
     bedrock_client = get_bedrock_client()

@@ -14,69 +14,54 @@ from utils.styles import load_css, custom_header
 import utils.common as common
 import utils.authenticate as authenticate
 
+st.set_page_config(
+    page_title="AWS Gen AI",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded")
 
-def create_transformer_architecture():
-    """Create a visual representation of the transformer architecture."""
-    fig = go.Figure()
+
+transformer_architecture="""
+graph TB
+    %% Encoder side
+    subgraph E [" "]
+        direction TB
+        IE[Input<br/>Embedding]
+        ESA[Self-<br/>Attention] 
+        EFF[Feed<br/>Forward]
+        IE --> ESA
+        ESA --> EFF
+    end
     
-    # Add encoder block
-    fig.add_shape(
-        type="rect", x0=0.1, y0=0.1, x1=0.4, y1=0.9,
-        line=dict(color="RoyalBlue"), fillcolor="LightSkyBlue", opacity=0.3
-    )
+    %% Decoder side
+    subgraph D [" "]
+        direction TB
+        OE[Output<br/>Embedding]
+        DSA[Self-<br/>Attention]
+        DFF[Feed<br/>Forward] 
+        OE --> DSA
+        DSA --> DFF
+    end
     
-    # Add decoder block
-    fig.add_shape(
-        type="rect", x0=0.6, y0=0.1, x1=0.9, y1=0.9,
-        line=dict(color="Crimson"), fillcolor="LightPink", opacity=0.3
-    )
+    %% Connection
+    EFF --> DSA
     
-    # Add attention mechanism
-    fig.add_shape(
-        type="rect", x0=0.25, y0=0.6, x1=0.35, y1=0.8,
-        line=dict(color="Green"), fillcolor="LightGreen", opacity=0.7
-    )
+    %% Labels
+    E -.- ELabel[Encoder]
+    D -.- DLabel[Decoder]
     
-    fig.add_shape(
-        type="rect", x0=0.65, y0=0.6, x1=0.75, y1=0.8,
-        line=dict(color="Green"), fillcolor="LightGreen", opacity=0.7
-    )
+    %% Styling
+    classDef encoderBox fill:#87CEEB,stroke:#4169E1,stroke-width:3px,opacity:0.3
+    classDef decoderBox fill:#FFB6C1,stroke:#DC143C,stroke-width:3px,opacity:0.3
+    classDef attention fill:#90EE90,stroke:#008000,stroke-width:2px,opacity:0.7
+    classDef label fill:none,stroke:none,font-weight:bold
     
-    # Add arrow between encoder and decoder
-    fig.add_annotation(
-        x=0.5, y=0.5,
-        xref="paper", yref="paper",
-        ax=-50,  # Using pixels instead of paper coordinates
-        ay=0,    # Using pixels instead of paper coordinates
-        axref="pixel",  # Changed from 'paper' to 'pixel'
-        ayref="pixel",  # Changed from 'paper' to 'pixel'
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1,
-        arrowwidth=2
-    )
-    
-    # Add labels
-    fig.add_annotation(x=0.25, y=0.95, text="Encoder", showarrow=False)
-    fig.add_annotation(x=0.75, y=0.95, text="Decoder", showarrow=False)
-    fig.add_annotation(x=0.3, y=0.7, text="Self-<br>Attention", showarrow=False, font=dict(size=10))
-    fig.add_annotation(x=0.7, y=0.7, text="Self-<br>Attention", showarrow=False, font=dict(size=10))
-    
-    fig.add_annotation(x=0.25, y=0.4, text="Feed<br>Forward", showarrow=False, font=dict(size=10))
-    fig.add_annotation(x=0.75, y=0.4, text="Feed<br>Forward", showarrow=False, font=dict(size=10))
-    
-    fig.add_annotation(x=0.25, y=0.2, text="Input<br>Embedding", showarrow=False, font=dict(size=10))
-    fig.add_annotation(x=0.75, y=0.2, text="Output<br>Embedding", showarrow=False, font=dict(size=10))
-    
-    fig.update_layout(
-        height=500, 
-        title="Simplified Transformer Architecture",
-        showlegend=False,
-        xaxis=dict(showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(showgrid=False, zeroline=False, visible=False)
-    )
-    
-    return fig
+    class E encoderBox
+    class D decoderBox
+    class ESA,DSA attention
+    class ELabel,DLabel label
+
+"""
 
 
 def create_temperature_plot():
@@ -202,9 +187,9 @@ def create_aws_gen_ai_stack():
     # Create Sankey diagram
     fig = go.Figure(data=[go.Sankey(
         node=dict(
-            pad=15,
-            thickness=20,
-            line=dict(color="black", width=0.5),
+            pad=10,
+            thickness=10,
+            line=dict(color="black", width=0.1),
             label=labels,
             color="#FF9900"
         ),
@@ -533,7 +518,7 @@ def render_foundation_models_tab():
         tab1, tab2 = st.tabs(["Text-to-Text Models", "Text-to-Image Models"])
         
         with tab1:
-            st.image("https://miro.medium.com/v2/resize:fit:1400/1*CojgKJwB_n_0arL5HmUOIA.png", caption="Text-to-Text Models (LLMs)")
+            st.image("https://miro.medium.com/v2/resize:fit:720/format:webp/0*XDtcpv-m0SJRGSGB.png", caption="Text-to-Text Models (LLMs)")
             st.write("""
             **Text-to-Text Models (LLMs):**
             - Large language models (LLMs) pretrained to process vast quantities of textual data and human language
@@ -546,7 +531,7 @@ def render_foundation_models_tab():
             """)
             
         with tab2:
-            st.image("https://www.assemblyai.com/blog/content/images/2023/03/stable-diffusion-banner.png", caption="Text-to-Image Models")
+            st.image("https://cdn.prod.website-files.com/67a1e6de2f2eab2e125f8b9a/67be08ddc9717ae946270318_image-25.png", caption="Text-to-Image Models")
             st.write("""
             **Text-to-Image Models:**
             - Take natural language input and produce high-quality images that match the input text description
@@ -604,7 +589,7 @@ def render_transformer_architecture_tab():
     
     with col2:
         # Visual representation of transformer architecture
-        st.plotly_chart(create_transformer_architecture(), use_container_width=True)
+        common.mermaid(transformer_architecture, height=750)
         
         st.markdown("""
         <div class='concept-card'>
@@ -1420,9 +1405,7 @@ def render_knowledge_checks_tab():
 
 def initialize_session_state():
     """Initialize session state variables."""
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = str(uuid.uuid4())
-        
+       
     if "knowledge_check_started" not in st.session_state:
         st.session_state.knowledge_check_started = False
 
@@ -1433,14 +1416,6 @@ def initialize_session_state():
         st.session_state.knowledge_check_answers = {}
 
 
-def setup_page():
-    """Set up the page configuration."""
-    st.set_page_config(
-        page_title="AWS Gen AI Learning Hub",
-        page_icon="🤖",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
     
     load_css()
 
@@ -1480,6 +1455,7 @@ def render_footer():
 def main():
     """Main function to run the application."""
     # Setup page and initialize session state
+    common.initialize_session_state()
     initialize_session_state()
     
     # Render sidebar
@@ -1530,11 +1506,14 @@ def main():
     render_footer()
 
 
+# Main execution flow
 if __name__ == "__main__":
-    setup_page()
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
+    if 'localhost' in st.context.headers["host"]:
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

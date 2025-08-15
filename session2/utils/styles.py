@@ -30,6 +30,21 @@ def load_css():
        =============================== */
     
     /* Main styles and typography */
+    
+    .main-header {{
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #FF5733;
+    }}
+    .sub-header {{
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #3366FF;
+    }}
+    
     html, body, [data-testid="stAppViewContainer"] {{
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
         color: {AWS_COLORS['text']};

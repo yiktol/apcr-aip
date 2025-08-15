@@ -2,8 +2,8 @@ import streamlit as st
 import uuid
 from utils.styles import load_css
 from utils.knowledge_check import display_knowledge_check
-from utils.common import initialize_session_state, render_sidebar
 import utils.authenticate as authenticate
+import utils.common as common
 
 # Set page configuration
 st.set_page_config(
@@ -13,7 +13,23 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-
+def initialize_session_state():
+    """Initialize session state variables"""
+    
+    common.initialize_session_state()
+    
+    if "knowledge_check_started" not in st.session_state:
+        st.session_state.knowledge_check_started = False
+    
+    if "current_question" not in st.session_state:
+        st.session_state.current_question = 0
+    
+    if "answers" not in st.session_state:
+        st.session_state.answers = {}
+    
+    if "score" not in st.session_state:
+        st.session_state.score = 0
+        
 def main():
     # Load CSS
     load_css()
@@ -37,7 +53,7 @@ Transformer models complete sentences by leveraging their attention mechanisms t
     
     # Sidebar
     with st.sidebar:
-        render_sidebar()
+        common.render_sidebar()
         
         # About this App - collapsed by default
         with st.expander("About this App", expanded=False):
@@ -572,7 +588,6 @@ if __name__ == "__main__":
                 main()
 
     except Exception as e:
-        logger.critical(f"Application error: {e}", exc_info=True)
         st.error(f"An unexpected error occurred: {str(e)}")
         
         # Provide debugging information in an expander

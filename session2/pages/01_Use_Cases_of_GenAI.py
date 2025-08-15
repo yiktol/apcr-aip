@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import Image
 import time
 from utils.styles import load_css, custom_header, load_css
-from utils.common import render_sidebar
+import utils.common as common
 import utils.authenticate as authenticate
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -31,18 +31,14 @@ load_css()
 
 def initialize_session():
     """Initialize session state variables if they don't exist"""
+    
+    common.initialize_session_state()
+    
     if "user_id" not in st.session_state:
         st.session_state.user_id = str(uuid.uuid4())
     
     if "conversation_history" not in st.session_state:
         st.session_state.conversation_history = []
-
-def reset_session():
-    """Reset all session variables"""
-    st.session_state.user_id = str(uuid.uuid4())
-    st.session_state.conversation_history = []
-    st.session_state.messages = []
-    st.success("Session has been reset successfully!")
 
 # ------- API FUNCTIONS -------
 
@@ -694,15 +690,8 @@ def main():
     
 
     with st.sidebar:
-        # Session Management
-        # st.markdown("<div class='side-header'>Session Management</div>", unsafe_allow_html=True)
-        
-        # st.caption(f"ID: {st.session_state.user_id[:8]}...")
-        
-        # st.button("Reset Session", on_click=reset_session, key="reset_session", 
-        #             help="Reset your current session and conversation history")
-        
-        render_sidebar()
+       
+        common.render_sidebar()
         
         # About section
         with st.expander("About this App", expanded=False):
@@ -730,7 +719,6 @@ def main():
     
     
     st.markdown("""<div class="info-box">
-    This interactive learning environment demonstrates various use cases of Generative AI using Amazon Bedrock.
     Explore different capabilities by selecting a use case tab below and experiment with the power of foundation models.
     </div>""",unsafe_allow_html=True)
     

@@ -24,6 +24,14 @@ from scipy.spatial.distance import cdist
 from stqdm import stqdm
 import utils.authenticate as authenticate
 import utils.common as common
+from utils.styles import load_css
+
+st.set_page_config(
+    page_title="Multimodal Embedding",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 # Configure logging
 logging.basicConfig(
@@ -31,40 +39,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-def setup_page_config():
-    """Configure the Streamlit page settings and styles"""
-    # Page configuration
-    st.set_page_config(
-        page_title="Multimodal Embedding",
-        page_icon="🔍",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-
-    # Custom CSS for styling
-    st.markdown("""
-    <style>
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        .st-emotion-cache-16txtl3 h1 {
-            font-weight: 700;
-            color: #1E88E5;
-        }
-        .result-card {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .stButton>button {
-            width: 100%;
-        }
-    </style>
-    """, unsafe_allow_html=True)
 
 # Initialize Bedrock client
 @st.cache_resource
@@ -293,13 +267,15 @@ def create_sidebar():
 
 def main():
     """Main application function"""
+    load_css()
     
     initialize_session_state()
     create_sidebar()
 
     # Main content
-    st.title("🔍 Multimodal Embedding")
-
+    st.markdown("""
+        <h1>🔍 Titan MultiModal Embedding</h1>
+        """, unsafe_allow_html=True)
     try:
         # Load dataset
         dataset = load_jsonl('data/metadata.jsonl')
@@ -309,13 +285,19 @@ def main():
         left_col, right_col = st.columns([0.6, 0.4])
         
         with left_col:
-            st.markdown("""
-            Amazon Titan Multimodal Embedding Models can be used for enterprise tasks such as image search and similarity-based recommendations.
             
-            - Generate embeddings for images and text
-            - Find similar products through semantic searching  
-            - Visualize embedding vectors
-            """)
+            st.markdown("""
+            <div class="info-box">
+                Amazon Titan Multimodal Embedding Models can be used for enterprise tasks such as image search and similarity-based recommendations.
+                <ul>
+                    <li>Generate embeddings for images and text</li>
+                    <li>Find similar products through semantic searching</li>
+                    <li>Visualize embedding vectors</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+
             
             # Search form
             with st.form("search_form", border=True):

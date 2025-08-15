@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import uuid
 from utils.common import render_sidebar
-from utils.styles import load_css, custom_header, load_css
+from utils.styles import load_css, custom_header
 import utils.authenticate as authenticate
 
 
