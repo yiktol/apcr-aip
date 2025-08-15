@@ -1,0 +1,14 @@
+streamlit
+boto3
+botocore
+matplotlib
+langchain
+langchain_aws
+langchain_community
+seaborn
+pandas
+scikit-learn
+pypdf
+plotly
+structlog
+faiss-cpu
