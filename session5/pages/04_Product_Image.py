@@ -12,7 +12,7 @@ from datetime import datetime
 import uuid
 import utils.common as common
 import utils.authenticate as authenticate
-
+import utils.styles as styles
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -26,193 +26,196 @@ class ImageError(Exception):
 
 def load_css():
     """Load custom CSS for modern UI/UX"""
-    st.markdown("""
-    <style>
-    /* Modern Color Scheme */
-    :root {
-        --aws-orange: #FF9900;
-        --aws-blue: #232F3E;
-        --aws-light-blue: #4B9CD3;
-        --aws-dark-blue: #16191F;
-        --aws-gray: #EAEDED;
-        --aws-white: #FFFFFF;
-        --success-green: #0FA958;
-        --error-red: #D13212;
-    }
     
-    /* Main Header */
-    .main-header {
-        background: linear-gradient(135deg, var(--aws-blue) 0%, var(--aws-light-blue) 100%);
-        padding: 2.5rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
+    styles.load_css()
     
-    .main-header h1 {
-        color: white !important;
-        font-size: 2.8rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
+    # st.markdown("""
+    # <style>
+    # /* Modern Color Scheme */
+    # :root {
+    #     --aws-orange: #FF9900;
+    #     --aws-blue: #232F3E;
+    #     --aws-light-blue: #4B9CD3;
+    #     --aws-dark-blue: #16191F;
+    #     --aws-gray: #EAEDED;
+    #     --aws-white: #FFFFFF;
+    #     --success-green: #0FA958;
+    #     --error-red: #D13212;
+    # }
     
-    .main-header p {
-        color: var(--aws-gray);
-        font-size: 1.2rem;
-        margin: 0;
-        opacity: 0.95;
-    }
+    # /* Main Header */
+    # .main-header {
+    #     background: linear-gradient(135deg, var(--aws-blue) 0%, var(--aws-light-blue) 100%);
+    #     padding: 2.5rem;
+    #     border-radius: 15px;
+    #     margin-bottom: 2rem;
+    #     text-align: center;
+    #     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    # }
     
-    /* Card Styling */
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-        border: 1px solid #e1e4e8;
-        transition: transform 0.3s ease;
-    }
+    # .main-header h1 {
+    #     color: white !important;
+    #     font-size: 2.8rem;
+    #     font-weight: 700;
+    #     margin-bottom: 0.5rem;
+    #     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    # }
     
-    .info-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-    }
+    # .main-header p {
+    #     color: var(--aws-gray);
+    #     font-size: 1.2rem;
+    #     margin: 0;
+    #     opacity: 0.95;
+    # }
     
-    .feature-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-left: 4px solid var(--aws-orange);
-        padding: 1.2rem;
-        margin: 1rem 0;
-        border-radius: 8px;
-    }
+    # /* Card Styling */
+    # .info-card {
+    #     background: white;
+    #     border-radius: 12px;
+    #     padding: 1.5rem;
+    #     margin-bottom: 1.5rem;
+    #     box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+    #     border: 1px solid #e1e4e8;
+    #     transition: transform 0.3s ease;
+    # }
     
-    /* Tabs Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 10px;
-    }
+    # .info-card:hover {
+    #     transform: translateY(-2px);
+    #     box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+    # }
     
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        padding: 0 24px;
-        background-color: white;
-        border-radius: 8px;
-        border: 2px solid #e1e4e8;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
+    # .feature-card {
+    #     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    #     border-left: 4px solid var(--aws-orange);
+    #     padding: 1.2rem;
+    #     margin: 1rem 0;
+    #     border-radius: 8px;
+    # }
     
-    .stTabs [data-baseweb="tab"]:hover {
-        background-color: var(--aws-orange);
-        color: white;
-        border-color: var(--aws-orange);
-    }
+    # /* Tabs Styling */
+    # .stTabs [data-baseweb="tab-list"] {
+    #     gap: 8px;
+    #     background-color: #f8f9fa;
+    #     padding: 0.5rem;
+    #     border-radius: 10px;
+    # }
     
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(90deg, var(--aws-orange) 0%, #ff7700 100%);
-        color: white !important;
-        border-color: var(--aws-orange) !important;
-    }
+    # .stTabs [data-baseweb="tab"] {
+    #     height: 50px;
+    #     padding: 0 24px;
+    #     background-color: white;
+    #     border-radius: 8px;
+    #     border: 2px solid #e1e4e8;
+    #     font-weight: 600;
+    #     transition: all 0.3s ease;
+    # }
     
-    /* Form Elements */
-    .stSelectbox label, .stTextArea label, .stNumberInput label {
-        font-weight: 600;
-        color: var(--aws-blue);
-        margin-bottom: 0.5rem;
-    }
+    # .stTabs [data-baseweb="tab"]:hover {
+    #     background-color: var(--aws-orange);
+    #     color: white;
+    #     border-color: var(--aws-orange);
+    # }
     
-    .stTextArea textarea {
-        border-radius: 8px;
-        border: 2px solid #e1e4e8;
-        transition: border-color 0.3s ease;
-    }
+    # .stTabs [aria-selected="true"] {
+    #     background: linear-gradient(90deg, var(--aws-orange) 0%, #ff7700 100%);
+    #     color: white !important;
+    #     border-color: var(--aws-orange) !important;
+    # }
     
-    .stTextArea textarea:focus {
-        border-color: var(--aws-orange);
-        box-shadow: 0 0 0 3px rgba(255,153,0,0.1);
-    }
+    # /* Form Elements */
+    # .stSelectbox label, .stTextArea label, .stNumberInput label {
+    #     font-weight: 600;
+    #     color: var(--aws-blue);
+    #     margin-bottom: 0.5rem;
+    # }
     
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, var(--aws-orange) 0%, #ff7700 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(255,153,0,0.2);
-    }
+    # .stTextArea textarea {
+    #     border-radius: 8px;
+    #     border: 2px solid #e1e4e8;
+    #     transition: border-color 0.3s ease;
+    # }
     
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(255,153,0,0.3);
-    }
+    # .stTextArea textarea:focus {
+    #     border-color: var(--aws-orange);
+    #     box-shadow: 0 0 0 3px rgba(255,153,0,0.1);
+    # }
     
-    /* Success/Error Messages */
-    .success-message {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        border-left: 4px solid var(--success-green);
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
+    # /* Buttons */
+    # .stButton > button {
+    #     background: linear-gradient(90deg, var(--aws-orange) 0%, #ff7700 100%);
+    #     color: white;
+    #     border: none;
+    #     border-radius: 8px;
+    #     padding: 0.75rem 2rem;
+    #     font-weight: 600;
+    #     font-size: 1rem;
+    #     transition: all 0.3s ease;
+    #     box-shadow: 0 4px 6px rgba(255,153,0,0.2);
+    # }
     
-    .error-message {
-        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        border-left: 4px solid var(--error-red);
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
+    # .stButton > button:hover {
+    #     transform: translateY(-2px);
+    #     box-shadow: 0 6px 12px rgba(255,153,0,0.3);
+    # }
     
-    /* Image Display */
-    .image-container {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        margin: 1.5rem 0;
-    }
+    # /* Success/Error Messages */
+    # .success-message {
+    #     background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    #     border-left: 4px solid var(--success-green);
+    #     padding: 1rem;
+    #     border-radius: 8px;
+    #     margin: 1rem 0;
+    # }
     
-    /* Footer */
-    .footer {
-        background-color: var(--aws-blue);
-        color: white;
-        text-align: center;
-        padding: 1.5rem;
-        margin-top: 3rem;
-        border-radius: 10px;
-        font-size: 0.9rem;
-    }
+    # .error-message {
+    #     background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    #     border-left: 4px solid var(--error-red);
+    #     padding: 1rem;
+    #     border-radius: 8px;
+    #     margin: 1rem 0;
+    # }
     
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .main-header h1 {
-            font-size: 2rem;
-        }
+    # /* Image Display */
+    # .image-container {
+    #     background: white;
+    #     border-radius: 12px;
+    #     padding: 1.5rem;
+    #     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    #     margin: 1.5rem 0;
+    # }
+    
+    # /* Footer */
+    # .footer {
+    #     background-color: var(--aws-blue);
+    #     color: white;
+    #     text-align: center;
+    #     padding: 1.5rem;
+    #     margin-top: 3rem;
+    #     border-radius: 10px;
+    #     font-size: 0.9rem;
+    # }
+    
+    # /* Responsive Design */
+    # @media (max-width: 768px) {
+    #     .main-header h1 {
+    #         font-size: 2rem;
+    #     }
         
-        .stButton > button {
-            width: 100%;
-        }
+    #     .stButton > button {
+    #         width: 100%;
+    #     }
         
-        .info-card {
-            padding: 1rem;
-        }
-    }
+    #     .info-card {
+    #         padding: 1rem;
+    #     }
+    # }
     
-    /* Loading Animation */
-    .stSpinner > div {
-        border-color: var(--aws-orange) !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # /* Loading Animation */
+    # .stSpinner > div {
+    #     border-color: var(--aws-orange) !important;
+    # }
+    # </style>
+    # """, unsafe_allow_html=True)
 
 def initialize_session_state():
     """Initialize session state variables"""
@@ -705,7 +708,7 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1>🎨 AWS Nova Canvas Product Image Generator</h1>
-        <p>Transform product specifications into stunning professional images with AI</p>
+        <p class="info-box">Transform product specifications into stunning professional images with AI</p>
     </div>
     """, unsafe_allow_html=True)
     

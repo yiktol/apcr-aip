@@ -21,6 +21,8 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -36,39 +38,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply custom CSS
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem;
-        color: #4A4A4A;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        color: #6F6F6F;
-        margin-bottom: 2rem;
-    }
-    .stChatMessage {
-        padding: 1rem;
-        border-radius: 15px;
-        margin-bottom: 1rem;
-    }
-    .stChatMessage div {
-        font-size: 1.1rem;
-    }
-    .stButton button {
-        border-radius: 20px;
-        padding: 0.5rem 1.5rem;
-    }
-    .sidebar-info {
-        padding: 1rem;
-        background-color: #f0f5ff;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+load_css()
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -177,9 +147,9 @@ class BedrockAgentChat:
 
 def initialize_session() -> None:
     """Initialize session state variables if they don't exist"""
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = str(uuid.uuid4())
-        logger.info(f"New session created: {st.session_state.session_id}")
+    
+    
+    common.initialize_session_state()
     
     if "chat_history" not in st.session_state:
         current_time = datetime.now().strftime("%H:%M")
@@ -197,7 +167,6 @@ def render_sidebar() -> None:
     """Render the sidebar with settings and controls"""
     with st.sidebar:
         common.render_sidebar()
-        # st.write(st.session_state["user_cognito_groups"])
         
         if st.button("🗑️ Clear Chat", use_container_width=True):
             current_time = datetime.now().strftime("%H:%M")
@@ -208,41 +177,20 @@ def render_sidebar() -> None:
             }]
             st.rerun()
     
-        # if st.session_state["user_cognito_groups"][0] == 'Admins':
-        #     st.sidebar.markdown("### Debug Options")
-        #     show_debug = st.sidebar.toggle("Show Debug Information", value=st.session_state.get('show_debug', False))
-        #     if show_debug != st.session_state.get('show_debug'):
-        #         st.session_state.show_debug = show_debug
-        #         st.rerun()
-                       
-        #     if st.session_state.get('show_debug', False):
-        #         try:
-        #             history_json = json.dumps(
-        #                 st.session_state.chat_history,
-        #                 indent=2,
-        #                 cls=DateTimeEncoder
-        #             )
-        #             st.download_button(
-        #                 "Download Chat History", 
-        #                 history_json, 
-        #                 "chat_history.json", 
-        #                 "application/json"
-        #             )
-        #         except Exception as e:
-        #             st.error(f"Error creating download: {e}")
             
-        st.sidebar.markdown("---")
-        st.sidebar.info(
-            "This assistant helps customers find the perfect shoes based on their preferences, "
-            "activities, and needs. Ask about running shoes, casual footwear, or specific brands."
-        )
+        # About section
+        with st.expander("About this App", expanded=False):
+            st.info(
+                "This assistant helps customers find the perfect shoes based on their preferences, "
+                "activities, and needs. Ask about running shoes, casual footwear, or specific brands."
+            )
 
 
 def render_chat_interface() -> None:
     """Render the main chat interface"""
     # Header
     st.markdown("<h1 class='main-header'>Shoe Department Assistant</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-header'>Your virtual shopping assistant to find the perfect shoes</p>", unsafe_allow_html=True)
+    st.markdown("<p class='info-box'>Your virtual shopping assistant to find the perfect shoes</p>", unsafe_allow_html=True)
     
     # Chat container
     chat_container = st.container()
@@ -316,14 +264,18 @@ def main():
         st.button("Reload Application", on_click=lambda: st.rerun())
 
 
-# Main execution flow
 if __name__ == "__main__":
-    if 'localhost' in st.context.headers.get("host", ""):
-        main()
-    else:
-        # First check authentication
-        is_authenticated = authenticate.login()
+    main()
+
+
+# # Main execution flow
+# if __name__ == "__main__":
+#     if 'localhost' in st.context.headers.get("host", ""):
+#         main()
+#     else:
+#         # First check authentication
+#         is_authenticated = authenticate.login()
         
-        # If authenticated, show the main app content
-        if is_authenticated:
-            main()
+#         # If authenticated, show the main app content
+#         if is_authenticated:
+#             main()

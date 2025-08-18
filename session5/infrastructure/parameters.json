@@ -1,0 +1,36 @@
+{
+  "Parameters": [
+    {
+      "ParameterKey": "VpcId",
+      "ParameterValue": "vpc-xxxxxxxxx"
+    },
+    {
+      "ParameterKey": "PublicSubnetIds",
+      "ParameterValue": "subnet-xxxxxxxx,subnet-yyyyyyyy"
+    },
+    {
+      "ParameterKey": "PrivateSubnetIds",
+      "ParameterValue": "subnet-aaaaaaaa,subnet-bbbbbbbb"
+    },
+    {
+      "ParameterKey": "ECRRepositoryURI",
+      "ParameterValue": "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/my-bedrock-app:latest"
+    },
+    {
+      "ParameterKey": "ContainerCpu",
+      "ParameterValue": "512"
+    },
+    {
+      "ParameterKey": "ContainerMemory",
+      "ParameterValue": "1024"
+    },
+    {
+      "ParameterKey": "DesiredCount",
+      "ParameterValue": "2"
+    },
+    {
+      "ParameterKey": "Environment",
+      "ParameterValue": "production"
+    }
+  ]
+}

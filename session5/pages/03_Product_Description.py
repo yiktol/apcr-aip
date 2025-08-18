@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import Image
 import time
 import json
-from utils.styles import load_css, custom_header, load_css
+from utils.styles import load_css
 import utils.common as common
 import utils.authenticate as authenticate
 
@@ -760,21 +760,24 @@ def main():
         """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    try:
-        if 'localhost' in st.context.headers["host"]:
-            main()
-        else:
-            # First check authentication
-            is_authenticated = authenticate.login()
-            
-            # If authenticated, show the main app content
-            if is_authenticated:
-                main()
+    main()
 
-    except Exception as e:
-        logger.critical(f"Application error: {e}", exc_info=True)
-        st.error(f"An unexpected error occurred: {str(e)}")
+# if __name__ == "__main__":
+#     try:
+#         if 'localhost' in st.context.headers["host"]:
+#             main()
+#         else:
+#             # First check authentication
+#             is_authenticated = authenticate.login()
+            
+#             # If authenticated, show the main app content
+#             if is_authenticated:
+#                 main()
+
+#     except Exception as e:
+#         logger.critical(f"Application error: {e}", exc_info=True)
+#         st.error(f"An unexpected error occurred: {str(e)}")
         
-        # Provide debugging information in an expander
-        with st.expander("Error Details"):
-            st.code(str(e))
+#         # Provide debugging information in an expander
+#         with st.expander("Error Details"):
+#             st.code(str(e))

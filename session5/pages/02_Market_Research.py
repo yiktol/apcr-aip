@@ -16,6 +16,7 @@ import tempfile
 from pathlib import Path
 import utils.common as common
 import utils.authenticate as authenticate
+import utils.styles as styles
 
 # Updated LangChain imports (v0.1.0+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
