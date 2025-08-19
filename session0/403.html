@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 Forbidden | Access Denied</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .error-container {
+            max-width: 800px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error-header {
+            background-color: #f44336;
+            padding: 30px;
+            color: white;
+            text-align: center;
+        }
+        
+        .error-code {
+            font-size: 72px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .error-content {
+            padding: 30px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .reasons-list {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px 20px 5px 20px;
+            margin-bottom: 25px;
+        }
+        
+        .reason-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .reason-icon {
+            background-color: #ff5252;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .button {
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .primary-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+        }
+        
+        .primary-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        .secondary-button {
+            background-color: transparent;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+        
+        .secondary-button:hover {
+            background-color: #f5f5f5;
+        }
+        
+        @media (max-width: 600px) {
+            .error-code {
+                font-size: 48px;
+            }
+            
+            .error-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-code">403</div>
+            <div class="error-title">Forbidden - Access Denied</div>
+        </div>
+        
+        <div class="error-content">
+            <h2>What does this error mean?</h2>
+            <p>
+                A 403 Forbidden error occurs when you don't have permission to access the requested resource on this server.
+                Unlike a 401 error (which asks for authentication), this error indicates the server understands your request
+                but refuses to authorize it, even with valid credentials.
+            </p>
+            
+            <h2>Why am I seeing this error?</h2>
+            <div class="reasons-list">
+                <div class="reason-item">
+                    <div class="reason-icon">1</div>
+                    <div>
+                        <strong>Insufficient permissions</strong>: Your account doesn't have the necessary permissions to access this resource.
+                    </div>
+                </div>
+                
+                <div class="reason-item">
+                    <div class="reason-icon">2</div>
+                    <div>
+                        <strong>IP restrictions</strong>: The server may be configured to block requests from your current IP address or geographic location.
+                    </div>
+                </div>
+                
+                <div class="reason-item">
+                    <div class="reason-icon">3</div>
+                    <div>
+                        <strong>Directory browsing restrictions</strong>: Attempting to browse a directory where index browsing is disabled.
+                    </div>
+                </div>
+                
+                <div class="reason-item">
+                    <div class="reason-icon">4</div>
+                    <div>
+                        <strong>Server configuration</strong>: The server has specific security rules blocking this request.
+                    </div>
+                </div>
+                
+                <div class="reason-item">
+                    <div class="reason-icon">5</div>
+                    <div>
+                        <strong>.htaccess restrictions</strong>: Custom access rules defined by the website's administrator are preventing access.
+                    </div>
+                </div>
+            </div>
+            
+            <h2>What can I do?</h2>
+            <p>
+                If you believe you should have access to this resource, you can try logging in with different credentials,
+                contact the website administrator, or check if you're accessing the correct URL.
+            </p>
+            
+            <div class="button-group">
+                <a href="/" class="button primary-button">Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

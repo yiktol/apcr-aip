@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateway Timeout | 504 Error</title>
+    <style>
+        :root {
+            --primary-color: #7e57c2;
+            --secondary-color: #9575cd;
+            --text-color: #333;
+            --background-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --error-shade: rgba(126, 87, 194, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 15px 50px var(--shadow-color);
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .error-code {
+            font-size: 110px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #444;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 17px;
+            max-width: 550px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .message-container {
+            background-color: var(--error-shade);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 35px;
+            position: relative;
+        }
+
+        .message-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .message-title i {
+            margin-right: 10px;
+        }
+
+        .timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 14px;
+            color: var(--primary-color);
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 4px 14px rgba(126, 87, 194, 0.25);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(126, 87, 194, 0.35);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 2px solid #e0e0e0;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .illustration {
+            width: 200px;
+            margin: 0 auto 30px;
+        }
+
+        .stack {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .stack-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .stack-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #555;
+            text-align: left;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 580px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .error-code {
+                font-size: 80px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            p {
+                font-size: 16px;
+            }
+
+            .message-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <svg class="illustration" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+            <rect x="150" y="30" width="200" height="140" rx="10" fill="#f0f0f0" />
+            <rect x="170" y="50" width="160" height="15" rx="3" fill="#e0e0e0" />
+            <rect x="170" y="80" width="160" height="15" rx="3" fill="#e0e0e0" />
+            <rect x="170" y="110" width="160" height="15" rx="3" fill="#e0e0e0" />
+            <rect x="170" y="140" width="80" height="15" rx="3" fill="#e0e0e0" />
+            <circle cx="250" cy="110" r="80" fill="rgba(126, 87, 194, 0.1)" />
+            <path d="M250,50 C283,50 310,77 310,110 C310,143 283,170 250,170 C217,170 190,143 190,110 C190,77 217,50 250,50 Z" stroke="#9575cd" stroke-width="6" fill="none" stroke-dasharray="15 10" />
+            <circle cx="250" cy="110" r="20" fill="#7e57c2" />
+            <rect x="248" y="75" width="4" height="35" rx="2" fill="#7e57c2" />
+            <rect x="248" y="110" width="25" height="4" rx="2" fill="#fff" />
+        </svg>
+
+        <div class="error-code">504</div>
+        <h1>Gateway Timeout</h1>
+        <p>Our server didn't receive a timely response from an upstream server that it needed to access in order to complete your request.</p>
+        
+        <div class="message-container">
+            <div class="message-title">
+                <i class="fas fa-info-circle"></i>
+                What happened?
+            </div>
+            <p>The server acting as a gateway or proxy did not receive a response from the upstream server within the time that was allowed.</p>
+            <div class="timer">
+                <i class="fas fa-sync-alt fa-spin"></i>
+                <span id="countdown">30</span> seconds until automatic retry
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <a href="javascript:window.location.reload()" class="btn">
+                <i class="fas fa-redo icon"></i>
+                Retry Now
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-home icon"></i>
+                Back to Homepage
+            </a>
+        </div>
+
+        <div class="stack">
+            <div class="stack-title">Technical Details</div>
+            <div class="stack-details">HTTP Error 504 - Gateway Timeout</div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer
+        let timeLeft = 30;
+        const countdownElement = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdownElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                window.location.reload();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>502 Bad Gateway Error</title>
+    <style>
+        :root {
+            --primary-color: #5661f2;
+            --error-color: #f6587d;
+            --text-color: #333333;
+            --light-text: #666666;
+            --background: #ffffff;
+            --light-gray: #f7f8fb;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --aws-color: #FF9900;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .error-container {
+            background-color: var(--background);
+            border-radius: 1rem;
+            box-shadow: 0 12px 24px var(--shadow);
+            padding: 3rem;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error-icon {
+            width: 110px;
+            height: 110px;
+            background-color: var(--light-gray);
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-code {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--error-color);
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        p {
+            color: var(--light-text);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .training-notice {
+            background-color: rgba(255, 153, 0, 0.1);
+            border-left: 4px solid var(--aws-color);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            text-align: left;
+            border-radius: 0.5rem;
+        }
+        
+        .training-notice h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+        
+        .training-notice p {
+            margin-bottom: 0.75rem;
+        }
+        
+        .aws-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+            transition: color 0.2s;
+            border-bottom: 1px solid transparent;
+            padding-bottom: 2px;
+        }
+        
+        .aws-link:hover {
+            color: #4149c2;
+            border-bottom: 1px solid;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(86, 97, 242, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .refresh-section {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+        
+        #countdown {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 480px) {
+            .error-container {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .training-notice {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="#f6587d" viewBox="0 0 16 16">
+                <path d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm-.5 5a.5.5 0 0 1 1 0v5a.5.5 0 0 1-1 0V5zm.5 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            </svg>
+        </div>
+        <div class="error-code">Error 502</div>
+        <h1>Bad Gateway</h1>
+        <p>Our servers are currently experiencing issues communicating with an upstream service. This is typically a temporary condition that will resolve itself shortly.</p>
+        
+        <div class="training-notice">
+            <h2>Training Session Access Only</h2>
+            <p>This website is only available during the day of training. The training session for today may have concluded or has not yet begun.</p>
+            <p>Please attend the next available training session to access this website and its resources.</p>
+            <a href="https://aws.amazon.com/partners/training/certification/?aws-partner-certification-readiness-cards.sort-by=item.additionalFields.startDate&aws-partner-certification-readiness-cards.sort-order=asc&awsf.aws-partner-certification-readiness-training-options=event-type%23virtual&awsf.aws-partner-certification-readiness-audience=*all&awsf.aws-partner-certification-readiness-certification=*all&awsf.aws-partner-certification-readiness-location=*all&awsf.aws-partner-certification-readiness-language=*all&awsf.aws-partner-certification-readiness-level=*all&awsf.aws-partner-certification-readiness-topics=*all&awsf.aws-partner-certification-readiness-certification-training-type=*all?trk=33d47330-532d-4336-9382-4f6bd107251c&sc_channel=el" 
+               class="aws-link" 
+               target="_blank" 
+               rel="noopener noreferrer">
+               Explore AWS Partner Certification Readiness Training →
+            </a>
+        </div>
+        
+        <a href="javascript:location.reload()" class="btn">Try Again</a>
+        
+        <div class="refresh-section">
+            Page will automatically refresh in <span id="countdown">30</span> seconds
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer for auto-refresh
+        let seconds = 30;
+        const countdownElement = document.getElementById('countdown');
+        
+        const countdown = setInterval(() => {
+            seconds--;
+            countdownElement.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                location.reload();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
