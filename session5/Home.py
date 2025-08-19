@@ -14,9 +14,11 @@ st.set_page_config(
 def main():
     # Initialize session state
     common.initialize_session_state()
+    styles.load_css()
 
     # Render the sidebar
-    common.render_sidebar()
+    with st.sidebar:
+        common.render_sidebar()
 
     # Render the main content
     st.title("👟 Shoe Industry Market Research Analyzer")
