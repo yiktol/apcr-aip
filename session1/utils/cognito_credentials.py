@@ -36,7 +36,8 @@ def get_cognito_credentials(secret_name="genai/essentials",region_name="ap-south
                 'COGNITO_REDIRECT_URI_1': secret.get('COGNITO_REDIRECT_URI_1'),
                 'COGNITO_REDIRECT_URI_2': secret.get('COGNITO_REDIRECT_URI_2'),
                 'COGNITO_REDIRECT_URI_3': secret.get('COGNITO_REDIRECT_URI_3'),
-                'COGNITO_REDIRECT_URI_4': secret.get('COGNITO_REDIRECT_URI_4')
+                'COGNITO_REDIRECT_URI_4': secret.get('COGNITO_REDIRECT_URI_4'),
+                'COGNITO_REDIRECT_URI_5': secret.get('COGNITO_REDIRECT_URI_5')
             }
             
             return cognito_credentials

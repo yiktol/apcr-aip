@@ -3,7 +3,7 @@ import json
 from botocore.exceptions import ClientError
 
 
-def get_cognito_credentials(secret_name="CognitoCredentials",region_name="us-east-1"):
+def get_cognito_credentials(secret_name="genai/essentials",region_name="ap-southeast-1"):
     """
     Retrieve Cognito credentials from AWS Secrets Manager
     
@@ -33,10 +33,11 @@ def get_cognito_credentials(secret_name="CognitoCredentials",region_name="us-eas
                 'COGNITO_APP_CLIENT_SECRET': secret.get('COGNITO_APP_CLIENT_SECRET'),
                 'COGNITO_APP_CLIENT_ID': secret.get('COGNITO_APP_CLIENT_ID'),
                 'COGNITO_REDIRECT_URI': secret.get('COGNITO_REDIRECT_URI'),
-                'COGNITO_REDIRECT_URI_AIP_1': secret.get('COGNITO_REDIRECT_URI_AIP_1'),
-                'COGNITO_REDIRECT_URI_AIP_2': secret.get('COGNITO_REDIRECT_URI_AIP_2'),
-                'COGNITO_REDIRECT_URI_AIP_3': secret.get('COGNITO_REDIRECT_URI_AIP_3'),
-                'COGNITO_REDIRECT_URI_AIP_4': secret.get('COGNITO_REDIRECT_URI_AIP_4')
+                'COGNITO_REDIRECT_URI_1': secret.get('COGNITO_REDIRECT_URI_1'),
+                'COGNITO_REDIRECT_URI_2': secret.get('COGNITO_REDIRECT_URI_2'),
+                'COGNITO_REDIRECT_URI_3': secret.get('COGNITO_REDIRECT_URI_3'),
+                'COGNITO_REDIRECT_URI_4': secret.get('COGNITO_REDIRECT_URI_4'),
+                'COGNITO_REDIRECT_URI_5': secret.get('COGNITO_REDIRECT_URI_5')
             }
             
             return cognito_credentials
