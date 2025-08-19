@@ -1,0 +1,1395 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Generative AI Essentials on AWS</title>
+  <link rel="icon" type="image/x-icon" href="aws.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <meta name="description" content="Learn Generative AI fundamentals on AWS with interactive playgrounds and comprehensive resources">
+  <meta name="theme-color" content="#232f3e">
+  
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+:root {
+      --primary-color: #232f3e;
+      --secondary-color: #ff9900;
+      --accent-color: #0073bb;
+      --light-bg: #ffffff;  /* Changed from #f8f9fa to pure white */
+      --lighter-bg: #fafbfc; /* New: even lighter background for sections */
+      --card-bg: #ffffff;    /* White cards */
+      --dark-bg: #232f3e;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08); /* Lighter shadow */
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --header-height: 80px;
+      --nav-height: 60px;
+      --container-max-width: min(1400px, 95vw);
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 20px;
+      --spacing-lg: 30px;
+      --spacing-xl: 40px;
+      --text-color: #2c3e50;  /* Slightly darker text for better contrast */
+      --text-secondary: #6c757d;
+      --border-color: #e9ecef; /* Light border color */
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --light-bg: #1a1f2e;
+        --card-bg: #2d3748;
+        --text-color: #e2e8f0;
+        --text-secondary: #a0aec0;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color, #333);
+      background-color: var(--light-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Utility Classes */
+    .container {
+      width: 100%;
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      padding: 0 var(--spacing-md);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Header Styles */
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #344b61 100%);
+      color: white;
+      padding: var(--spacing-md) 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 15px);
+    }
+
+    .header-logo img {
+      height: clamp(40px, 8vw, 60px);
+      width: auto;
+      object-fit: contain;
+    }
+
+    .header-title h1 {
+      font-size: clamp(1.2rem, 4vw, 1.75rem);
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .header-title p {
+      font-size: clamp(0.875rem, 2vw, 1rem);
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    /* Mobile Menu Toggle */
+    .mobile-menu-toggle {
+      display: none;
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: var(--transition);
+    }
+
+    .mobile-menu-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Navigation */
+    .nav-wrapper {
+      background-color: white;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      margin-top: var(--spacing-lg);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .nav-tabs {
+      display: flex;
+      overflow-x: auto;
+      border-bottom: 1px solid #e1e4e8;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) transparent;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .nav-tabs::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .nav-tabs::-webkit-scrollbar-thumb {
+      background: var(--accent-color);
+      border-radius: 3px;
+    }
+
+    .nav-tab {
+      padding: clamp(12px, 2vw, 15px) clamp(15px, 3vw, 25px);
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: 500;
+      color: #555;
+      border-bottom: 3px solid transparent;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-tab i {
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+
+    .nav-tab:hover {
+      color: var(--accent-color);
+      background: rgba(0, 115, 187, 0.05);
+    }
+
+    .nav-tab.active {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+      background: rgba(0, 115, 187, 0.05);
+    }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-color);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    /* Main content */
+    main {
+      flex: 1;
+    }
+
+    .content-section {
+      display: none;
+      padding: var(--spacing-lg) 0;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 1.75rem);
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+      color: white;
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    /* Card styles */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+      gap: clamp(1rem, 2vw, 1.25rem);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .card {
+      background-color: var(--card-bg, white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #344b61 100%);
+      color: white;
+      padding: clamp(12px, 2vw, 15px);
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.125rem);
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: clamp(12px, 2vw, 15px);
+      flex-grow: 1;
+    }
+
+    .resource-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .resource-item {
+      margin-bottom: clamp(10px, 1.5vw, 12px);
+      padding-bottom: clamp(10px, 1.5vw, 12px);
+      border-bottom: 1px solid #eee;
+    }
+
+    .resource-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .resource-link {
+      display: flex;
+      align-items: center;
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      font-size: clamp(0.875rem, 1.5vw, 1rem);
+      padding: 4px 0;
+    }
+
+    .resource-link:hover,
+    .resource-link:focus {
+      color: var(--secondary-color);
+      transform: translateX(5px);
+    }
+
+    .resource-link:focus {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+
+    .resource-index {
+      background-color: var(--accent-color);
+      color: white;
+      min-width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-right: clamp(8px, 1.5vw, 10px);
+      font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* Playground section */
+    .playground-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
+      gap: clamp(1rem, 3vw, 1.5rem);
+    }
+
+    .playground-card {
+      background-color: var(--card-bg, white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .playground-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .playground-image {
+      height: clamp(150px, 25vw, 200px);
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .playground-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .playground-card:hover .playground-image img {
+      transform: scale(1.1);
+    }
+
+    .playground-content {
+      padding: clamp(15px, 3vw, 20px);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .playground-title {
+      font-size: clamp(1rem, 2vw, 1.125rem);
+      font-weight: 600;
+      color: white;
+      margin-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .playground-title i {
+      color: var(--secondary-color);
+      flex-shrink: 0;
+    }
+
+    .playground-description {
+      color: var(--text-secondary, #666);
+      font-size: clamp(0.875rem, 1.5vw, 0.95rem);
+      margin-bottom: var(--spacing-md);
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    .playground-button {
+      display: inline-block;
+      padding: clamp(8px, 1.5vw, 10px) clamp(14px, 2vw, 18px);
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      font-size: clamp(0.875rem, 1.5vw, 0.95rem);
+      transition: var(--transition);
+      text-align: center;
+      border: 2px solid transparent;
+      align-self: flex-start;
+    }
+
+    .playground-button:hover,
+    .playground-button:focus {
+      background-color: #005d96;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 115, 187, 0.3);
+    }
+
+    .playground-button:focus {
+      outline: none;
+      border-color: white;
+    }
+
+    .playground-badge {
+      position: absolute;
+      top: var(--spacing-sm);
+      right: var(--spacing-sm);
+      background-color: rgba(255, 153, 0, 0.95);
+      color: white;
+      padding: 5px 10px;
+      border-radius: var(--border-radius);
+      font-size: clamp(0.7rem, 1.5vw, 0.75rem);
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--dark-bg);
+      color: white;
+      padding: var(--spacing-md) 0;
+      margin-top: auto;
+      text-align: center;
+    }
+
+    .footer-content {
+      font-size: clamp(0.875rem, 1.5vw, 1rem);
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      animation: skeleton-loading 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading {
+      0% {
+        background-color: hsl(200, 20%, 80%);
+      }
+      100% {
+        background-color: hsl(200, 20%, 95%);
+      }
+    }
+
+    /* Responsive Design - Mobile First Approach */
+    
+    /* Small devices (phones, less than 576px) */
+    @media (max-width: 575.98px) {
+      :root {
+        --container-max-width: 100%;
+        --spacing-md: 15px;
+      }
+
+      .mobile-menu-toggle {
+        display: block;
+      }
+
+      .nav-wrapper {
+        margin-top: var(--spacing-md);
+      }
+
+      .nav-tabs {
+        flex-direction: column;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+
+      .nav-tabs.mobile-open {
+        max-height: 500px;
+      }
+
+      .nav-tab {
+        width: 100%;
+        border-bottom: 1px solid #e1e4e8;
+        border-left: 3px solid transparent;
+      }
+
+      .nav-tab.active {
+        border-left-color: var(--accent-color);
+        border-bottom-color: transparent;
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .playground-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-container {
+        justify-content: space-between;
+      }
+    }
+
+    /* Medium devices (tablets, 576px and up) */
+    @media (min-width: 576px) and (max-width: 767.98px) {
+      .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .playground-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    /* Large devices (desktops, 768px and up) */
+    @media (min-width: 768px) {
+      .nav-tabs {
+        gap: var(--spacing-xs);
+      }
+
+      .playground-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      }
+    }
+
+    /* Extra large devices (large desktops, 1200px and up) */
+    @media (min-width: 1200px) {
+      .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      }
+
+      .playground-grid {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .header,
+      footer,
+      .nav-wrapper {
+        display: none;
+      }
+
+      .content-section {
+        display: block !important;
+      }
+
+      .card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+      :root {
+        --box-shadow: 0 0 0 2px currentColor;
+      }
+
+      .card,
+      .playground-card {
+        border: 2px solid currentColor;
+      }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) and (pointer: coarse) {
+      .nav-tab,
+      .playground-button,
+      .resource-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Skip to main content for accessibility -->
+  <a href="#main-content" class="visually-hidden">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header-container container">
+      <div class="header-logo">
+        <img src="img/AWS-Certified-AI-Practitioner.png" alt="AWS Certified AI Practitioner Logo" loading="lazy">
+        <div class="header-title">
+          <h1>Generative AI Essentials on AWS</h1>
+          <p>Gen AI Learning Path</p>
+        </div>
+      </div>
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <div class="container">
+      <!-- Navigation -->
+      <nav class="nav-wrapper" role="navigation" aria-label="Main navigation">
+        <div class="nav-tabs" id="navTabs">
+          <button class="nav-tab active" onclick="openSection('playgrounds')" aria-current="page">
+            <i class="fas fa-flask" aria-hidden="true"></i>
+            <span>Playgrounds</span>
+          </button>
+          <button class="nav-tab" onclick="openSection('session1')">
+            <i class="fas fa-microchip" aria-hidden="true"></i>
+            <span>AI & ML</span>
+          </button>
+          <button class="nav-tab" onclick="openSection('session2')">
+            <i class="fas fa-robot" aria-hidden="true"></i>
+            <span>Gen AI</span>
+          </button>
+          <button class="nav-tab" onclick="openSection('session3')">
+            <i class="fas fa-brain" aria-hidden="true"></i>
+            <span>Foundation Model</span>
+          </button>
+          <button class="nav-tab" onclick="openSection('session4')">
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
+            <span>Responsible AI</span>
+          </button>
+          <button class="nav-tab" onclick="openSection('resources')">
+            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+            <span>Resources</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Content Sections -->
+      
+      <!-- Playgrounds Section -->
+      <section id="playgrounds" class="content-section active" aria-label="AI Playgrounds">
+        <h2 class="section-title">
+          <i class="fas fa-flask" aria-hidden="true"></i>
+          AI Playgrounds
+        </h2>
+        <div class="playground-grid">
+          <!-- ML Fundamentals -->
+          <article class="playground-card">
+            <div class="playground-image">
+              <img src="img/robot2.png" alt="Machine Learning visualization" loading="lazy">
+              <span class="playground-badge">AI & ML</span>
+            </div>
+            <div class="playground-content">
+              <h3 class="playground-title">
+                <i class="fas fa-microchip" aria-hidden="true"></i>
+                Machine Learning Basics
+              </h3>
+              <p class="playground-description">
+                Explore the essential distinctions between artificial intelligence, machine learning, deep learning, and
+                generative AI, while understanding the various learning paradigms.
+              </p>
+              <a href="/genai-1/" target="_blank" rel="noopener" class="playground-button">
+                Explore Playground
+              </a>
+            </div>
+          </article>
+
+          <!-- GenAI in Practice -->
+          <article class="playground-card">
+            <div class="playground-image">
+              <img src="img/ai.png" alt="Generative AI visualization" loading="lazy">
+              <span class="playground-badge">Gen AI</span>
+            </div>
+            <div class="playground-content">
+              <h3 class="playground-title">
+                <i class="fas fa-robot" aria-hidden="true"></i>
+                Fundamentals of Generative AI
+              </h3>
+              <p class="playground-description">
+                Delve into the practical implementations of Generative AI across diverse applications, showcasing how
+                these technologies are transforming industries.
+              </p>
+              <a href="/genai-2/" target="_blank" rel="noopener" class="playground-button">
+                Explore Playground
+              </a>
+            </div>
+          </article>
+
+          <!-- Prompt Engineering -->
+          <article class="playground-card">
+            <div class="playground-image">
+              <img src="img/brain.png" alt="Foundation models visualization" loading="lazy">
+              <span class="playground-badge">Foundation Models</span>
+            </div>
+            <div class="playground-content">
+              <h3 class="playground-title">
+                <i class="fas fa-brain" aria-hidden="true"></i>
+                Applications of Foundation Models
+              </h3>
+              <p class="playground-description">
+                Apply effective prompt engineering techniques for large language models on Amazon Bedrock, optimizing
+                prompts through proper testing methodologies.
+              </p>
+              <a href="/genai-3/" target="_blank" rel="noopener" class="playground-button">
+                Explore Playground
+              </a>
+            </div>
+          </article>
+
+          <!-- Responsible AI -->
+          <article class="playground-card">
+            <div class="playground-image">
+              <img src="img/key.png" alt="Security and governance visualization" loading="lazy">
+              <span class="playground-badge">Responsible AI</span>
+            </div>
+            <div class="playground-content">
+              <h3 class="playground-title">
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                Responsible AI, Security, and Governance
+              </h3>
+              <p class="playground-description">
+                Explores the ethical frameworks, security practices, and governance structures necessary to develop and deploy AI systems that are fair, transparent, secure, and accountable.
+              </p>
+              <a href="/genai-4/" target="_blank" rel="noopener" class="playground-button">
+                Explore Playground
+              </a>
+            </div>
+          </article>
+
+          <!-- Gen AI Solution -->
+          <article class="playground-card">
+            <div class="playground-image">
+              <img src="img/shoe.png" alt="Gen AI solutions visualization" loading="lazy">
+              <span class="playground-badge">Solutions</span>
+            </div>
+            <div class="playground-content">
+              <h3 class="playground-title">
+                <i class="fas fa-vector-square" aria-hidden="true"></i>
+                Gen AI Solution
+              </h3>
+              <p class="playground-description">
+                Explore the revolutionary footwear experience through AI-powered shoe design, personalized product descriptions, visual concept generation, and interactive customer engagement.
+              <a href="/genai-5/" target="_blank" rel="noopener" class="playground-button">
+                Explore Playground
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Session 1 Content -->
+      <section id="session1" class="content-section" aria-label="Session 1: AI and ML Fundamentals">
+        <h2 class="section-title">
+          <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+          Session 1: AI & ML Fundamentals
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>AI Fundamentals</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/artificial-intelligence/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    What Is Artificial Intelligence?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/machine-learning/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">02</span>
+                    What Is Machine Learning?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/deep-learning/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">03</span>
+                    What is Deep Learning?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/generative-ai/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">04</span>
+                    What Is Generative AI?
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>Learning Approaches</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/compare/the-difference-between-machine-learning-supervised-and-unsupervised/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">05</span>
+                    Supervised vs. Unsupervised Learning
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/mlops/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">06</span>
+                    What is MLOps?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/ai/machine-learning/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">07</span>
+                    Machine learning on AWS
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>AWS AI Services</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">08</span>
+                    What is Amazon SageMaker AI?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/sagemaker/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">09</span>
+                    Amazon SageMaker
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/rekognition/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">10</span>
+                    Amazon Rekognition
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/personalize/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">11</span>
+                    Amazon Personalize
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Session 2 Content -->
+      <section id="session2" class="content-section" aria-label="Session 2: Generative AI">
+        <h2 class="section-title">
+          <i class="fas fa-book" aria-hidden="true"></i>
+          Session 2: Generative AI
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>Foundation Models</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/foundation-models/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    What are Foundation Models?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/transformers-in-artificial-intelligence/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">02</span>
+                    What are Transformers in AI?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/vector-databases/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">03</span>
+                    What is a Vector Database?
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>Amazon Bedrock</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">04</span>
+                    What is Amazon Bedrock?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">05</span>
+                    Influence response generation
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/bedrock/pricing/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">09</span>
+                    Amazon Bedrock pricing
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>Generative AI</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/ai/generative-ai/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">06</span>
+                    Transform business with generative AI
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-customize.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">07</span>
+                    Foundation model customization
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">10</span>
+                    Customize models for your use case
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>SageMaker</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/sagemaker-ai/jumpstart/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">08</span>
+                    Amazon SageMaker JumpStart
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Session 3 Content -->
+      <section id="session3" class="content-section" aria-label="Session 3: Foundation Models">
+        <h2 class="section-title">
+          <i class="fas fa-book" aria-hidden="true"></i>
+          Session 3: Foundation Models
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>Application of Foundation Models</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/prompt-engineering/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    What is Prompt Engineering?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/what-is/retrieval-augmented-generation/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">02</span>
+                    What is RAG (Retrieval-Augmented Generation)?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">03</span>
+                    What is Amazon Bedrock?
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/blogs/aws/amazon-bedrock-model-evaluation-is-now-generally-available/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">04</span>
+                    Amazon Bedrock model evaluation
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-customize-prompt-engineering.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">05</span>
+                    Prompt engineering for foundation models
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Session 4 Content -->
+      <section id="session4" class="content-section" aria-label="Session 4: Responsible AI">
+        <h2 class="section-title">
+          <i class="fas fa-book" aria-hidden="true"></i>
+          Session 4: Responsible AI
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>Responsible AI, Security, and Governance</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/ai/responsible-ai/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    Responsible AI
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/governance.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">02</span>
+                    Model governance
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html#model-monitor-how-it-works" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">03</span>
+                    How Amazon SageMaker Model Monitor works
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/blogs/enterprise-strategy/responsible-ai-best-practices-promoting-responsible-and-trustworthy-ai-systems/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">04</span>
+                    Responsible AI Best Practices
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://aws.amazon.com/blogs/security/securing-generative-ai-an-introduction-to-the-generative-ai-security-scoping-matrix/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">05</span>
+                    Securing generative AI
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Useful Resources -->
+      <section id="resources" class="content-section" aria-label="Useful Resources">
+        <h2 class="section-title">
+          <i class="fas fa-link" aria-hidden="true"></i>
+          Useful Resources
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>Tools & Playgrounds</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://aistylist.awsplayer.com/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    AWS AI Stylist
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://partyrock.aws/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">02</span>
+                    PartyRock
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>Model Comparisons</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://artificialanalysis.ai/providers/amazon_bedrock" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">03</span>
+                    Amazon Bedrock: Models Comparison
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://crfm.stanford.edu/helm/lite/latest/#/leaderboard" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">04</span>
+                    HELM Leaderboard
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        
+          <article class="card">
+            <div class="card-header">
+              <h3>Readings & Research</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://www.amazon.science/blog/responsible-ai-in-the-generative-era" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">05</span>
+                    Responsible AI in the generative era
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://www.pinecone.io/learn/vector-embeddings/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">06</span>
+                    What are Vector Embeddings?
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h3>Additional Training</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://explore.skillbuilder.aws/" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">01</span>
+                    Digital Training on SkillBuilder
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer role="contentinfo">
+    <div class="footer-content container">
+      <p>&copy; 2025 Amazon Web Services, Inc. or its affiliates. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Enhanced JavaScript with mobile support and accessibility
+    (function() {
+      'use strict';
+
+      // Mobile menu toggle
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const navTabs = document.getElementById('navTabs');
+
+      if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function() {
+          const isOpen = navTabs.classList.toggle('mobile-open');
+          this.setAttribute('aria-expanded', isOpen);
+          this.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+      }
+
+      // Section navigation
+      function openSection(sectionId) {
+        // Hide all content sections
+        const contentSections = document.querySelectorAll('.content-section');
+        contentSections.forEach(section => {
+          section.classList.remove('active');
+          section.setAttribute('aria-hidden', 'true');
+        });
+
+        // Show the selected content section
+        const selectedSection = document.getElementById(sectionId);
+        if (selectedSection) {
+          selectedSection.classList.add('active');
+          selectedSection.setAttribute('aria-hidden', 'false');
+        }
+
+        // Update active tab
+        const navTabs = document.querySelectorAll('.nav-tab');
+        navTabs.forEach(tab => {
+          tab.classList.remove('active');
+          tab.removeAttribute('aria-current');
+        });
+
+        // Find and activate the clicked tab
+        const clickedTab = document.querySelector(`.nav-tab[onclick="openSection('${sectionId}')"]`);
+        if (clickedTab) {
+          clickedTab.classList.add('active');
+          clickedTab.setAttribute('aria-current', 'page');
+        }
+
+        // Close mobile menu if open
+        if (window.innerWidth < 576) {
+          const navTabsElement = document.getElementById('navTabs');
+          const mobileToggle = document.getElementById('mobileMenuToggle');
+          if (navTabsElement && navTabsElement.classList.contains('mobile-open')) {
+            navTabsElement.classList.remove('mobile-open');
+            if (mobileToggle) {
+              mobileToggle.setAttribute('aria-expanded', 'false');
+              mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+          }
+        }
+
+        // Smooth scroll to top on section change
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Update URL hash without scrolling
+        history.replaceState(null, null, '#' + sectionId);
+      }
+
+      // Make openSection globally available
+      window.openSection = openSection;
+
+      // Handle browser back/forward buttons
+      window.addEventListener('hashchange', function() {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+          openSection(hash);
+        }
+      });
+
+      // Load section from URL hash on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        const hash = window.location.hash.substring(1);
+        if (hash && document.getElementById(hash)) {
+          openSection(hash);
+        }
+
+        // Add keyboard navigation for tabs
+        const tabs = document.querySelectorAll('.nav-tab');
+        tabs.forEach((tab, index) => {
+          tab.addEventListener('keydown', function(e) {
+            let nextIndex;
+            if (e.key === 'ArrowRight') {
+              nextIndex = (index + 1) % tabs.length;
+              tabs[nextIndex].focus();
+              tabs[nextIndex].click();
+            } else if (e.key === 'ArrowLeft') {
+              nextIndex = (index - 1 + tabs.length) % tabs.length;
+              tabs[nextIndex].focus();
+              tabs[nextIndex].click();
+            }
+          });
+        });
+
+        // Lazy load images
+        if ('IntersectionObserver' in window) {
+          const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src || img.src;
+                img.classList.add('loaded');
+                observer.unobserve(img);
+              }
+            });
+          });
+
+          document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+            imageObserver.observe(img);
+          });
+        }
+
+        // Add smooth scroll behavior for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        });
+      });
+
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          // Close mobile menu on resize to desktop
+          if (window.innerWidth >= 576) {
+            const navTabsElement = document.getElementById('navTabs');
+            const mobileToggle = document.getElementById('mobileMenuToggle');
+            if (navTabsElement && navTabsElement.classList.contains('mobile-open')) {
+              navTabsElement.classList.remove('mobile-open');
+              if (mobileToggle) {
+                mobileToggle.setAttribute('aria-expanded', 'false');
+              }
+            }
+          }
+        }, 250);
+      });
+
+      // Add service worker for offline support (optional)
+      if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+        navigator.serviceWorker.register('/sw.js').catch(function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      }
+    })();
+  </script>
+</body>
+
+</html>

@@ -264,18 +264,14 @@ def main():
         st.button("Reload Application", on_click=lambda: st.rerun())
 
 
+# Main execution flow
 if __name__ == "__main__":
-    main()
-
-
-# # Main execution flow
-# if __name__ == "__main__":
-#     if 'localhost' in st.context.headers.get("host", ""):
-#         main()
-#     else:
-#         # First check authentication
-#         is_authenticated = authenticate.login()
+    if 'localhost' in st.context.headers.get("host", ""):
+        main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
         
-#         # If authenticated, show the main app content
-#         if is_authenticated:
-#             main()
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()
