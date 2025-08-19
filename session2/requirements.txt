@@ -19,3 +19,4 @@ nltk
 jsonlines
 scipy
 stqdm
+scikit-learn
