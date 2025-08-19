@@ -103,7 +103,7 @@ def load_heart_disease_data():
         # Return a mock dataset if loading fails
         return create_mock_heart_disease_data()
 
-@st.cache_data
+# @st.cache_data
 def load_diabetes_data():
     """
     Load the Pima Indians Diabetes dataset

@@ -13,4 +13,4 @@ xgboost==2.0.3
 shap>=0.44.0
 imblearn
 boto3
-httpx
+httpx[http2]

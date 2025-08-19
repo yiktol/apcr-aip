@@ -2,6 +2,9 @@ import streamlit as st
 import utils.nova_image_lib as nova_lib
 import uuid
 from datetime import datetime
+import utils.common as common
+import utils.authenticate as authenticate
+
 
 # Set page configuration
 st.set_page_config(
@@ -122,8 +125,7 @@ def load_css():
 
 def initialize_session_state():
     """Initialize session state variables"""
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = str(uuid.uuid4())
+    common.initialize_session_state()
     
     if "session_start_time" not in st.session_state:
         st.session_state.session_start_time = datetime.now()
@@ -146,15 +148,6 @@ def initialize_session_state():
     if "generated_images" not in st.session_state:
         st.session_state.generated_images = []
 
-def reset_session():
-    """Reset session state"""
-    keys_to_reset = ["prompt", "negative_prompt", "selected_style", "generated_images"]
-    for key in keys_to_reset:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.session_state.session_id = str(uuid.uuid4())
-    st.session_state.session_start_time = datetime.now()
-    st.rerun()
 
 def get_prompt_examples():
     """Return comprehensive prompt examples with emphasis on negative prompts"""
@@ -264,15 +257,9 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.markdown("### 🎛️ Session Controls")
-        
+       
         # Session info
-        st.info(f"**Session ID:** `{st.session_state.session_id[:8]}...`")
-        st.info(f"**Started:** {st.session_state.session_start_time.strftime('%H:%M:%S')}")
-        
-        # Reset button
-        if st.button("🔄 Reset Session", type="secondary", use_container_width=True):
-            reset_session()
+        common.render_sidebar()
                 
         st.markdown("---")
         st.markdown("### 💡 Tips")
@@ -452,5 +439,14 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+# Main execution flow
 if __name__ == "__main__":
-    main()
+    if 'localhost' in st.context.headers.get("host", ""):
+        main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

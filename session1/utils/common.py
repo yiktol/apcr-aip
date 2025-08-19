@@ -1,7 +1,6 @@
 import streamlit as st
 import uuid
 from datetime import datetime
-import utils.authenticate as authenticate
 
 def reset_session():
     """Reset the session state"""
@@ -10,91 +9,25 @@ def reset_session():
             del st.session_state[key]
 
     
-    
 def render_sidebar():
     """Render the sidebar with session information and reset button"""
     st.markdown("#### 🔑 Session Info")
-    # st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
-    st.caption(f"**Session ID:** {st.session_state['auth_code'][:8]}")
-    
+    if 'auth_code':
+        st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
+    else:
+        st.caption(f"**Session ID:** {st.session_state['auth_code'][:8]}")
 
-    if st.button("🔄 Reset Session"):
-        reset_session()
+    if st.button("🔄 Reset Session",use_container_width=True ):
         st.success("Session has been reset successfully!")
         st.rerun()  # Force a rerun to refresh the page
 
 
-
-
-
 def initialize_session_state():
-    """Initialize session state variables if they don't exist."""
-    
+    """Initialize session state variables"""
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())[:8]
-    
-    if "start_time" not in st.session_state:
-        st.session_state.start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    # Game 1: AI vs ML vs GenAI
-    if "game1_score" not in st.session_state:
-        st.session_state.game1_score = 0
-    if "game1_submitted" not in st.session_state:
-        st.session_state.game1_submitted = [False] * 5
 
-    # Game 2: Traditional Programming vs ML
-    if "game2_score" not in st.session_state:
-        st.session_state.game2_score = 0
-    if "game2_submitted" not in st.session_state:
-        st.session_state.game2_submitted = [False] * 5
-    
-    # Game 3: ML or Not?
-    if "game3_score" not in st.session_state:
-        st.session_state.game3_score = 0
-    if "game3_submitted" not in st.session_state:
-        st.session_state.game3_submitted = [False] * 5
-    
-    # Game 4: Traditional ML vs GenAI
-    if "game4_score" not in st.session_state:
-        st.session_state.game4_score = 0
-    if "game4_submitted" not in st.session_state:
-        st.session_state.game4_submitted = [False] * 5
-    
-    # Game 5: ML Terms
-    if "game5_score" not in st.session_state:
-        st.session_state.game5_score = 0
-    if "game5_submitted" not in st.session_state:
-        st.session_state.game5_submitted = [False] * 5
-    
-    # Game 6: Learning Types
-    if "game6_score" not in st.session_state:
-        st.session_state.game6_score = 0
-    if "game6_submitted" not in st.session_state:
-        st.session_state.game6_submitted = [False] * 5
-    
-    # Game 7: ML Process
-    if "game7_score" not in st.session_state:
-        st.session_state.game7_score = 0
-    if "game7_submitted" not in st.session_state:
-        st.session_state.game7_submitted = [False] * 5
-    
-    # Game 8: AWS Services
-    if "game8_score" not in st.session_state:
-        st.session_state.game8_score = 0
-    if "game8_submitted" not in st.session_state:
-        st.session_state.game8_submitted = [False] * 5
 
-# def reset_session():
-#     """Reset all session state variables."""
-    
-#     # Keep only the session ID but generate a new one
-#     st.session_state.session_id = str(uuid.uuid4())[:8]
-#     st.session_state.start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-#     # Reset all game scores and submissions
-#     for i in range(1, 9):  # 8 games
-#         st.session_state[f"game{i}_score"] = 0
-#         st.session_state[f"game{i}_submitted"] = [False] * 5
 
 def display_progress(game_number):
     """Display progress for the specified game."""
