@@ -139,6 +139,7 @@ def get_llm(temperature=0.7, top_p=0.8, max_tokens=1024):
     
     llm = ChatBedrock(
         client=init_bedrock_client(),
+        region_name='us-east-1',
         model_id="amazon.nova-micro-v1:0",
         model_kwargs=model_kwargs
     )
