@@ -10,6 +10,7 @@ plotly==5.18.0
 transformers>=4.30.0
 langchain
 langchain_aws
+langchain-community
 torch
 seaborn
 amazon_transcribe

@@ -2,8 +2,7 @@ import os
 import streamlit as st
 import boto3
 import uuid
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain.chains import ConversationChain
+
 from langchain_aws import ChatBedrock
 import utils.common as common
 import utils.authenticate as authenticate
@@ -117,8 +116,8 @@ def init_session_state():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = [{"role": "assistant", "text": "Hello! How can I assist you today?"}]
     
-    if 'memory' not in st.session_state:
-        st.session_state.memory = get_memory()
+    if 'conversation_history' not in st.session_state:
+        st.session_state.conversation_history = []
 
 @st.cache_resource
 def init_bedrock_client():
@@ -146,13 +145,17 @@ def get_llm(temperature=0.7, top_p=0.8, max_tokens=1024):
     
     return llm
 
-def get_memory():
-    """Create a conversation memory with the language model."""
-    llm = get_llm()
-    memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit=1024)
-    return memory
+def format_conversation_history():
+    """Format conversation history for context."""
+    if not st.session_state.conversation_history:
+        return ""
+    
+    context = "Previous conversation:\n"
+    for msg in st.session_state.conversation_history[-10:]:  # Keep last 10 messages
+        context += f"{msg['role'].title()}: {msg['text']}\n"
+    return context + "\n"
 
-def get_chat_response(input_text, memory=None, use_memory=True):
+def get_chat_response(input_text, use_memory=True):
     """Generate a chat response using the LLM."""
     llm = get_llm(
         st.session_state.temperature, 
@@ -160,24 +163,21 @@ def get_chat_response(input_text, memory=None, use_memory=True):
         st.session_state.max_tokens
     )
     
-    if use_memory and memory:
-        conversation = ConversationChain(
-            llm=llm,
-            memory=memory,
-            verbose=False
-        )
-        chat_response = conversation.predict(input=input_text)
+    if use_memory:
+        context = format_conversation_history()
+        prompt = f"{context}User: {input_text}\nAI: "
     else:
-        # Use a simple prompt without memory
-        chat_response = llm.invoke(f"User: {input_text}\nAI: ")
-        if hasattr(chat_response, 'content'):  # Handle different return types
-            chat_response = chat_response.content
+        prompt = f"User: {input_text}\nAI: "
+    
+    chat_response = llm.invoke(prompt)
+    if hasattr(chat_response, 'content'):
+        chat_response = chat_response.content
     
     return chat_response
 
 def reset_session():
     """Reset the chat session state."""
-    st.session_state.memory = get_memory()
+    st.session_state.conversation_history = []
     st.session_state.chat_history = [{"role": "assistant", "text": "Session reset. How may I assist you?"}]
     st.session_state.memory_enabled = True
     st.session_state.session_id = str(uuid.uuid4())[:8]
@@ -235,10 +235,16 @@ def render_chat_input():
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking..."):
                 chat_response = get_chat_response(
-                    input_text=input_text, 
-                    memory=st.session_state.memory,
+                    input_text=input_text,
                     use_memory=st.session_state.memory_enabled
                 )
+                
+                # Update conversation history if memory is enabled
+                if st.session_state.memory_enabled:
+                    st.session_state.conversation_history.extend([
+                        {"role": "user", "text": input_text},
+                        {"role": "assistant", "text": chat_response}
+                    ])
                 st.markdown(chat_response)
         
         st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
