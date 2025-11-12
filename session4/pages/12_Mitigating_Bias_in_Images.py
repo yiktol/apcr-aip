@@ -2,7 +2,7 @@
 import streamlit as st
 import boto3
 from langchain_aws import ChatBedrock
-from langchain.memory import ConversationBufferMemory
+from langchain_community.memory import ConversationBufferMemory
 from langchain_core.prompts import (ChatPromptTemplate, 
                                SystemMessagePromptTemplate, 
                                HumanMessagePromptTemplate, 

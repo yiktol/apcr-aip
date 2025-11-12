@@ -4,6 +4,7 @@ botocore
 matplotlib
 langchain
 langchain_aws
+langchain-community
 seaborn
 pandas
 scikit-learn
