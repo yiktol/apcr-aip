@@ -2,7 +2,7 @@
 import streamlit as st
 import boto3
 from langchain_aws import ChatBedrock
-from langchain_community.memory import ConversationBufferMemory
+# ConversationBufferMemory is deprecated, using simple list-based memory
 from langchain_core.prompts import (ChatPromptTemplate, 
                                SystemMessagePromptTemplate, 
                                HumanMessagePromptTemplate, 
@@ -49,12 +49,7 @@ def init_session_state():
         logger.info(f"Created new session ID: {st.session_state.session_id}")
 
     if "memory" not in st.session_state:
-        st.session_state.memory = ConversationBufferMemory(
-            return_messages=True,
-            human_prefix="Human",
-            ai_prefix="Assistant",
-            memory_key="history"
-        )
+        st.session_state.memory = []
         logger.info("Initialized conversation memory")
 
     if "messages" not in st.session_state:
@@ -116,7 +111,7 @@ def update_conversation_chain(llm):
     def load_memory(_):
         try:
             if "memory" in st.session_state:
-                return st.session_state.memory.load_memory_variables({})["history"]
+                return st.session_state.memory
             return []
         except:
             logger.debug("Accessing memory from background thread, using empty list")
@@ -160,7 +155,7 @@ def render_sidebar():
             logger.info("Clearing chat history")
             st.session_state.messages = [{"role": "Assistant", "content": "Hello! I can help you generate unbiased image prompts. What kind of image would you like to create?"}]
             if "memory" in st.session_state:
-                st.session_state.memory.clear()
+                st.session_state.memory = []
             st.rerun()
 
         if st.button("🔄 Reset Session", use_container_width=True):
@@ -191,7 +186,7 @@ def render_system_prompt_editor():
             st.session_state.system_prompt = system_prompt_input
             thread_local.system_prompt = system_prompt_input
             if "memory" in st.session_state:
-                st.session_state.memory.clear()
+                st.session_state.memory = []
             st.session_state.messages = [{"role": "Assistant", "content": "System prompt updated. How may I assist you?"}]
             st.success("System prompt updated successfully!")
             st.rerun()
@@ -228,7 +223,8 @@ def process_user_input(user_prompt, conversation):
                 logger.info("Received AI response")
                 
                 # Update memory in the main thread
-                st.session_state.memory.save_context({"input": user_prompt}, {"output": response_text})
+                from langchain_core.messages import HumanMessage, AIMessage
+                st.session_state.memory.extend([HumanMessage(content=user_prompt), AIMessage(content=response_text)])
                 
                 # Check if response contains image prompt
                 if "<imageprompt>" in response_text:
