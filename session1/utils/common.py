@@ -26,6 +26,13 @@ def initialize_session_state():
     """Initialize session state variables"""
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())[:8]
+    
+    # Initialize game state variables for all 8 games
+    for game_num in range(1, 9):
+        if f"game{game_num}_score" not in st.session_state:
+            st.session_state[f"game{game_num}_score"] = 0
+        if f"game{game_num}_submitted" not in st.session_state:
+            st.session_state[f"game{game_num}_submitted"] = [False] * 5
 
 
 
