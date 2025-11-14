@@ -470,13 +470,12 @@ def main():
 # Main execution flow
 if __name__ == "__main__":
     setup_page()
-    # First check authentication
-    try:
+    if 'localhost' in st.context.headers["host"]:
+        main()
+    else:
+        # First check authentication
         is_authenticated = authenticate.login()
         
         # If authenticated, show the main app content
         if is_authenticated:
             main()
-    except ImportError:
-        # If authentication module is not available, run the app directly
-        main()
