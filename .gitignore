@@ -4,6 +4,7 @@ log/
 pid
 generated_image.png
 */mcp_client/output/
+chroma_db/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
