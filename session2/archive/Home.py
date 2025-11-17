@@ -1460,9 +1460,47 @@ def main():
     
     # Render sidebar
     render_sidebar()
-
+    
+    # Main page content with tabs
+    tabs = st.tabs([
+        "🏠 Home", 
+        "🧠 Foundation Models", 
+        "⚙️ Transformer Architecture",
+        "🎛️ FM Inference Parameters",
+        "📝 Context",
+        "⚠️ Concerns",
+        "☁️ AWS Gen AI Stack",
+        "🔄 Model Training",
+        "❓ Knowledge Checks"
+    ])
+    
     # Render each tab's content
-    render_home_tab()
+    with tabs[0]:
+        render_home_tab()
+    
+    with tabs[1]:
+        render_foundation_models_tab()
+    
+    with tabs[2]:
+        render_transformer_architecture_tab()
+    
+    with tabs[3]:
+        render_inference_parameters_tab()
+    
+    with tabs[4]:
+        render_context_tab()
+    
+    with tabs[5]:
+        render_concerns_tab()
+    
+    with tabs[6]:
+        render_aws_gen_ai_stack_tab()
+    
+    with tabs[7]:
+        render_model_training_tab()
+    
+    with tabs[8]:
+        render_knowledge_checks_tab()
     
     # Render footer
     render_footer()

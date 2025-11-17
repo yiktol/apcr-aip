@@ -1,3 +1,4 @@
+
 import streamlit as st
 import uuid
 from utils.styles import load_css
@@ -7,7 +8,7 @@ import utils.common as common
 
 # Set page configuration
 st.set_page_config(
-    page_title="How Transformer Works",
+    page_title="How Transformer Architecture Works",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -38,65 +39,50 @@ def main():
     initialize_session_state()
     
     # App title and header
-    
     st.markdown("""
     <div class="element-animation">
-        <h1>🤖 Transformer Model Sentence Completion</h1>
+        <h1>🧠 How Transformer Architecture Works</h1>
     </div>
     """, unsafe_allow_html=True)
     
-    
     st.markdown("""<div class="info-box">
-Transformer models complete sentences by leveraging their attention mechanisms to analyze existing text patterns and predict the most contextually appropriate words to follow, considering both local and long-range dependencies in the input sequence.
-    </div>""",unsafe_allow_html=True)
+The Transformer architecture revolutionized AI by using self-attention mechanisms to process sequences in parallel, enabling models to understand context and relationships between words regardless of their distance in text.
+    </div>""", unsafe_allow_html=True)
 
-    
     # Sidebar
     with st.sidebar:
         common.render_sidebar()
         
-        # About this App - collapsed by default
         with st.expander("About this App", expanded=False):
             st.write("""
-            This interactive application demonstrates how transformer models complete sentences by:
-            - Tokenization and Encoding
-            - Word Embedding
-            - Decoding Process
-            - Output Generation
-            
-            Explore each tab to learn about the different components of transformer models.
+            Learn the core components of Transformer architecture:
+            - **Self-Attention**: How models focus on relevant words
+            - **Encoder-Decoder**: Processing and generating sequences
+            - **Positional Encoding**: Understanding word order
+            - **Feed-Forward Networks**: Final processing layers
             """)
-            
 
-            
-
-        
     # Main content - Tab-based navigation
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🔤 Tokenization", 
-        "🔡 Word Embedding", 
-        "🧩 Decoding", 
-        "📤 Output Generation",
+        "🎯 Self-Attention", 
+        "🔄 Encoder-Decoder", 
+        "📍 Positional Encoding", 
+        "⚡ Feed-Forward Network",
         "❓ Knowledge Check"
     ])
     
-    # Tab 1: Tokenization and Encoding
     with tab1:
-        tokenization_tab()
+        self_attention_tab()
     
-    # Tab 2: Word Embedding
     with tab2:
-        word_embedding_tab()
+        encoder_decoder_tab()
     
-    # Tab 3: Decoding
     with tab3:
-        decoding_tab()
+        positional_encoding_tab()
     
-    # Tab 4: Output Generation
     with tab4:
-        output_generation_tab()
+        feedforward_tab()
     
-    # Tab 5: Knowledge Check
     with tab5:
         display_knowledge_check()
     
@@ -105,491 +91,396 @@ Transformer models complete sentences by leveraging their attention mechanisms t
     st.markdown("© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
 
-def tokenization_tab():
-    st.header("Tokenization and Encoding")
-    
-    # Example sentence input
-    example_sentence = st.text_input(
-        "Enter a sentence to tokenize:", 
-        value="A puppy is to dog as kitten is to",
-        key="tokenization_input"
-    )
-    
-    # Explanation
-    st.markdown("""
-    ### What is Tokenization?
-    
-    Tokenization is the first step in the transformer pipeline. It involves:
-    1. Breaking down text input into smaller units called "tokens"
-    2. Converting these tokens into numerical identifiers (encoding)
-    
-    This transformation makes the text data processable by machine learning models.
-    """)
-    
-    # Interactive visualization
-    if st.button("Tokenize and Encode", key="tokenize_button"):
-        display_tokenization_process(example_sentence)
-
-
-def display_tokenization_process(sentence):
-    import pandas as pd
-    
-    # Simulate tokenization
-    tokens = ["[CLS]"] + sentence.split() + ["[SEP]"]
-    
-    # Simulate token IDs (random for demonstration)
-    import random
-    token_ids = [random.randint(100, 50000) for _ in tokens]
-    
-    # Display the tokens and IDs
-    st.subheader("Step 1: Convert words to tokens")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**Original Sentence:**")
-        st.info(sentence)
-        
-    with col2:
-        st.markdown("**Tokenized:**")
-        df = pd.DataFrame({
-            "Token": tokens,
-            "Token ID": token_ids
-        })
-        st.table(df)
-    
-    # Visualize embedding vectors (simplified with random values)
-    st.subheader("Step 2: Encode tokens into vectors")
-    st.markdown("""
-    Each token ID is converted to an embedding vector (high-dimensional representation).
-    Here's a simplified visualization with only 5 dimensions per vector:
-    """)
-    
-    # Generate random embeddings for visualization
-    import numpy as np
-    embeddings = np.random.randn(len(tokens), 5)
-    
-    # Create a dataframe for display
-    embedding_df = pd.DataFrame(
-        embeddings, 
-        index=tokens,
-        columns=[f"Dim {i+1}" for i in range(5)]
-    )
-    st.table(embedding_df.round(2))
-    
-    # Code sample
-    st.subheader("Code Example: Tokenization with Transformers")
-    st.code("""
-    # Using Hugging Face transformers library
-    from transformers import AutoTokenizer
-    
-    # Load a pre-trained tokenizer
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    
-    # Tokenize the input text
-    text = "A puppy is to dog as kitten is to cat"
-    tokens = tokenizer(text, return_tensors="pt")
-    
-    # The tokens object contains:
-    # - input_ids: the numerical representations of tokens
-    # - attention_mask: indicates which tokens should be attended to
-    # - token_type_ids: identifies which sequence a token belongs to
-    """, language="python")
-
-
-def word_embedding_tab():
-    st.header("Word Embedding")
+def self_attention_tab():
+    st.header("Self-Attention Mechanism")
     
     st.markdown("""
-    ### What are Word Embeddings?
+    ### What is Self-Attention?
     
-    Word embeddings convert tokens (words) into dense vector representations in a 
-    multi-dimensional space. Words with similar meanings will be located closer to each other in this vector space.
-    
-    For example, "cat" and "kitten" would be closer together than "cat" and "airplane".
-    """)
-    
-    # Interactive visualization
-    st.subheader("Interactive Embedding Space Visualization")
-    
-    # Display 2D visualization of word embeddings
-    import plotly.express as px
-    import numpy as np
-    import pandas as pd
-    
-    # Example words and their 2D embeddings (simplified for visualization)
-    words = ["cat", "kitten", "feline", "dog", "puppy", "canine", 
-             "car", "vehicle", "truck", "airplane", "fly"]
-    
-    # Create somewhat meaningful 2D embeddings for visualization
-    # Words with similar meanings will be clustered together
-    np.random.seed(42)  # For reproducibility
-    
-    # Create semantic clusters
-    cat_family = np.array([1, 1]) + np.random.randn(3, 2) * 0.2  # cat, kitten, feline
-    dog_family = np.array([-1, 1]) + np.random.randn(3, 2) * 0.2  # dog, puppy, canine
-    vehicle_family = np.array([0, -1]) + np.random.randn(3, 2) * 0.2  # car, vehicle, truck
-    air_family = np.array([2, -1]) + np.random.randn(2, 2) * 0.2  # airplane, fly
-    
-    # Combine embeddings
-    embeddings_2d = np.vstack([cat_family, dog_family, vehicle_family, air_family])
-    
-    # Create dataframe for plotting
-    df = pd.DataFrame({
-        'word': words,
-        'x': embeddings_2d[:, 0],
-        'y': embeddings_2d[:, 1],
-        'category': ['animals']*6 + ['vehicles']*5
-    })
-    
-    # Create interactive plot
-    fig = px.scatter(
-        df, x='x', y='y', text='word', color='category',
-        title='2D Word Embedding Space Visualization',
-        labels={'x': 'Dimension 1', 'y': 'Dimension 2'},
-        width=700, height=500
-    )
-    fig.update_traces(textposition='top center', marker_size=10)
-    st.plotly_chart(fig)
-    
-    st.markdown("""
-    ### How Word Embeddings Work in Transformers
-    
-    1. Each token is mapped to a vector of floating-point numbers
-    2. The dimension of these vectors is typically between 300-1000 for large models
-    3. These vectors capture semantic relationships between words
-    4. Similar words have similar vector representations (closer in the embedding space)
-    """)
-    
-    # Code example
-    st.subheader("Code Example: Working with Embeddings")
-    st.code("""
-    # Using a pre-trained embedding model
-    import torch
-    from transformers import AutoModel, AutoTokenizer
-    
-    # Load pre-trained model and tokenizer
-    model_name = "bert-base-uncased"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
-    
-    # Get embeddings for words
-    def get_word_embedding(word):
-        # Tokenize the word
-        inputs = tokenizer(word, return_tensors="pt")
-        
-        # Get the embedding
-        with torch.no_grad():
-            outputs = model(**inputs)
-            
-        # Extract the embedding from the last hidden state
-        # Usually we'd take the [CLS] token embedding for the whole sentence
-        # or average all token embeddings
-        embeddings = outputs.last_hidden_state.mean(dim=1)
-        return embeddings.numpy()
-        
-    # Compare similarity between embeddings
-    from sklearn.metrics.pairwise import cosine_similarity
-    
-    emb1 = get_word_embedding("cat")
-    emb2 = get_word_embedding("kitten")
-    emb3 = get_word_embedding("airplane")
-    
-    # Higher value indicates greater similarity
-    similarity_cat_kitten = cosine_similarity(emb1, emb2)
-    similarity_cat_airplane = cosine_similarity(emb1, emb3)
-    """, language="python")
-
-
-def decoding_tab():
-    st.header("Decoding Process")
-    
-    st.markdown("""
-    ### How Decoding Works in Transformers
-    
-    Decoding is the process of turning the model's internal representations back into 
-    meaningful output. In the context of our sentence completion task:
-    
-    1. The model processes the input sequence using self-attention mechanisms
-    2. It weighs the importance of different tokens in the sequence
-    3. For each potential next word, it calculates a probability distribution
-    4. The decoding strategy determines which word to choose from this distribution
+    Self-attention allows the model to weigh the importance of different words when processing each word in a sentence.
+    It answers: **"Which other words should I focus on to understand this word better?"**
     """)
     
     # Interactive example
-    st.subheader("Interactive Decoding Example")
+    st.subheader("🎮 Interactive Attention Visualization")
     
-    # Input prompt
-    prompt = st.text_input(
-        "Enter a prompt for the model to complete:",
-        value="A puppy is to dog as kitten is to",
-        key="decode_input"
-    )
-    
-    # Decoding parameters
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        temperature = st.slider("Temperature", 0.1, 2.0, 1.0, 0.1,
-                               help="Higher values increase randomness/creativity")
-    with col2:
-        top_k = st.slider("Top-K", 1, 10, 3, 1,
-                         help="Limit selection to top K most likely tokens")
-    with col3:
-        top_p = st.slider("Top-P (Nucleus Sampling)", 0.1, 1.0, 0.7, 0.1,
-                         help="Select from tokens that make up top p probability mass")
-    
-    # Execute decoding
-    if st.button("Generate Completion", key="decode_button"):
-        display_decoding_simulation(prompt, temperature, top_k, top_p)
-
-
-def display_decoding_simulation(prompt, temperature, top_k, top_p):
-    import pandas as pd
-    import numpy as np
-    
-    # Potential completion words with probabilities (simulated)
-    candidates = {
-        "cat": 0.30,
-        "dog": 0.03, 
-        "bird": 0.25,
-        "bear": 0.20,
-        "human": 0.15,
-        "snake": 0.05,
-        "fish": 0.01,
-        "tiger": 0.01
+    # Predefined examples for better demonstration
+    example_sentences = {
+        "Pronoun Resolution": "The cat didn't cross the street because it was too tired",
+        "Subject-Verb Agreement": "The keys to the cabinet are on the table",
+        "Word Relationship": "The bank can refuse to lend money to customers",
     }
     
-    # Create dataframe for display
-    df = pd.DataFrame({
-        "Word": list(candidates.keys()),
-        "Base Probability": list(candidates.values())
-    })
+    selected_example = st.selectbox("Choose an example:", list(example_sentences.keys()))
+    sentence = example_sentences[selected_example]
     
-    # Apply temperature (simplistic simulation)
-    # Temperature affects the probability distribution
-    temp_probs = np.array(list(candidates.values()))
-    if temperature != 1.0:
-        # Simulate temperature effect
-        temp_probs = temp_probs ** (1/temperature)
-        temp_probs = temp_probs / temp_probs.sum()  # Normalize
+    st.info(f"**Sentence:** {sentence}")
     
-    df["After Temperature"] = temp_probs
+    words = sentence.split()
     
-    # Apply Top-K filtering
-    top_k_indices = np.argsort(temp_probs)[-top_k:]
-    filtered_probs = np.zeros_like(temp_probs)
-    filtered_probs[top_k_indices] = temp_probs[top_k_indices]
+    col1, col2 = st.columns([1, 2])
     
-    # Normalize after Top-K
-    if filtered_probs.sum() > 0:
-        filtered_probs = filtered_probs / filtered_probs.sum()
+    with col1:
+        focus_word_index = st.selectbox(
+            "Select a word to see its attention:",
+            range(len(words)),
+            format_func=lambda x: f"{x}: {words[x]}"
+        )
     
-    df["After Top-K"] = filtered_probs
+    with col2:
+        display_attention_weights(words, focus_word_index, selected_example)
     
-    # Apply Top-P (nucleus sampling)
-    sorted_indices = np.argsort(filtered_probs)[::-1]
-    sorted_probs = filtered_probs[sorted_indices]
-    cumsum_probs = np.cumsum(sorted_probs)
-    nucleus = cumsum_probs <= top_p
-    
-    # Handle edge case for when no value is < top_p (include at least one token)
-    if not nucleus.any():
-        nucleus[0] = True
-        
-    # Create final filtered distribution
-    final_indices = sorted_indices[nucleus]
-    final_probs = np.zeros_like(filtered_probs)
-    final_probs[final_indices] = filtered_probs[final_indices]
-    
-    # Normalize after Top-P
-    if final_probs.sum() > 0:
-        final_probs = final_probs / final_probs.sum()
-    
-    df["After Top-P"] = final_probs
-    
-    # Round for display
-    df = df.round(3)
-    
-    # Highlight selection
-    selected_word = df.loc[df["After Top-P"] > 0, "Word"].sample(1, weights=df.loc[df["After Top-P"] > 0, "After Top-P"]).iloc[0]
-    
-    # Display results
-    st.subheader("Decoding Process Simulation")
-    st.write(f"**Input Prompt:** {prompt}")
-    
-    # Display probability table
-    st.markdown("#### Probability Distribution for Next Word")
-    st.dataframe(df.style.background_gradient(cmap='Blues', subset=["After Top-P"]))
-    
-    # Display final selection
-    st.markdown("### Final Output")
-    st.success(f"{prompt} **{selected_word}**")
-    
-    # Explain the process
-    st.markdown("#### Process Explanation")
-    st.write(f"""
-    1. **Base Distribution:** The model initially calculated probabilities for each potential word
-    2. **Temperature Applied ({temperature}):** {'Increased randomness' if temperature > 1 else 'Decreased randomness'} in word selection
-    3. **Top-K Filter ({top_k}):** Limited selection to the {top_k} most likely options
-    4. **Top-P Filter ({top_p}):** Selected from words that make up {top_p*100}% of probability mass
-    5. **Final Selection:** "{selected_word}" was selected based on the filtered distribution
-    """)
-
-
-def output_generation_tab():
-    st.header("Output Generation")
-    
+    # Explanation
     st.markdown("""
-    ### The Final Step: Output Generation
+    ### How It Works
     
-    After the decoding process selects the next token, the transformer model:
+    1. **Query (Q)**: Represents the word asking "what should I focus on?"
+    2. **Key (K)**: Represents each word being considered
+    3. **Value (V)**: The actual information to extract from each word
+    4. **Attention Score**: Calculated as similarity between Query and Keys
     
-    1. Adds the selected token to the existing sequence
-    2. Updates its internal state based on the new token
-    3. Repeats the process until a stop condition is met, such as:
-       - Reaching a maximum length
-       - Generating a specific stop token
-       - Completing a required number of tokens
+    The model learns these representations during training to capture meaningful relationships.
     """)
+
+
+def display_attention_weights(words, focus_index, example_type):
+    import plotly.graph_objects as go
+    import numpy as np
     
-    # Interactive generation demo
-    st.subheader("Interactive Sentence Completion")
+    # Create attention patterns based on example type
+    attention_weights = np.zeros(len(words))
     
-    input_text = st.text_input(
-        "Enter an incomplete sentence:",
-        value="A puppy is to dog as kitten is to",
-        key="generation_input"
+    if example_type == "Pronoun Resolution":
+        # "it" should attend to "cat"
+        if focus_index == 9:  # "it"
+            attention_weights[1] = 0.8  # "cat"
+            attention_weights[9] = 0.15  # "it" itself
+            attention_weights[11] = 0.05  # "was"
+        else:
+            attention_weights = np.random.dirichlet(np.ones(len(words)) * 0.5)
+            attention_weights[focus_index] *= 2
+    
+    elif example_type == "Subject-Verb Agreement":
+        # "are" should attend to "keys"
+        if focus_index == 6:  # "are"
+            attention_weights[1] = 0.75  # "keys"
+            attention_weights[6] = 0.15  # "are" itself
+            attention_weights[0] = 0.1   # "The"
+        else:
+            attention_weights = np.random.dirichlet(np.ones(len(words)) * 0.5)
+            attention_weights[focus_index] *= 2
+    
+    else:  # Word Relationship
+        # "refuse" should attend to "bank"
+        if focus_index == 3:  # "refuse"
+            attention_weights[1] = 0.7  # "bank"
+            attention_weights[3] = 0.2  # "refuse" itself
+            attention_weights[5] = 0.1  # "lend"
+        else:
+            attention_weights = np.random.dirichlet(np.ones(len(words)) * 0.5)
+            attention_weights[focus_index] *= 2
+    
+    # Normalize
+    attention_weights = attention_weights / attention_weights.sum()
+    
+    # Create bar chart
+    fig = go.Figure(data=[
+        go.Bar(
+            x=words,
+            y=attention_weights,
+            marker_color=['red' if i == focus_index else 'lightblue' for i in range(len(words))],
+            text=[f'{w:.2f}' for w in attention_weights],
+            textposition='outside'
+        )
+    ])
+    
+    fig.update_layout(
+        title=f'Attention weights for: "{words[focus_index]}"',
+        xaxis_title="Words",
+        yaxis_title="Attention Weight",
+        height=400,
+        showlegend=False
     )
     
-    # Generation parameters
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def encoder_decoder_tab():
+    st.header("Encoder-Decoder Architecture")
+    
+    st.markdown("""
+    ### The Two-Part System
+    
+    - **Encoder**: Processes and understands the input sequence
+    - **Decoder**: Generates the output sequence based on encoder's understanding
+    """)
+    
+    # Interactive translation example
+    st.subheader("🎮 Interactive Translation Example")
+    
     col1, col2 = st.columns(2)
+    
     with col1:
-        gen_temperature = st.slider("Temperature", 0.1, 2.0, 0.7, 0.1,
-                                   help="Controls randomness of generation",
-                                   key="gen_temp")
-    with col2:
-        max_tokens = st.slider("Max Tokens to Generate", 1, 20, 5, 1,
-                              help="Maximum number of tokens to generate",
-                              key="max_tokens")
-    
-    if st.button("Complete Sentence", key="generate_button"):
-        display_output_generation(input_text, gen_temperature, max_tokens)
-
-
-def display_output_generation(input_text, temperature, max_tokens):
-    import time
-    import numpy as np
-    import pandas as pd
-    
-    # Create a placeholder for the generated text
-    output_placeholder = st.empty()
-    status_placeholder = st.empty()
-    
-    # Dictionary mapping certain word pairs/patterns to likely completions (simplified)
-    completion_patterns = {
-        "kitten is to": ["cat", "feline", "pet"],
-        "dog as kitten": ["cat", "feline", "pet"],
-        "train is to": ["tracks", "railway", "transportation"],
-        "car is to": ["road", "vehicle", "transportation"],
-        "day is to": ["night", "sun", "morning"],
-        "happy is to": ["sad", "joy", "smile"]
-    }
-    
-    # Find matching pattern
-    next_word = None
-    for pattern, options in completion_patterns.items():
-        if pattern in input_text.lower():
-            # Select based on temperature (higher = more random)
-            if temperature < 0.5:
-                next_word = options[0]  # Most common/expected
-            elif temperature < 1.2:
-                next_word = np.random.choice(options)  # Random from common options
-            else:
-                # With high temperature, introduce some unusual options
-                unusual_options = ["elephant", "universe", "melody", "quantum", "dream"]
-                combined = options + unusual_options
-                next_word = np.random.choice(combined)
-            break
-    
-    # Fallback if no pattern matched
-    if next_word is None:
-        common_words = ["the", "a", "one", "some", "many", "few", "this", "that"]
-        next_word = np.random.choice(common_words)
-    
-    # Show generation process
-    current_output = input_text
-    tokens_to_generate = min(5, max_tokens)  # Cap at 5 for demo purposes
-    
-    # Words to potentially add after the first completion
-    follow_up_words = [
-        "which", "because", "when", "and", "but", "while", 
-        "although", "since", "if", "as", "the", "a", "an"
-    ]
-    
-    # Display the generation process token by token
-    status_placeholder.info("Generating...")
-    
-    # First add the main completion word
-    time.sleep(0.5)
-    current_output = f"{current_output} {next_word}"
-    output_placeholder.markdown(f"**Output so far:** {current_output}")
-    
-    # Then add any additional tokens if requested
-    for i in range(tokens_to_generate - 1):
-        time.sleep(0.7)  # Pause for effect
+        st.markdown("### 📥 Encoder (Input)")
+        input_lang = st.selectbox("Source Language", ["English", "Spanish", "French"])
         
-        # Add another word
-        next_token = np.random.choice(follow_up_words)
-        current_output = f"{current_output} {next_token}"
-        output_placeholder.markdown(f"**Output so far:** {current_output}")
+        examples = {
+            "English": "The cat sleeps",
+            "Spanish": "El gato duerme", 
+            "French": "Le chat dort"
+        }
+        
+        input_text = st.text_input("Input text:", value=examples[input_lang])
+        
+        if st.button("Process", key="encode_btn"):
+            st.session_state.encoded = True
     
-    # Show final result
-    status_placeholder.success("Generation complete!")
-    output_placeholder.markdown(f"### Final Output:\n{current_output}")
+    with col2:
+        st.markdown("### 📤 Decoder (Output)")
+        output_lang = st.selectbox("Target Language", ["Spanish", "French", "English"])
+        
+        if st.session_state.get('encoded', False):
+            translations = {
+                ("English", "Spanish"): "El gato duerme",
+                ("English", "French"): "Le chat dort",
+                ("Spanish", "English"): "The cat sleeps",
+                ("Spanish", "French"): "Le chat dort",
+                ("French", "English"): "The cat sleeps",
+                ("French", "Spanish"): "El gato duerme",
+            }
+            
+            output_text = translations.get((input_lang, output_lang), input_text)
+            st.success(f"**Output:** {output_text}")
     
-    # Show generation stats
-    st.subheader("Generation Statistics")
-    stats_df = pd.DataFrame({
-        "Metric": ["Input Length", "Generated Tokens", "Temperature", "Time to Generate"],
-        "Value": [
-            f"{len(input_text.split())} tokens",
-            tokens_to_generate,
-            temperature,
-            f"{tokens_to_generate * 0.7:.1f} seconds"
-        ]
-    })
-    st.table(stats_df)
+    # Visualization of the architecture
+    st.subheader("Architecture Flow")
     
-    # Explain the influence of parameters
     st.markdown("""
-    ### How Parameters Affect Generation
-    
-    - **Temperature**: Controls randomness - higher values produce more creative and unpredictable outputs
-    - **Max Tokens**: Limits the length of the generated text
-    - **Top-K/Top-P**: Filters the vocabulary to control diversity and quality
-    
-    In production systems, these parameters let you balance between:
-    - Creativity vs. Predictability
-    - Diversity vs. Quality
-    - Length vs. Relevance
+    ```
+    Input Sequence
+         ↓
+    [ENCODER STACK]
+    - Self-Attention Layer
+    - Feed-Forward Layer
+    (repeated N times)
+         ↓
+    Context Representation
+         ↓
+    [DECODER STACK]
+    - Self-Attention Layer
+    - Cross-Attention Layer (attends to encoder output)
+    - Feed-Forward Layer
+    (repeated N times)
+         ↓
+    Output Sequence
+    ```
     """)
+    
+    st.markdown("""
+    ### Key Differences
+    
+    | Component | Encoder | Decoder |
+    |-----------|---------|---------|
+    | **Purpose** | Understand input | Generate output |
+    | **Attention** | Self-attention only | Self-attention + Cross-attention |
+    | **Processing** | Parallel (all at once) | Sequential (one token at a time) |
+    """)
+
+
+def positional_encoding_tab():
+    st.header("Positional Encoding")
+    
+    st.markdown("""
+    ### Why Do We Need It?
+    
+    Unlike RNNs, Transformers process all words simultaneously. Without positional encoding, 
+    the model wouldn't know the order of words - "dog bites man" vs "man bites dog" would look the same!
+    """)
+    
+    # Interactive demonstration
+    st.subheader("🎮 Word Order Matters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Original Sentence**")
+        sentence = "The quick brown fox jumps"
+        st.info(sentence)
+        st.success("✓ Meaningful sentence")
+    
+    with col2:
+        st.markdown("**Without Position Info**")
+        words = sentence.split()
+        import random
+        shuffled = words.copy()
+        random.shuffle(shuffled)
+        st.info(" ".join(shuffled))
+        st.error("✗ Loses meaning!")
+    
+    # Visualize positional encodings
+    st.subheader("Positional Encoding Visualization")
+    
+    import numpy as np
+    import plotly.graph_objects as go
+    
+    def get_positional_encoding(seq_len, d_model):
+        """Generate sinusoidal positional encoding"""
+        position = np.arange(seq_len)[:, np.newaxis]
+        div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
+        
+        pos_encoding = np.zeros((seq_len, d_model))
+        pos_encoding[:, 0::2] = np.sin(position * div_term)
+        pos_encoding[:, 1::2] = np.cos(position * div_term)
+        
+        return pos_encoding
+    
+    seq_length = st.slider("Sequence Length", 5, 50, 20)
+    d_model = 64  # Embedding dimension
+    
+    pos_enc = get_positional_encoding(seq_length, d_model)
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=pos_enc.T,
+        colorscale='RdBu',
+        x=list(range(seq_length)),
+        y=list(range(d_model))
+    ))
+    
+    fig.update_layout(
+        title="Positional Encoding Pattern",
+        xaxis_title="Position in Sequence",
+        yaxis_title="Embedding Dimension",
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("""
+    ### How It Works
+    
+    - Uses sine and cosine functions of different frequencies
+    - Each position gets a unique encoding pattern
+    - Added to word embeddings before processing
+    - Allows model to learn relative positions between words
+    """)
+
+
+def feedforward_tab():
+    st.header("Feed-Forward Network")
+    
+    st.markdown("""
+    ### The Processing Layer
+    
+    After attention mechanisms identify important relationships, feed-forward networks 
+    process this information independently for each position.
+    """)
+    
+    # Interactive demonstration
+    st.subheader("🎮 Interactive FFN Processing")
+    
+    st.markdown("**Architecture**: Input → Dense Layer → Activation (ReLU) → Dense Layer → Output")
+    
+    # Simulate a simple feed-forward pass
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("**Input**")
+        input_dim = st.slider("Input dimensions", 64, 512, 256, 64)
+        st.metric("Vector size", input_dim)
+    
+    with col2:
+        st.markdown("**Hidden Layer**")
+        hidden_dim = st.slider("Hidden dimensions", 256, 2048, 1024, 256)
+        st.metric("Expanded size", hidden_dim)
+        expansion = hidden_dim / input_dim
+        st.caption(f"Expansion ratio: {expansion:.1f}x")
+    
+    with col3:
+        st.markdown("**Output**")
+        st.metric("Vector size", input_dim)
+        st.caption("(back to original size)")
+    
+    # Visualize the expansion and contraction
+    import plotly.graph_objects as go
+    
+    layers = ['Input', 'Hidden', 'Output']
+    sizes = [input_dim, hidden_dim, input_dim]
+    
+    fig = go.Figure(data=[
+        go.Bar(
+            x=layers,
+            y=sizes,
+            marker_color=['lightblue', 'lightcoral', 'lightgreen'],
+            text=sizes,
+            textposition='outside'
+        )
+    ])
+    
+    fig.update_layout(
+        title="Feed-Forward Network Dimensions",
+        yaxis_title="Vector Dimension",
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Key characteristics
+    st.markdown("""
+    ### Key Characteristics
+    
+    1. **Position-wise**: Processes each position independently
+    2. **Expansion**: Typically expands to 4x the input dimension
+    3. **Non-linearity**: Uses ReLU or GELU activation
+    4. **Bottleneck**: Projects back to original dimension
+    
+    ### Purpose
+    
+    - Transforms the attention output
+    - Adds non-linear processing capability
+    - Allows the model to learn complex patterns
+    - Applied identically to each position
+    """)
+    
+    # Simple code example
+    with st.expander("💻 Code Example"):
+        st.code("""
+import torch.nn as nn
+
+class FeedForward(nn.Module):
+    def __init__(self, d_model, d_ff, dropout=0.1):
+        super().__init__()
+        self.linear1 = nn.Linear(d_model, d_ff)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(d_ff, d_model)
+        self.activation = nn.ReLU()
+    
+    def forward(self, x):
+        # x shape: (batch, seq_len, d_model)
+        x = self.linear1(x)      # Expand
+        x = self.activation(x)    # Non-linearity
+        x = self.dropout(x)       # Regularization
+        x = self.linear2(x)      # Project back
+        return x
+
+# Example usage
+d_model = 512
+d_ff = 2048
+ffn = FeedForward(d_model, d_ff)
+        """, language="python")
 
 
 if __name__ == "__main__":
     try:
-
         if 'localhost' in st.context.headers["host"]:
             main()
         else:
-            # First check authentication
             is_authenticated = authenticate.login()
             
-            # If authenticated, show the main app content
             if is_authenticated:
                 main()
 
     except Exception as e:
         st.error(f"An unexpected error occurred: {str(e)}")
         
-        # Provide debugging information in an expander
         with st.expander("Error Details"):
             st.code(str(e))
