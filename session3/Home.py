@@ -1846,35 +1846,8 @@ def main():
     # Render sidebar content
     render_sidebar_content()
     
-    # Main content area with tabs
-    tabs = st.tabs([
-        "🏠 Home",
-        "🛠️ Customizing FMs",
-        "✏️ Prompt Engineering",
-        "🔍 RAG",
-        "📊 Evaluations",
-        "❓ Knowledge Check"
-    ])
-    
-    # Populate each tab with content
-    with tabs[0]:
-        show_home_tab()
-    
-    with tabs[1]:
-        show_customizing_fms_tab()
-    
-    with tabs[2]:
-        show_prompt_engineering_tab()
-    
-    with tabs[3]:
-        show_rag_tab()
-    
-    with tabs[4]:
-        show_evaluations_tab()
-    
-    with tabs[5]:
-        show_knowledge_check_tab()
-    
+    show_home_tab()
+      
     # Render footer
     render_app_footer()
 
