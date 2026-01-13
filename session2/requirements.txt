@@ -1,9 +1,9 @@
-streamlit==1.45.0
+streamlit
 boto3
 Pillow==10.1.0
 botocore
 python-dotenv==1.0.1
-numpy==1.26.0
+numpy
 pandas==2.1.1
 matplotlib==3.8.0
 plotly==5.18.0
