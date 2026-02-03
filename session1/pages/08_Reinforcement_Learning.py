@@ -610,7 +610,7 @@ def main():
             
         # # Sidebar configuration
             with st.container(border=True):
-                st.markdown('<h3 class="sub-header">Configuration</h3>', unsafe_allow_html=True)
+                st.markdown('<div class="sub-header">Configuration</div>', unsafe_allow_html=True)
                 
                 # Environment Parameters
                 st.subheader("🌍 Environment")
@@ -667,7 +667,7 @@ def main():
                     st.success("Environment and agent have been reset!")            
                     
         with col1: 
-            st.markdown('<h2 class="sub-header">Setup Environment & Train Agent</h2>', unsafe_allow_html=True)
+            st.markdown('<div class="sub-header">Setup Environment & Train Agent</div>', unsafe_allow_html=True)
             if env_setup == "Custom":
                 st.markdown('<div class="highlight">Design your own grid world by drawing obstacles:</div>', unsafe_allow_html=True)
                 custom_grid = grid_editor(grid_size, st.session_state.custom_grid)
@@ -698,7 +698,7 @@ def main():
         
         st.divider()
         # Training section
-        st.markdown('<h3 class="sub-header">Train the Agent</h3>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">Train the Agent</div>', unsafe_allow_html=True)
         
         if st.session_state.env is not None and st.session_state.agent is not None:
             col1, col2 = st.columns([3, 2])
@@ -814,7 +814,7 @@ def main():
             st.info("Please create an environment first before training the agent.")
     
     with tab2:
-        st.markdown('<h2 class="sub-header">Analyze Learning Results</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">Analyze Learning Results</div>', unsafe_allow_html=True)
         
         if st.session_state.training_complete and st.session_state.agent is not None:
             col1, col2 = st.columns(2)
@@ -977,7 +977,7 @@ def main():
             st.info("Please train the agent first before analyzing results.")
     
     with tab3:
-        st.markdown('<h2 class="sub-header">Interactive Agent Testing</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">Interactive Agent Testing</div>', unsafe_allow_html=True)
         
         if st.session_state.training_complete and st.session_state.agent is not None:
             col1, col2 = st.columns([1, 2])
@@ -1119,7 +1119,7 @@ def main():
             st.info("Please train the agent first before testing it.")
     
     with tab4:
-        st.markdown('<h2 class="sub-header">Learn About Reinforcement Learning</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">Learn About Reinforcement Learning</div>', unsafe_allow_html=True)
         
         # RL Fundamentals
         st.markdown("### The Basics of Reinforcement Learning")
