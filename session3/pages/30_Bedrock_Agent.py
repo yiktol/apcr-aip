@@ -157,21 +157,37 @@ Remember: Your goal is to provide personalized service and help customers find s
             if hasattr(result, 'message'):
                 message = result.message
                 
+                # Handle string message (most common case)
+                if isinstance(message, str):
+                    return message
+                
                 # Handle dict message
                 if isinstance(message, dict):
+                    # Try to get content array
                     content = message.get('content', [])
                     if content and isinstance(content, list):
                         # Get text from content blocks
-                        text_parts = [block.get('text', '') for block in content if isinstance(block, dict) and 'text' in block]
+                        text_parts = []
+                        for block in content:
+                            if isinstance(block, dict) and 'text' in block:
+                                text_parts.append(block['text'])
+                            elif isinstance(block, str):
+                                text_parts.append(block)
                         if text_parts:
                             return '\n'.join(text_parts)
-                
-                # Handle string message
-                elif isinstance(message, str):
-                    return message
+                    
+                    # Try to get text directly from message dict
+                    if 'text' in message:
+                        return message['text']
+            
+            # Try to get text attribute directly
+            if hasattr(result, 'text'):
+                return result.text
             
             # Fallback to string representation
-            return str(result)
+            result_str = str(result)
+            logger.warning(f"Unexpected result type: {type(result)}, converted to string")
+            return result_str
             
         except Exception as e:
             logger.error(f"Error getting response from agent: {e}", exc_info=True)
@@ -419,9 +435,22 @@ def render_chat_interface() -> None:
     with chat_container:
         # Display chat history with enhanced styling
         for idx, message in enumerate(st.session_state.chat_history):
-            with st.chat_message(message["role"], avatar="👤" if message["role"] == "user" else "🤖"):
-                st.markdown(message["text"])
-                st.caption(f"🕐 {message.get('timestamp', 'N/A')}")
+            try:
+                # Ensure message is a dictionary
+                if not isinstance(message, dict):
+                    logger.warning(f"Invalid message format at index {idx}: {type(message)}")
+                    continue
+                
+                role = message.get("role", "assistant")
+                text = message.get("text", "")
+                timestamp = message.get("timestamp", "N/A")
+                
+                with st.chat_message(role, avatar="👤" if role == "user" else "🤖"):
+                    st.markdown(text)
+                    st.caption(f"🕐 {timestamp}")
+            except Exception as e:
+                logger.error(f"Error rendering message {idx}: {e}")
+                continue
     
     # Chat input with placeholder
     user_input = st.chat_input("💬 Ask about shoes, brands, prices, or get personalized recommendations...")

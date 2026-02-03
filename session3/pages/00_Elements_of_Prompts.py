@@ -272,29 +272,38 @@ def instruction_tab(model_id, params):
         "Custom": "Write your own instruction..."
     }
     
+    # Initialize session state
+    if 'instruction_prompt' not in st.session_state:
+        st.session_state.instruction_prompt = ""
+    
+    # Callback for selectbox change
+    def on_instruction_example_change():
+        selected = st.session_state.instruction_examples
+        if selected == "Custom":
+            st.session_state.instruction_prompt = ""
+        else:
+            st.session_state.instruction_prompt = example_prompts[selected]
+    
     selected_example = st.selectbox(
         "Choose an instruction example",
         options=list(example_prompts.keys()),
-        key="instruction_examples"
+        key="instruction_examples",
+        on_change=on_instruction_example_change
     )
     
     if selected_example == "Custom":
         user_prompt = st.text_area(
             "Your instruction",
-            value="",
             height=120,
             placeholder="Enter your own instruction for the model...",
-            key="instruction_custom"
+            key="instruction_prompt"
         )
     else:
-        user_prompt = example_prompts[selected_example]
-        if user_prompt:
-            st.text_area(
-                "Instruction to test",
-                value=user_prompt,
-                height=120,
-                key="instruction_selected"
-            )
+        user_prompt = st.text_area(
+            "Instruction to test",
+            height=120,
+            key="instruction_prompt"
+        )
     
     col1, col2 = st.columns(2)
     with col1:
@@ -454,29 +463,38 @@ def context_tab(model_id, params):
         "Custom": "Write your own prompt with context..."
     }
     
+    # Initialize session state
+    if 'context_prompt' not in st.session_state:
+        st.session_state.context_prompt = ""
+    
+    # Callback for selectbox change
+    def on_context_example_change():
+        selected = st.session_state.context_examples
+        if selected == "Custom":
+            st.session_state.context_prompt = ""
+        else:
+            st.session_state.context_prompt = example_prompts[selected]
+    
     selected_example = st.selectbox(
         "Choose a context example",
         options=list(example_prompts.keys()),
-        key="context_examples"
+        key="context_examples",
+        on_change=on_context_example_change
     )
     
     if selected_example == "Custom":
         user_prompt = st.text_area(
             "Your prompt with context",
-            value="",
             height=150,
             placeholder="Enter your prompt with appropriate context...",
-            key="context_custom"
+            key="context_prompt"
         )
     else:
-        user_prompt = example_prompts[selected_example]
-        if user_prompt:
-            st.text_area(
-                "Prompt to test",
-                value=user_prompt,
-                height=150,
-                key="context_selected"
-            )
+        user_prompt = st.text_area(
+            "Prompt to test",
+            height=150,
+            key="context_prompt"
+        )
     
     col1, col2 = st.columns(2)
     with col1:
@@ -1193,7 +1211,7 @@ def main():
             output_indicator_tab(model_id, params)
     
     # Footer
-    st.markdown("<div class='footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":

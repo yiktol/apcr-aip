@@ -12,6 +12,7 @@ import shutil
 
 # Import authentication utility
 import utils.authenticate as authenticate
+from utils import common
 
 # LangChain imports - Updated to latest versions
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -711,18 +712,10 @@ def render_sidebar() -> tuple[str, Dict, int, bool]:
     
     # FIXED: Move sidebar content outside the container to avoid nesting
     with st.sidebar:
-        st.markdown("<div class='sub-header'>Session Management</div>", unsafe_allow_html=True)
-        st.markdown(f"**Session ID:** `{st.session_state.session_id[:8]}...`")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("🔄 Reset", key="reset_session", use_container_width=True):
-                reset_session()
-        
-        with col2:
-            if st.button("🗑️ Clear DB", key="clear_db", use_container_width=True):
-                clear_vectorstore()
+        common.render_sidebar()
+
+        if st.button("🗑️ Clear DB", key="clear_db", use_container_width=True):
+            clear_vectorstore()
         
         # Display Chroma database status
         st.markdown("---")
@@ -1193,7 +1186,7 @@ def main():
     # Footer
     st.markdown(
         '<div class="footer">'
-        '© 2025 Amazon Web Services, Inc. or its affiliates. All rights reserved. | '
+        '© 2026 Amazon Web Services, Inc. or its affiliates. All rights reserved. | '
         'Powered by Amazon Bedrock & Chroma'
         '</div>',
         unsafe_allow_html=True

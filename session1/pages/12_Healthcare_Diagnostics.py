@@ -433,7 +433,7 @@ def create_footer():
     st.markdown(
         f"""
         <div class="footer-container">
-            <div class="footer-text">© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>
+            <div class="footer-text">© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>
         </div>
         """, 
         unsafe_allow_html=True

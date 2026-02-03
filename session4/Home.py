@@ -3417,7 +3417,7 @@ def main():
             The app includes interactive examples, code snippets, and knowledge checks to help you prepare 
             for the AWS AI Practitioner certification exam.
             
-            © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+            © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
         """)
     
     # Create main tabs

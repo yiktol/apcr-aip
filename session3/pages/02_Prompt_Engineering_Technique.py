@@ -171,7 +171,25 @@ def zero_shot_interface(model_id, params):
         "Question Answering": "What are three ways to reduce carbon emissions in urban areas?"
     }
     
-    selected_task = st.selectbox("Select Task Type", options=list(task_options.keys()), key="zero_shot_task")
+    # Initialize session state
+    if 'zero_shot_prompt' not in st.session_state:
+        st.session_state.zero_shot_prompt = task_options[list(task_options.keys())[0]]
+    
+    # Initialize selectbox state if not exists
+    if 'zero_shot_task' not in st.session_state:
+        st.session_state.zero_shot_task = list(task_options.keys())[0]
+    
+    # Callback for selectbox change
+    def on_zero_shot_task_change():
+        selected = st.session_state.zero_shot_task
+        st.session_state.zero_shot_prompt = task_options[selected]
+    
+    selected_task = st.selectbox(
+        "Select Task Type", 
+        options=list(task_options.keys()), 
+        key="zero_shot_task",
+        on_change=on_zero_shot_task_change
+    )
     
     system_prompt = st.text_area(
         "System Prompt",
@@ -182,7 +200,6 @@ def zero_shot_interface(model_id, params):
     
     user_prompt = st.text_area(
         "Zero-shot Prompt",
-        value=task_options[selected_task],
         height=120,
         key="zero_shot_prompt"
     )
@@ -301,7 +318,25 @@ Features:
 Summary:"""
     }
     
-    selected_task = st.selectbox("Select Example Type", options=list(task_templates.keys()), key="few_shot_task")
+    # Initialize session state - set to first option if not exists
+    if 'few_shot_prompt' not in st.session_state:
+        st.session_state.few_shot_prompt = task_templates[list(task_templates.keys())[0]]
+    
+    # Initialize selectbox state if not exists
+    if 'few_shot_task' not in st.session_state:
+        st.session_state.few_shot_task = list(task_templates.keys())[0]
+    
+    # Callback for selectbox change
+    def on_few_shot_task_change():
+        selected = st.session_state.few_shot_task
+        st.session_state.few_shot_prompt = task_templates[selected]
+    
+    selected_task = st.selectbox(
+        "Select Example Type", 
+        options=list(task_templates.keys()), 
+        key="few_shot_task",
+        on_change=on_few_shot_task_change
+    )
     
     system_prompt = st.text_area(
         "System Prompt",
@@ -312,7 +347,6 @@ Summary:"""
     
     user_prompt = st.text_area(
         "Few-shot Prompt with Examples",
-        value=task_templates[selected_task],
         height=250,
         key="few_shot_prompt"
     )
@@ -367,7 +401,25 @@ def zero_shot_cot_interface(model_id, params):
         "Scientific Analysis": "What would happen if humans suddenly lost the ability to see the color blue? Think through the implications step by step."
     }
     
-    selected_task = st.selectbox("Select Task Type", options=list(task_options.keys()), key="zero_shot_cot_task")
+    # Initialize session state
+    if 'zero_shot_cot_prompt' not in st.session_state:
+        st.session_state.zero_shot_cot_prompt = task_options[list(task_options.keys())[0]]
+    
+    # Initialize selectbox state if not exists
+    if 'zero_shot_cot_task' not in st.session_state:
+        st.session_state.zero_shot_cot_task = list(task_options.keys())[0]
+    
+    # Callback for selectbox change
+    def on_zero_shot_cot_task_change():
+        selected = st.session_state.zero_shot_cot_task
+        st.session_state.zero_shot_cot_prompt = task_options[selected]
+    
+    selected_task = st.selectbox(
+        "Select Task Type", 
+        options=list(task_options.keys()), 
+        key="zero_shot_cot_task",
+        on_change=on_zero_shot_cot_task_change
+    )
     
     system_prompt = st.text_area(
         "System Prompt",
@@ -378,7 +430,6 @@ def zero_shot_cot_interface(model_id, params):
     
     user_prompt = st.text_area(
         "Zero-shot CoT Prompt",
-        value=task_options[selected_task],
         height=120,
         key="zero_shot_cot_prompt"
     )
@@ -518,7 +569,25 @@ With only $120,000 available to invest, what should they do?
 """
     }
     
-    selected_task = st.selectbox("Select Example Type", options=list(task_templates.keys()), key="few_shot_cot_task")
+    # Initialize session state - set to first option if not exists
+    if 'few_shot_cot_prompt' not in st.session_state:
+        st.session_state.few_shot_cot_prompt = task_templates[list(task_templates.keys())[0]]
+    
+    # Initialize selectbox state if not exists
+    if 'few_shot_cot_task' not in st.session_state:
+        st.session_state.few_shot_cot_task = list(task_templates.keys())[0]
+    
+    # Callback for selectbox change
+    def on_few_shot_cot_task_change():
+        selected = st.session_state.few_shot_cot_task
+        st.session_state.few_shot_cot_prompt = task_templates[selected]
+    
+    selected_task = st.selectbox(
+        "Select Example Type", 
+        options=list(task_templates.keys()), 
+        key="few_shot_cot_task",
+        on_change=on_few_shot_cot_task_change
+    )
     
     system_prompt = st.text_area(
         "System Prompt",
@@ -529,7 +598,6 @@ With only $120,000 available to invest, what should they do?
     
     user_prompt = st.text_area(
         "Few-shot CoT Prompt with Examples",
-        value=task_templates[selected_task],
         height=400,
         key="few_shot_cot_prompt"
     )
@@ -610,6 +678,11 @@ def main():
         
         with tabs[3]:
             few_shot_cot_interface(model_id, params)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     if 'localhost' in st.context.headers["host"]:

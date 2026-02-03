@@ -1581,6 +1581,11 @@ def main():
         # Get X_test_scaled and y_test for model explanation
         _, results, X_test_scaled, y_test, _ = train_fraud_models(X, y)
         display_model_explanation_tab(models, X_test_scaled, y_test, feature_names)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     # Configure the page

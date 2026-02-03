@@ -1264,6 +1264,11 @@ def main():
           - Stable Baselines3: Reliable implementations of RL algorithms
           - TensorFlow Agents and PyTorch RL: Deep RL implementations
         """)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 # Run the app
 if __name__ == "__main__":

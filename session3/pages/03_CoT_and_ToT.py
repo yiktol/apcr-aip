@@ -277,289 +277,828 @@ Algorithm: Depth-First Search (DFS)"""
 
 TOT_PROMPTS = [
     {
-        "name": "Strategy Game - Game of 24",
-        "prompt": """Solve the Game of 24 using the numbers 4, 1, 8, 7. You must use each number exactly once with the operations +, -, ×, ÷ to make 24.""",
+        "name": "ML Model Selection - Classification Task",
+        "prompt": """You need to build a classification model to detect fraudulent credit card transactions. You have 100,000 transactions with 30 features, but only 0.5% are fraudulent (highly imbalanced). Which ML approach would you choose and why?""",
         
         "tot_suffix": """
 
-I need to solve the Game of 24 using 4, 1, 8, 7 to make 24. Let me explore multiple solution paths systematically.
+I need to select the best ML approach for fraud detection with imbalanced data. Let me systematically explore different solution paths.
 
-**Possible approaches to explore:**
+**Problem Analysis:**
+- Dataset: 100,000 transactions, 30 features
+- Class imbalance: 0.5% fraud (500 fraudulent, 99,500 legitimate)
+- Goal: Detect fraudulent transactions with high recall
 
-**Approach 1: Start with multiplication to get larger numbers**
-- Path 1a: 8 × 4 = 32, then work with 32, 1, 7
-  - 32 - 7 = 25, then 25 - 1 = 24 ✓
-  - So: (8 × 4) - 7 - 1 = 24
+**Approach 1: Traditional ML with Resampling**
+Path 1a: Random Forest + SMOTE
+- Pros: Handles imbalance well, robust to outliers, feature importance
+- Cons: May overfit on synthetic samples, slower training
+- Expected performance: Precision ~70-80%, Recall ~75-85%
+- Evaluation: Good baseline, interpretable ✓
 
-- Path 1b: 8 × 7 = 56, then work with 56, 4, 1  
-  - 56 ÷ 4 = 14, then need 14 + 1 = 15 ≠ 24
-  - 56 - 4 = 52, then need 52 + 1 = 53 ≠ 24
+Path 1b: XGBoost + Class Weights
+- Pros: Excellent with imbalanced data, fast, handles missing values
+- Cons: Requires careful hyperparameter tuning
+- Expected performance: Precision ~75-85%, Recall ~80-90%
+- Evaluation: Strong candidate, production-ready ✓✓
 
-**Approach 2: Use division to create fractions**
-- Path 2a: 8 ÷ 1 = 8, then work with 8, 4, 7
-  - 8 + 4 = 12, then 12 + 7 = 19 ≠ 24
-  - 8 × 4 = 32, then 32 - 7 = 25 ≠ 24 (close!)
+**Approach 2: Anomaly Detection Methods**
+Path 2a: Isolation Forest
+- Pros: Designed for anomaly detection, no need for balanced data
+- Cons: Less interpretable, may miss subtle fraud patterns
+- Expected performance: Precision ~60-70%, Recall ~70-80%
+- Evaluation: Good for unsupervised scenarios
 
-**Approach 3: Group operations differently**
-- Path 3a: (8 - 4) × (7 - 1) = 4 × 6 = 24 ✓
-- Path 3b: (8 + 4) × (7 - 1) = 12 × 6 = 72 ≠ 24
-- Path 3c: (8 + 7) × (4 - 1) = 15 × 3 = 45 ≠ 24
+Path 2b: Autoencoder (Deep Learning)
+- Pros: Learns complex patterns, good for rare events
+- Cons: Requires more data, harder to tune, black box
+- Expected performance: Precision ~65-75%, Recall ~75-85%
+- Evaluation: Overkill for this dataset size
 
-**Evaluation of paths:**
-- Path 1a works: (8 × 4) - 7 - 1 = 32 - 7 - 1 = 24
-- Path 3a works: (8 - 4) × (7 - 1) = 4 × 6 = 24
+**Approach 3: Ensemble Strategy**
+Path 3a: Stacking (XGBoost + Random Forest + Logistic Regression)
+- Pros: Combines strengths of multiple models, highest accuracy potential
+- Cons: Complex, slower inference, harder to maintain
+- Expected performance: Precision ~80-90%, Recall ~85-92%
+- Evaluation: Best performance but complex ✓✓✓
 
-**Best solutions found:**
-1. (8 × 4) - 7 - 1 = 24
-2. (8 - 4) × (7 - 1) = 24"""
+Path 3b: Voting Classifier (Soft voting)
+- Pros: Simpler than stacking, reduces overfitting
+- Cons: Still requires multiple models
+- Expected performance: Precision ~75-85%, Recall ~82-88%
+- Evaluation: Good balance of performance and complexity ✓✓
+
+**Approach 4: Cost-Sensitive Learning**
+Path 4a: Logistic Regression with Custom Loss
+- Pros: Simple, interpretable, fast inference
+- Cons: May not capture complex patterns
+- Expected performance: Precision ~65-75%, Recall ~70-80%
+- Evaluation: Good for baseline and explainability
+
+**Evaluation Criteria:**
+1. Performance (Recall priority): Approach 3a > 3b > 1b > 2b > 1a
+2. Interpretability: 1a > 4a > 1b > 3b > 2a
+3. Production readiness: 1b > 1a > 3b > 4a > 3a
+4. Training time: 4a > 1a > 1b > 3b > 3a
+
+**Recommended Solution:**
+**Primary: XGBoost with Class Weights (Path 1b)**
+- Use scale_pos_weight parameter to handle imbalance
+- Apply stratified k-fold cross-validation
+- Optimize for F2-score (emphasizes recall)
+- Monitor precision-recall curve, not just accuracy
+- Set decision threshold based on business cost of false negatives
+
+**Alternative: Ensemble Approach (Path 3b) if higher performance needed**
+- Combine XGBoost, Random Forest, and LightGBM
+- Use soft voting with optimized weights
+- Worth the complexity if fraud cost is very high
+
+**Implementation Strategy:**
+1. Start with XGBoost baseline
+2. Tune hyperparameters (max_depth, learning_rate, scale_pos_weight)
+3. If performance insufficient, move to ensemble
+4. Always validate on time-based split (not random) for temporal patterns"""
     },
     {
-        "name": "Complex Problem Solving - Water Jug Problem",
-        "prompt": """You have two water jugs: one holds 5 gallons and the other holds 3 gallons. You have access to unlimited water. How can you measure exactly 4 gallons using only these two jugs?""",
+        "name": "System Architecture - Microservices Design",
+        "prompt": """You're designing a scalable e-commerce platform expected to handle 10,000 orders per hour during peak times. Should you use a monolithic architecture or microservices? Consider trade-offs and provide a recommendation.""",
         
         "tot_suffix": """
 
-I need to measure exactly 4 gallons using a 5-gallon jug and a 3-gallon jug. Let me explore different solution paths systematically.
+I need to choose between monolithic and microservices architecture for a high-traffic e-commerce platform. Let me explore multiple architectural paths systematically.
 
-**Initial state analysis:**
-- 5-gallon jug (J5): empty
-- 3-gallon jug (J3): empty
-- Goal: get exactly 4 gallons in one of the jugs
+**Requirements Analysis:**
+- Peak load: 10,000 orders/hour (~3 orders/second)
+- Domain: E-commerce (catalog, cart, orders, payments, inventory, shipping)
+- Scalability: Must handle traffic spikes
+- Team: Assume medium-sized development team
 
-**Approach 1: Start by filling the 5-gallon jug**
-- Step 1: Fill J5 completely → J5: 5, J3: 0
-- Step 2: Pour from J5 to J3 → J5: 2, J3: 3
-- Step 3: Empty J3 → J5: 2, J3: 0
-- Step 4: Pour the 2 gallons from J5 to J3 → J5: 0, J3: 2
-- Step 5: Fill J5 again → J5: 5, J3: 2
-- Step 6: Pour from J5 to J3 (can only add 1 more gallon) → J5: 4, J3: 3
-- Result: 4 gallons in J5 ✓
+**Approach 1: Pure Monolithic Architecture**
+Path 1a: Traditional Monolith with Vertical Scaling
+- Pros: Simple deployment, easier debugging, shared database, no network latency
+- Cons: Single point of failure, hard to scale specific components, deployment risk
+- Scalability: Limited by single server capacity
+- Team impact: Easier for small teams, but merge conflicts increase
+- Evaluation: Too risky for 10k orders/hour ✗
 
-**Approach 2: Start by filling the 3-gallon jug**
-- Step 1: Fill J3 completely → J5: 0, J3: 3
-- Step 2: Pour from J3 to J5 → J5: 3, J3: 0
-- Step 3: Fill J3 again → J5: 3, J3: 3
-- Step 4: Pour from J3 to J5 (can only add 2 more gallons) → J5: 5, J3: 1
-- Step 5: Empty J5 → J5: 0, J3: 1
-- Step 6: Pour the 1 gallon from J3 to J5 → J5: 1, J3: 0
-- Step 7: Fill J3 again → J5: 1, J3: 3
-- Step 8: Pour from J3 to J5 → J5: 4, J3: 0
-- Result: 4 gallons in J5 ✓
+Path 1b: Modular Monolith with Horizontal Scaling
+- Pros: Clear boundaries, easier to refactor later, load balancer distribution
+- Cons: Still coupled deployment, database bottleneck
+- Scalability: Can handle load with multiple instances + caching
+- Team impact: Good for medium teams with clear module ownership
+- Evaluation: Viable option, lower complexity ✓
 
-**Approach 3: Alternative method using subtraction**
-- Fill J5, use J3 to remove 3, then remove 3 again, leaving 5-3-3 = -1 (impossible)
-- Fill J3 twice into J5: not possible since 3+3 = 6 > 5
+**Approach 2: Full Microservices Architecture**
+Path 2a: Fine-Grained Microservices (10+ services)
+- Services: User, Product, Cart, Order, Payment, Inventory, Shipping, Notification, Analytics, Search
+- Pros: Maximum flexibility, independent scaling, technology diversity
+- Cons: High operational complexity, distributed transactions, network overhead
+- Scalability: Excellent - scale each service independently
+- Team impact: Requires DevOps expertise, service mesh, monitoring
+- Evaluation: Over-engineered for this scale ✗
 
-**Evaluation of approaches:**
-- Approach 1: 6 steps, efficient
-- Approach 2: 8 steps, longer but also valid
-- Approach 3: Not feasible
+Path 2b: Coarse-Grained Microservices (4-5 services)
+- Services: Catalog (products, search), Order Management (cart, orders), Payment, Fulfillment (inventory, shipping)
+- Pros: Balanced complexity, key services can scale independently
+- Cons: Some operational overhead, need API gateway, distributed tracing
+- Scalability: Very good - scale order service during peaks
+- Team impact: Manageable with 2-3 teams, clear service boundaries
+- Evaluation: Strong candidate ✓✓
 
-**Optimal solution:** Approach 1 with 6 steps
-1. Fill 5-gallon jug
-2. Pour into 3-gallon jug (leaving 2 in 5-gallon)
-3. Empty 3-gallon jug
-4. Pour 2 gallons into 3-gallon jug
-5. Fill 5-gallon jug again
-6. Pour into 3-gallon jug until full (adds 1 gallon, leaving 4 in 5-gallon jug)"""
+**Approach 3: Hybrid Architecture**
+Path 3a: Monolith with Extracted Critical Services
+- Core: Monolith for catalog, cart, user management
+- Extracted: Payment service (PCI compliance), Order service (high load)
+- Pros: Pragmatic, reduces complexity, isolates critical paths
+- Cons: Some coupling remains, gradual migration needed
+- Scalability: Good - scale order service independently
+- Team impact: Easiest transition, learn microservices gradually
+- Evaluation: Best balance for most teams ✓✓✓
+
+Path 3b: Monolith with Event-Driven Extensions
+- Core: Monolith for transactional operations
+- Async: Event bus for notifications, analytics, recommendations
+- Pros: Decouples non-critical paths, improves performance
+- Cons: Eventual consistency challenges, message queue overhead
+- Scalability: Good for async workloads
+- Team impact: Moderate complexity, need message broker expertise
+- Evaluation: Good for specific use cases ✓✓
+
+**Approach 4: Serverless Architecture**
+Path 4a: AWS Lambda + API Gateway
+- Pros: Auto-scaling, pay-per-use, no server management
+- Cons: Cold starts, vendor lock-in, debugging complexity, cost at scale
+- Scalability: Excellent auto-scaling
+- Team impact: Different skillset required
+- Evaluation: Interesting but risky for core e-commerce ✗
+
+**Decision Matrix:**
+
+| Criteria | Monolith (1b) | Microservices (2b) | Hybrid (3a) |
+|----------|---------------|-------------------|-------------|
+| Scalability | 7/10 | 10/10 | 9/10 |
+| Complexity | 9/10 | 4/10 | 7/10 |
+| Team Readiness | 9/10 | 5/10 | 8/10 |
+| Time to Market | 10/10 | 5/10 | 8/10 |
+| Operational Cost | 8/10 | 5/10 | 7/10 |
+| **Total** | **43/50** | **29/50** | **39/50** |
+
+**Recommended Solution: Hybrid Architecture (Path 3a)**
+
+**Phase 1: Start with Modular Monolith**
+- Build with clear module boundaries
+- Use domain-driven design principles
+- Implement async communication where possible
+- Set up comprehensive monitoring
+
+**Phase 2: Extract Critical Services**
+- Extract Payment Service first (compliance, security)
+- Extract Order Service second (high load, business critical)
+- Keep Catalog, Cart, User in monolith (lower traffic, tightly coupled)
+
+**Phase 3: Scale Strategically**
+- Horizontal scaling for monolith (3-5 instances)
+- Independent scaling for Order Service (10+ instances during peaks)
+- Use Redis for session management and caching
+- Implement CDN for static assets
+
+**Why This Works:**
+- Handles 10k orders/hour easily (Order service scales independently)
+- Lower operational complexity than full microservices
+- Faster time to market than building microservices from scratch
+- Clear migration path if you need more services later
+- Team can learn microservices patterns gradually
+
+**Technology Stack:**
+- Monolith: Spring Boot or Django
+- Order Service: Node.js or Go (high concurrency)
+- Payment Service: Java (security, compliance)
+- Message Queue: RabbitMQ or AWS SQS
+- Cache: Redis
+- Database: PostgreSQL (main), MongoDB (product catalog)
+- API Gateway: Kong or AWS API Gateway"""
     },
     {
-        "name": "Logic Puzzle - Knights and Knaves",
-        "prompt": """On an island, there are two types of people: Knights (who always tell the truth) and Knaves (who always lie). You meet three people: Alice, Bob, and Charlie. Alice says "Bob is a knave." Bob says "Charlie is a knave." Charlie says "Alice and Bob are both knaves." What type is each person?""",
+        "name": "Prompt Engineering - Hallucination Mitigation",
+        "prompt": """An LLM keeps generating factually incorrect information about recent events. What strategies would you use to reduce hallucinations and improve factual accuracy?""",
         
         "tot_suffix": """
 
-I need to determine who are Knights (truth-tellers) and who are Knaves (liars). Let me systematically explore all possibilities.
+I need to reduce LLM hallucinations and improve factual accuracy. Let me systematically explore different mitigation strategies.
 
-**Given statements:**
-- Alice: "Bob is a knave"
-- Bob: "Charlie is a knave"  
-- Charlie: "Alice and Bob are both knaves"
+**Problem Analysis:**
+- Issue: LLM generating false information about recent events
+- Root causes: Training data cutoff, lack of grounding, overconfidence
+- Goal: Improve factual accuracy while maintaining usefulness
 
-**Possible combinations to explore:**
-Since each person is either a Knight (K) or Knave (N), there are 2³ = 8 possibilities.
+**Approach 1: Retrieval-Augmented Generation (RAG)**
+Path 1a: Basic RAG with Vector Database
+- Implementation: Embed queries, retrieve relevant docs, inject into context
+- Pros: Grounds responses in real data, handles recent information
+- Cons: Retrieval quality critical, context window limits, latency increase
+- Expected improvement: 60-80% reduction in hallucinations
+- Evaluation: Strong baseline solution ✓✓
 
-**Path 1: Alice=K, Bob=K, Charlie=K**
-- Alice (K) says "Bob is a knave" → False statement → Contradiction (Knights can't lie)
-- Invalid ✗
+Path 1b: Advanced RAG with Reranking
+- Implementation: Multi-stage retrieval → rerank → generate with citations
+- Pros: Better relevance, source attribution, verifiable claims
+- Cons: More complex, higher latency, requires reranking model
+- Expected improvement: 70-85% reduction in hallucinations
+- Evaluation: Best for high-stakes applications ✓✓✓
 
-**Path 2: Alice=K, Bob=K, Charlie=N**
-- Alice (K) says "Bob is a knave" → False (Bob is K) → Contradiction
-- Invalid ✗
+Path 1c: Hybrid Search (Dense + Sparse)
+- Implementation: Combine vector search with keyword search (BM25)
+- Pros: Better recall, handles both semantic and exact matches
+- Cons: More infrastructure, tuning required
+- Expected improvement: 65-80% reduction
+- Evaluation: Good for diverse query types ✓✓
 
-**Path 3: Alice=K, Bob=N, Charlie=K**
-- Alice (K) says "Bob is a knave" → True ✓
-- Bob (N) says "Charlie is a knave" → False (Charlie is K) → Consistent (Knaves lie) ✓
-- Charlie (K) says "Alice and Bob are both knaves" → False → Contradiction
-- Invalid ✗
+**Approach 2: Prompt Engineering Techniques**
+Path 2a: Explicit Uncertainty Instructions
+- Prompt: "If you're not certain, say 'I don't know' rather than guessing"
+- Pros: Simple, no infrastructure, reduces overconfidence
+- Cons: May refuse too often, doesn't add new knowledge
+- Expected improvement: 30-40% reduction
+- Evaluation: Easy first step ✓
 
-**Path 4: Alice=K, Bob=N, Charlie=N**
-- Alice (K) says "Bob is a knave" → True ✓
-- Bob (N) says "Charlie is a knave" → True, but Knaves must lie → Contradiction
-- Invalid ✗
+Path 2b: Chain-of-Thought with Verification
+- Prompt: "Think step-by-step and verify each claim before stating it"
+- Pros: Encourages self-reflection, better reasoning
+- Cons: Longer responses, still limited by training data
+- Expected improvement: 35-45% reduction
+- Evaluation: Good for reasoning tasks ✓
 
-**Path 5: Alice=N, Bob=K, Charlie=K**
-- Alice (N) says "Bob is a knave" → False (Bob is K) → Consistent (Knaves lie) ✓
-- Bob (K) says "Charlie is a knave" → False (Charlie is K) → Contradiction
-- Invalid ✗
+Path 2c: Few-Shot with Correct Examples
+- Prompt: Provide examples of accurate, well-sourced responses
+- Pros: Demonstrates desired behavior, improves consistency
+- Cons: Uses context window, examples must be carefully chosen
+- Expected improvement: 40-50% reduction
+- Evaluation: Effective for specific domains ✓✓
 
-**Path 6: Alice=N, Bob=K, Charlie=N**
-- Alice (N) says "Bob is a knave" → False → Consistent ✓
-- Bob (K) says "Charlie is a knave" → True ✓
-- Charlie (N) says "Alice and Bob are both knaves" → False → Consistent ✓
-- Valid! ✓
+**Approach 3: Model Fine-Tuning**
+Path 3a: Fine-Tune on Factual QA Dataset
+- Implementation: RLHF or supervised fine-tuning on verified facts
+- Pros: Permanent improvement, no runtime overhead
+- Cons: Expensive, requires large dataset, may reduce generality
+- Expected improvement: 50-70% reduction
+- Evaluation: Good for specific domains with budget ✓✓
 
-**Path 7: Alice=N, Bob=N, Charlie=K**
-- Alice (N) says "Bob is a knave" → True, but Knaves must lie → Contradiction
-- Invalid ✗
+Path 3b: Instruction Tuning for Uncertainty
+- Implementation: Train model to express uncertainty appropriately
+- Pros: Better calibration, more honest responses
+- Cons: Requires careful dataset curation
+- Expected improvement: 45-60% reduction
+- Evaluation: Improves trustworthiness ✓✓
 
-**Path 8: Alice=N, Bob=N, Charlie=N**
-- Alice (N) says "Bob is a knave" → True, but Knaves must lie → Contradiction
-- Invalid ✗
+**Approach 4: Multi-Model Verification**
+Path 4a: Ensemble with Fact-Checking Model
+- Implementation: Generate response → fact-check with specialized model → revise
+- Pros: Catches errors before user sees them, high accuracy
+- Cons: 2-3x latency, higher cost, complex pipeline
+- Expected improvement: 75-90% reduction
+- Evaluation: Best accuracy but expensive ✓✓✓
 
-**Verification of Path 6 (Alice=N, Bob=K, Charlie=N):**
-- Alice (Knave) says "Bob is a knave" → False statement ✓ (Knaves lie)
-- Bob (Knight) says "Charlie is a knave" → True statement ✓ (Knights tell truth)
-- Charlie (Knave) says "Alice and Bob are both knaves" → False statement ✓ (Knaves lie)
+Path 4b: Self-Consistency Checking
+- Implementation: Generate multiple responses, check for consistency
+- Pros: No additional models needed, catches contradictions
+- Cons: Higher latency and cost (multiple generations)
+- Expected improvement: 50-65% reduction
+- Evaluation: Good middle ground ✓✓
 
-**Solution:**
-- Alice: Knave
-- Bob: Knight  
-- Charlie: Knave"""
+**Approach 5: Structured Output with Constraints**
+Path 5a: JSON Schema with Required Fields
+- Implementation: Force structured output with source citations
+- Pros: Verifiable, parseable, encourages grounding
+- Cons: Less natural, may not fit all use cases
+- Expected improvement: 55-70% reduction
+- Evaluation: Excellent for data extraction ✓✓
+
+Path 5b: Template-Based Generation
+- Implementation: Fill predefined templates with verified information
+- Pros: Highly controlled, consistent format
+- Cons: Less flexible, may feel robotic
+- Expected improvement: 60-75% reduction
+- Evaluation: Good for repetitive tasks ✓
+
+**Decision Matrix:**
+
+| Strategy | Accuracy | Cost | Latency | Complexity | Score |
+|----------|----------|------|---------|------------|-------|
+| Advanced RAG (1b) | 9/10 | 6/10 | 6/10 | 7/10 | 28/40 |
+| Basic RAG (1a) | 8/10 | 7/10 | 7/10 | 8/10 | 30/40 |
+| Multi-Model (4a) | 10/10 | 4/10 | 4/10 | 5/10 | 23/40 |
+| Fine-Tuning (3a) | 7/10 | 5/10 | 9/10 | 6/10 | 27/40 |
+| Prompt Eng (2c) | 6/10 | 9/10 | 9/10 | 9/10 | 33/40 |
+
+**Recommended Solution: Layered Defense Strategy**
+
+**Tier 1: Immediate Improvements (Week 1)**
+1. Update system prompt with uncertainty instructions
+2. Add few-shot examples of well-sourced responses
+3. Implement basic input validation
+
+**Tier 2: RAG Implementation (Weeks 2-4)**
+1. Set up vector database (Pinecone, Weaviate, or ChromaDB)
+2. Implement basic RAG pipeline:
+   - Query → Embed → Retrieve top-k docs → Inject context → Generate
+3. Add source citations to responses
+4. Monitor retrieval quality metrics
+
+**Tier 3: Advanced Techniques (Months 2-3)**
+1. Implement reranking (Cohere Rerank or cross-encoder)
+2. Add hybrid search (vector + BM25)
+3. Implement confidence scoring
+4. A/B test different retrieval strategies
+
+**Tier 4: Verification Layer (Month 4+)**
+1. Add fact-checking model for high-stakes queries
+2. Implement self-consistency checking for critical facts
+3. Build feedback loop to improve retrieval
+
+**Implementation Example:**
+
+```python
+# System prompt with uncertainty handling
+system_prompt = '''You are a helpful assistant. Follow these rules:
+1. Only state facts you're confident about
+2. Cite sources when available: [Source: ...]
+3. If uncertain, say "I don't have reliable information about..."
+4. For recent events, acknowledge your knowledge cutoff
+5. Never make up dates, statistics, or quotes'''
+
+# RAG-enhanced generation
+def generate_with_rag(query):
+    # Retrieve relevant documents
+    docs = vector_db.search(query, top_k=5)
+    
+    # Build context
+    context = "\\n\\n".join([f"[Source {i+1}]: {doc}" 
+                            for i, doc in enumerate(docs)])
+    
+    # Enhanced prompt
+    prompt = f'''Context information:
+{context}
+
+Question: {query}
+
+Instructions: Answer based on the context above. Cite sources using [Source N].
+If the context doesn't contain the answer, say so clearly.'''
+    
+    return llm.generate(prompt, system=system_prompt)
+```
+
+**Expected Results:**
+- Week 1: 30-40% reduction in hallucinations
+- Month 1: 60-75% reduction with RAG
+- Month 3: 75-85% reduction with advanced techniques
+- Month 4+: 85-90% reduction with verification layer
+
+**Monitoring Metrics:**
+- Factual accuracy rate (human eval)
+- Citation rate (% responses with sources)
+- Uncertainty expression rate
+- User satisfaction scores
+- Retrieval relevance (precision@k)"""
     },
     {
-        "name": "Mathematical Proof - Number Theory",
-        "prompt": """Prove that the sum of any three consecutive integers is always divisible by 3.""",
+        "name": "Data Pipeline Optimization - ETL Performance",
+        "prompt": """Your ETL pipeline processes 500GB of data daily but takes 8 hours to complete. The business needs it done in 2 hours. What optimization strategies would you explore?""",
         
         "tot_suffix": """
 
-I need to prove that the sum of any three consecutive integers is always divisible by 3. Let me explore multiple proof approaches.
+I need to reduce ETL pipeline time from 8 hours to 2 hours (4x speedup). Let me systematically explore optimization strategies.
 
-**Approach 1: Algebraic proof using general form**
-Let the three consecutive integers be n, n+1, n+2 where n is any integer.
+**Current State Analysis:**
+- Data volume: 500GB daily
+- Current time: 8 hours (62.5 GB/hour)
+- Target time: 2 hours (250 GB/hour)
+- Required speedup: 4x
 
-Sum = n + (n+1) + (n+2) = 3n + 3 = 3(n+1)
+**Approach 1: Parallelization Strategies**
+Path 1a: Horizontal Partitioning (Data Parallelism)
+- Implementation: Split data into chunks, process in parallel
+- Example: 10 workers processing 50GB each
+- Pros: Linear scalability, simple to implement
+- Cons: Requires partitionable data, coordination overhead
+- Expected speedup: 3-5x (depending on workers)
+- Cost: Medium (more compute resources)
+- Evaluation: Strong candidate ✓✓✓
 
-Since the sum equals 3(n+1), it's clearly divisible by 3 for any integer n. ✓
+Path 1b: Pipeline Parallelism (Stage Parallelism)
+- Implementation: Overlap Extract, Transform, Load stages
+- Example: While batch N loads, batch N+1 transforms, batch N+2 extracts
+- Pros: Better resource utilization, no data splitting needed
+- Cons: Complex coordination, requires streaming architecture
+- Expected speedup: 2-3x
+- Cost: Low (same resources, better utilization)
+- Evaluation: Good complementary approach ✓✓
 
-**Approach 2: Modular arithmetic approach**
-Consider any integer n modulo 3. There are three cases:
+Path 1c: Hybrid Parallelism
+- Implementation: Combine data + pipeline parallelism
+- Pros: Maximum throughput, flexible scaling
+- Cons: Most complex, harder to debug
+- Expected speedup: 5-8x
+- Cost: High (complexity + resources)
+- Evaluation: Overkill unless needed for future growth ✓
 
-Case 1: n ≡ 0 (mod 3)
-- Three consecutive integers: n, n+1, n+2
-- n ≡ 0 (mod 3), n+1 ≡ 1 (mod 3), n+2 ≡ 2 (mod 3)
-- Sum ≡ 0 + 1 + 2 ≡ 3 ≡ 0 (mod 3) ✓
+**Approach 2: Infrastructure Optimization**
+Path 2a: Upgrade to Distributed Processing (Spark/Dask)
+- Implementation: Replace single-node with Spark cluster
+- Pros: Built-in parallelism, fault tolerance, mature ecosystem
+- Cons: Learning curve, infrastructure overhead, cost
+- Expected speedup: 4-6x
+- Cost: High (cluster + maintenance)
+- Evaluation: Best for long-term scalability ✓✓✓
 
-Case 2: n ≡ 1 (mod 3)
-- n ≡ 1 (mod 3), n+1 ≡ 2 (mod 3), n+2 ≡ 0 (mod 3)
-- Sum ≡ 1 + 2 + 0 ≡ 3 ≡ 0 (mod 3) ✓
+Path 2b: Use Columnar Storage (Parquet/ORC)
+- Implementation: Convert source data to columnar format
+- Pros: Faster reads (only needed columns), better compression
+- Cons: Requires data conversion, storage format change
+- Expected speedup: 2-3x (for read-heavy workloads)
+- Cost: Low (storage optimization)
+- Evaluation: Easy win for analytics workloads ✓✓
 
-Case 3: n ≡ 2 (mod 3)
-- n ≡ 2 (mod 3), n+1 ≡ 0 (mod 3), n+2 ≡ 1 (mod 3)
-- Sum ≡ 2 + 0 + 1 ≡ 3 ≡ 0 (mod 3) ✓
+Path 2c: Increase Compute Resources (Vertical Scaling)
+- Implementation: Bigger machine (more CPU, RAM, faster disk)
+- Pros: Simple, no code changes
+- Cons: Limited scalability, expensive, diminishing returns
+- Expected speedup: 1.5-2x
+- Cost: High (hardware costs)
+- Evaluation: Quick fix but not sustainable ✗
 
-**Approach 3: Pattern recognition approach**
-Examples:
-- 1 + 2 + 3 = 6 = 3 × 2 ✓
-- 5 + 6 + 7 = 18 = 3 × 6 ✓
-- (-2) + (-1) + 0 = -3 = 3 × (-1) ✓
-- 10 + 11 + 12 = 33 = 3 × 11 ✓
+**Approach 3: Algorithm & Code Optimization**
+Path 3a: Optimize Transformations
+- Implementation: Profile code, optimize hot paths, vectorize operations
+- Examples: Use pandas vectorization, avoid loops, optimize SQL queries
+- Pros: No infrastructure changes, permanent improvement
+- Cons: Requires deep analysis, may be limited gains
+- Expected speedup: 1.5-3x
+- Cost: Low (developer time)
+- Evaluation: Should always do this first ✓✓✓
 
-Pattern confirms the general rule.
+Path 3b: Reduce Data Movement
+- Implementation: Push transformations to source (SQL), avoid unnecessary copies
+- Examples: Filter early, aggregate at source, use views
+- Pros: Less network I/O, less memory usage
+- Cons: May shift load to source database
+- Expected speedup: 1.5-2.5x
+- Cost: Very low
+- Evaluation: Quick wins available ✓✓
 
-**Approach 4: Combinatorial/grouping approach**
-Any three consecutive integers can be grouped as:
-- One number ≡ 0 (mod 3)
-- One number ≡ 1 (mod 3)  
-- One number ≡ 2 (mod 3)
+Path 3c: Incremental Processing
+- Implementation: Process only changed data (CDC - Change Data Capture)
+- Pros: Dramatically reduces data volume, faster processing
+- Cons: Requires change tracking, more complex logic
+- Expected speedup: 5-10x (if only 10-20% data changes daily)
+- Cost: Medium (implementation complexity)
+- Evaluation: Game-changer if applicable ✓✓✓
 
-Since we have exactly one representative from each residue class modulo 3, their sum must be congruent to 0 + 1 + 2 = 3 ≡ 0 (mod 3).
+**Approach 4: Caching & Precomputation**
+Path 4a: Materialize Intermediate Results
+- Implementation: Cache expensive transformations, reuse across runs
+- Pros: Avoid recomputation, faster iterations
+- Cons: Storage overhead, cache invalidation complexity
+- Expected speedup: 2-4x (for repeated computations)
+- Cost: Low (storage)
+- Evaluation: Good for complex pipelines ✓✓
 
-**Evaluation of approaches:**
-- Approach 1: Most direct and elegant
-- Approach 2: Most rigorous, covers all cases
-- Approach 3: Provides intuitive evidence
-- Approach 4: Offers conceptual insight
+Path 4b: Precompute Aggregations
+- Implementation: Maintain summary tables, update incrementally
+- Pros: Much faster queries, reduced processing
+- Cons: More storage, consistency challenges
+- Expected speedup: 3-5x (for aggregation-heavy workloads)
+- Cost: Low-Medium
+- Evaluation: Excellent for reporting pipelines ✓✓
 
-**Best proof:** Approach 1 (algebraic) is the most concise and complete.
+**Approach 5: Architectural Changes**
+Path 5a: Streaming Architecture (Kafka + Flink)
+- Implementation: Replace batch with real-time streaming
+- Pros: Continuous processing, lower latency, better resource utilization
+- Cons: Major rewrite, operational complexity, different paradigm
+- Expected speedup: N/A (different model, but spreads load over 24 hours)
+- Cost: Very high (rewrite + infrastructure)
+- Evaluation: Future-proof but major undertaking ✓
 
-**Final proof:** For any integer n, three consecutive integers are n, n+1, n+2. Their sum is n + (n+1) + (n+2) = 3n + 3 = 3(n+1), which is divisible by 3. QED."""
+Path 5b: Lambda Architecture (Batch + Stream)
+- Implementation: Fast path for recent data, batch for historical
+- Pros: Best of both worlds, handles late data
+- Cons: Maintain two systems, complexity
+- Expected speedup: Varies
+- Cost: Very high
+- Evaluation: Only for specific requirements ✗
+
+**Decision Matrix:**
+
+| Strategy | Speedup | Cost | Complexity | Time to Implement | Score |
+|----------|---------|------|------------|-------------------|-------|
+| Incremental (3c) | 10/10 | 7/10 | 6/10 | 7/10 | 30/40 |
+| Spark Cluster (2a) | 9/10 | 5/10 | 6/10 | 5/10 | 25/40 |
+| Data Parallel (1a) | 8/10 | 7/10 | 8/10 | 8/10 | 31/40 |
+| Code Optimize (3a) | 7/10 | 9/10 | 8/10 | 9/10 | 33/40 |
+| Columnar (2b) | 7/10 | 9/10 | 9/10 | 8/10 | 33/40 |
+
+**Recommended Solution: Phased Optimization**
+
+**Phase 1: Quick Wins (Week 1-2) - Target: 2x speedup**
+1. Profile current pipeline to identify bottlenecks
+2. Optimize hot paths:
+   - Vectorize pandas operations
+   - Optimize SQL queries (add indexes, push filters down)
+   - Remove unnecessary data copies
+3. Convert to columnar storage (Parquet)
+4. Implement basic caching for expensive operations
+
+**Phase 2: Parallelization (Week 3-4) - Target: 2x additional speedup**
+1. Implement data partitioning:
+   - Partition by date, customer_id, or natural key
+   - Process partitions in parallel (multiprocessing or ThreadPoolExecutor)
+2. Add pipeline parallelism:
+   - Use queues to overlap Extract/Transform/Load
+3. Optimize I/O:
+   - Batch database operations
+   - Use connection pooling
+   - Parallel reads/writes
+
+**Phase 3: Incremental Processing (Week 5-6) - Target: Maintain performance**
+1. Implement Change Data Capture:
+   - Track changed records (timestamps, version columns)
+   - Process only deltas
+2. Maintain state:
+   - Store last processed timestamp
+   - Handle late-arriving data
+
+**Implementation Example:**
+
+```python
+# Phase 1: Optimized transformation
+def transform_optimized(df):
+    # Vectorized operations instead of loops
+    df['total'] = df['quantity'] * df['price']  # Not: df.apply()
+    
+    # Filter early
+    df = df[df['status'] == 'active']
+    
+    # Use categorical for low-cardinality columns
+    df['category'] = df['category'].astype('category')
+    
+    return df
+
+# Phase 2: Parallel processing
+from multiprocessing import Pool
+from functools import partial
+
+def process_partition(partition_id, date):
+    # Each worker processes one partition
+    df = extract_partition(partition_id, date)
+    df = transform_optimized(df)
+    load_partition(df, partition_id)
+
+def run_parallel_etl(date, num_workers=10):
+    partitions = range(num_workers)
+    with Pool(num_workers) as pool:
+        pool.map(partial(process_partition, date=date), partitions)
+
+# Phase 3: Incremental processing
+def run_incremental_etl(date):
+    last_processed = get_last_processed_timestamp()
+    
+    # Only extract changed records
+    df = extract_changes_since(last_processed)
+    
+    if df.empty:
+        print("No changes to process")
+        return
+    
+    df = transform_optimized(df)
+    load_incremental(df)  # Upsert instead of full load
+    
+    update_last_processed_timestamp(date)
+```
+
+**Expected Results:**
+- Week 2: 4 hours (2x speedup from optimization + columnar storage)
+- Week 4: 2 hours (4x total speedup with parallelization)
+- Week 6: 1-2 hours (4-8x speedup with incremental processing)
+
+**Monitoring & Validation:**
+- Add timing metrics for each stage
+- Monitor resource utilization (CPU, memory, I/O)
+- Track data quality metrics
+- Set up alerts for pipeline failures
+- A/B test optimizations before full rollout"""
     },
     {
-        "name": "Creative Problem Solving - Bridge Crossing",
-        "prompt": """Four people need to cross a bridge at night. They have one flashlight that must be used when crossing. The bridge can hold only two people at a time. The four people walk at different speeds: 1 minute, 2 minutes, 5 minutes, and 10 minutes to cross. When two people cross together, they must go at the speed of the slower person. What's the minimum time needed for all four to cross?""",
+        "name": "Security Incident Response - API Key Leak",
+        "prompt": """Your team accidentally committed AWS API keys to a public GitHub repository. The commit was public for 3 hours before being noticed. What immediate actions should you take?""",
         
         "tot_suffix": """
 
-I need to find the minimum time for four people (taking 1, 2, 5, 10 minutes respectively) to cross a bridge. Let me explore different strategies systematically.
+I need to respond to an AWS API key leak in a public GitHub repository. Let me systematically explore the incident response paths.
 
-**Constraints:**
-- Bridge holds max 2 people
-- One flashlight must accompany crossers
-- Speed = slower person's speed
-- Someone must bring flashlight back
+**Incident Assessment:**
+- Exposure: AWS API keys in public GitHub repo
+- Duration: 3 hours public exposure
+- Risk: High - automated scanners find keys within minutes
+- Assumption: Keys may already be compromised
 
-Let me call the people A(1min), B(2min), C(5min), D(10min).
+**Approach 1: Immediate Containment (First 15 minutes)**
+Path 1a: Revoke Compromised Credentials
+- Action 1: Log into AWS Console immediately
+- Action 2: Navigate to IAM → Users → Security Credentials
+- Action 3: Delete the exposed access keys (make inactive first if unsure)
+- Action 4: Generate new keys and securely distribute to team
+- Pros: Stops ongoing unauthorized access immediately
+- Cons: May break running services temporarily
+- Priority: CRITICAL - Do this first ✓✓✓
 
-**Strategy 1: Always send fastest back**
-1. A & B cross → 2 min (total: 2)
-2. A returns → 1 min (total: 3)  
-3. C & D cross → 10 min (total: 13)
-4. B returns → 2 min (total: 15)
-5. A & B cross → 2 min (total: 17)
-Total: 17 minutes
+Path 1b: Enable MFA Delete (if not already enabled)
+- Action: Enable MFA for critical operations
+- Pros: Adds protection layer
+- Cons: Doesn't help with already-leaked keys
+- Priority: Important but secondary
 
-**Strategy 2: Send two fastest first, then two slowest**
-1. A & B cross → 2 min (total: 2)
-2. A returns → 1 min (total: 3)
-3. C & D cross → 10 min (total: 13)  
-4. B returns → 2 min (total: 15)
-5. A & B cross → 2 min (total: 17)
-Total: 17 minutes (same as Strategy 1)
+Path 1c: Rotate All Related Credentials
+- Action: Rotate database passwords, other API keys that might be exposed
+- Pros: Comprehensive security
+- Cons: Time-consuming, may cause outages
+- Priority: Do after immediate containment ✓✓
 
-**Strategy 3: Alternative approach - fastest escorts each slow person**
-1. A & C cross → 5 min (total: 5)
-2. A returns → 1 min (total: 6)
-3. A & D cross → 10 min (total: 16)
-4. A returns → 1 min (total: 17)
-5. A & B cross → 2 min (total: 19)
-Total: 19 minutes (worse)
+**Approach 2: Assess Damage (First 30 minutes)**
+Path 2a: Check CloudTrail Logs
+- Action: Review CloudTrail for unauthorized API calls
+- Look for:
+  - Unusual regions (especially crypto-mining regions)
+  - EC2 instance launches (especially GPU instances)
+  - S3 bucket access or data exfiltration
+  - IAM policy changes
+  - Resource deletions
+- Pros: Identifies what attacker did
+- Cons: Logs may have delay (up to 15 min)
+- Priority: CRITICAL - Do immediately after revocation ✓✓✓
 
-**Strategy 4: Send two slowest together, fastest brings light back**
-1. A & B cross → 2 min (total: 2)
-2. A returns → 1 min (total: 3)
-3. C & D cross → 10 min (total: 13)
-4. B returns → 2 min (total: 15)  
-5. A & B cross → 2 min (total: 17)
-Total: 17 minutes
+Path 2b: Check AWS Cost Explorer
+- Action: Look for unexpected charges
+- Common attack patterns:
+  - EC2 instances for crypto mining
+  - Data transfer charges (exfiltration)
+  - Lambda invocations
+- Pros: Quick indicator of resource abuse
+- Cons: Charges may not appear immediately
+- Priority: Important for financial impact ✓✓
 
-**Strategy 5: Hybrid approach analysis**
-Let me check if there's a better combination:
-- Option 5a: Send A&C first
-  A&C cross(5) → A back(1) → A&D cross(10) → A back(1) → A&B cross(2) = 19min
-- Option 5b: Send A&D first  
-  A&D cross(10) → A back(1) → A&C cross(5) → A back(1) → A&B cross(2) = 19min
+Path 2c: Review GuardDuty Findings (if enabled)
+- Action: Check GuardDuty for security alerts
+- Pros: Automated threat detection
+- Cons: Only if previously enabled
+- Priority: Check if available ✓
 
-**Strategy 6: Mathematical optimization approach**
-For optimal solution, compare:
-- Fast-Fast, Slow-Slow strategy: 2+1+10+2+2 = 17
-- Fast with each slow: 5+1+10+1+2 = 19
+**Approach 3: Remove Evidence from GitHub (First 30 minutes)**
+Path 3a: Delete Commit from History (git filter-branch)
+- Action: Use git filter-branch or BFG Repo-Cleaner to remove keys
+- Commands:
+  ```
+  git filter-branch --force --index-filter \
+    "git rm --cached --ignore-unmatch path/to/file" \
+    --prune-empty --tag-name-filter cat -- --all
+  git push origin --force --all
+  ```
+- Pros: Removes keys from all history
+- Cons: Doesn't help if already scraped, breaks forks
+- Priority: Important but keys already compromised ✓✓
 
-The first approach is better.
+Path 3b: Make Repository Private Temporarily
+- Action: Change repo visibility to private
+- Pros: Quick, prevents further exposure
+- Cons: Doesn't remove from caches/scrapers
+- Priority: Quick action while cleaning history ✓
 
-**Verification of optimal solution:**
-1. A(1) & B(2) cross together → 2 minutes
-2. A(1) returns with flashlight → 1 minute  
-3. C(5) & D(10) cross together → 10 minutes
-4. B(2) returns with flashlight → 2 minutes
-5. A(1) & B(2) cross together → 2 minutes
+Path 3c: Contact GitHub Support
+- Action: Request GitHub to purge cached versions
+- Pros: Removes from GitHub's caches
+- Cons: Slow, keys likely already scraped
+- Priority: Do it but don't rely on it ✓
 
-**Total: 17 minutes**
+**Approach 4: Prevent Future Unauthorized Access (First hour)**
+Path 4a: Implement SCPs (Service Control Policies)
+- Action: Restrict which services can be used
+- Example: Deny EC2 in expensive regions, deny GPU instances
+- Pros: Limits blast radius of future compromises
+- Cons: May restrict legitimate use
+- Priority: Important for prevention ✓✓
 
-This is optimal because:
-- We minimize the impact of the slowest person (10min) by pairing with 5min person
-- We use the fastest people (1&2min) for return trips
-- We avoid multiple trips by the very slow people"""
+Path 4b: Set Up Billing Alerts
+- Action: Create CloudWatch alarms for unusual spending
+- Thresholds: Alert if daily spend > 2x normal
+- Pros: Early warning system
+- Cons: Reactive, not preventive
+- Priority: Should have been done already ✓✓
+
+Path 4c: Enable AWS Config Rules
+- Action: Set up compliance rules for security best practices
+- Pros: Continuous monitoring
+- Cons: Doesn't prevent initial compromise
+- Priority: Good for long-term ✓
+
+**Approach 5: Communication & Documentation (First 2 hours)**
+Path 5a: Notify Stakeholders
+- Internal: Security team, management, affected service owners
+- External: Customers (if their data was accessed)
+- Pros: Transparency, compliance
+- Cons: May cause panic if not handled well
+- Priority: Critical for compliance ✓✓✓
+
+Path 5b: Document Incident
+- Action: Create incident report with timeline
+- Include: What happened, when, impact, actions taken
+- Pros: Required for compliance, helps prevent recurrence
+- Cons: Time-consuming during crisis
+- Priority: Do concurrently with response ✓✓
+
+Path 5c: File Incident Report with AWS
+- Action: Contact AWS Support about potential compromise
+- Pros: AWS may provide additional insights or assistance
+- Cons: May trigger account review
+- Priority: Important for serious incidents ✓✓
+
+**Approach 6: Long-Term Prevention (Days 1-7)**
+Path 6a: Implement Secrets Management
+- Action: Use AWS Secrets Manager or HashiCorp Vault
+- Pros: Centralized, rotatable, auditable
+- Cons: Requires code changes
+- Priority: Essential to prevent recurrence ✓✓✓
+
+Path 6b: Set Up Pre-Commit Hooks
+- Action: Use tools like git-secrets, truffleHog
+- Pros: Prevents commits with secrets
+- Cons: Can be bypassed, may have false positives
+- Priority: Easy win for prevention ✓✓✓
+
+Path 6c: Implement Least Privilege IAM
+- Action: Review and restrict IAM permissions
+- Principle: Only grant minimum necessary permissions
+- Pros: Limits damage from future compromises
+- Cons: Requires careful planning
+- Priority: Critical security practice ✓✓✓
+
+**Recommended Action Plan:**
+
+**Immediate (0-15 minutes):**
+1. ✅ Revoke exposed AWS access keys in IAM
+2. ✅ Generate new keys, distribute securely
+3. ✅ Make GitHub repo private
+
+**Short-term (15-60 minutes):**
+4. ✅ Review CloudTrail logs for unauthorized activity
+5. ✅ Check AWS Cost Explorer for unexpected charges
+6. ✅ Terminate any unauthorized resources (EC2, Lambda, etc.)
+7. ✅ Remove keys from git history (git filter-branch)
+8. ✅ Enable GuardDuty if not already enabled
+9. ✅ Set up billing alerts
+
+**Medium-term (1-4 hours):**
+10. ✅ Notify security team and management
+11. ✅ Document incident timeline and actions
+12. ✅ Contact AWS Support if significant unauthorized activity found
+13. ✅ Review and restrict IAM permissions
+14. ✅ Implement SCPs to limit blast radius
+
+**Long-term (1-7 days):**
+15. ✅ Implement AWS Secrets Manager
+16. ✅ Set up pre-commit hooks (git-secrets)
+17. ✅ Conduct security training for team
+18. ✅ Implement automated secret scanning in CI/CD
+19. ✅ Review and update incident response procedures
+20. ✅ Conduct post-mortem meeting
+
+**Critical Commands:**
+
+```bash
+# 1. Revoke keys (AWS CLI)
+aws iam delete-access-key --access-key-id AKIAIOSFODNN7EXAMPLE --user-name username
+
+# 2. Check CloudTrail for unauthorized activity
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=Username,AttributeValue=username --max-results 50
+
+# 3. List all EC2 instances (check for unauthorized)
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,InstanceType,LaunchTime]' --output table
+
+# 4. Remove secrets from git history
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch config/credentials.yml" \
+  --prune-empty --tag-name-filter cat -- --all
+
+# 5. Install git-secrets
+git secrets --install
+git secrets --register-aws
+```
+
+**Expected Outcomes:**
+- Immediate: Unauthorized access stopped
+- 1 hour: Full damage assessment complete
+- 4 hours: All unauthorized resources terminated
+- 1 day: Preventive measures in place
+- 1 week: Comprehensive security improvements deployed"""
     }
 ]
 
@@ -681,7 +1220,7 @@ def parameter_sidebar():
         
     return model_id, params
 
-def display_sample_prompts(prompts, current_prompt, key_prefix):
+def display_sample_prompts(prompts, current_prompt, key_prefix, on_change_callback=None):
     """Display sample prompts as a selectbox."""
     prompt_names = [p["name"] for p in prompts]
     
@@ -692,12 +1231,13 @@ def display_sample_prompts(prompts, current_prompt, key_prefix):
             current_index = i
             break
     
-    # Create the selectbox
+    # Create the selectbox with callback
     selected_name = st.selectbox(
         "Select a sample prompt:", 
         options=prompt_names, 
         key=f"{key_prefix}_select",
-        index=current_index
+        index=current_index,
+        on_change=on_change_callback
     )
     
     # Return the selected prompt data
@@ -871,17 +1411,23 @@ def zero_shot_tab(model_id, params):
     )
     st.session_state.zero_shot_system_prompt = system_prompt
     
+    # Callback function for when sample prompt changes
+    def on_zero_shot_prompt_change():
+        selected_name = st.session_state.zero_shot_select
+        selected_prompt = next(p for p in ZERO_SHOT_PROMPTS if p["name"] == selected_name)
+        st.session_state.zero_shot_prompt = selected_prompt["prompt"]
+    
     # Display sample prompts
     selected_prompt = display_sample_prompts(
         ZERO_SHOT_PROMPTS, 
         st.session_state.zero_shot_prompt,
-        "zero_shot"
+        "zero_shot",
+        on_change_callback=on_zero_shot_prompt_change
     )
     
     # User prompt input
     user_prompt = st.text_area(
         "Prompt", 
-        value=selected_prompt["prompt"],
         height=120,
         placeholder="Enter your question or task here...",
         key="zero_shot_prompt"
@@ -1012,31 +1558,35 @@ def few_shot_tab(model_id, params):
     )
     st.session_state.few_shot_system_prompt = system_prompt
     
+    # Callback function for when sample prompt changes
+    def on_few_shot_prompt_change():
+        selected_name = st.session_state.few_shot_select
+        selected_prompt = next(p for p in FEW_SHOT_PROMPTS if p["name"] == selected_name)
+        st.session_state.few_shot_prompt = selected_prompt["prompt"]
+        st.session_state.few_shot_cot_prompt = selected_prompt["prompt"] + selected_prompt["cot_suffix"]
+    
     # Display sample prompts
     selected_prompt = display_sample_prompts(
         FEW_SHOT_PROMPTS, 
         st.session_state.few_shot_prompt,
-        "few_shot"
+        "few_shot",
+        on_change_callback=on_few_shot_prompt_change
     )
 
     # Few-shot prompts (standard and CoT)
     st.markdown("#### Standard Few-Shot")
     few_shot_prompt = st.text_area(
         "Standard Few-Shot Prompt",
-        value=selected_prompt["prompt"],
         height=300,
-        key="few_shot_prompt_standard"
+        key="few_shot_prompt"
     )
-    st.session_state.few_shot_prompt = few_shot_prompt
     
     st.markdown("#### Few-Shot with Chain-of-Thought")
     few_shot_cot_prompt = st.text_area(
         "Few-Shot CoT Prompt",
-        value=selected_prompt["prompt"] + selected_prompt["cot_suffix"],
         height=300,
-        key="few_shot_prompt_cot"
+        key="few_shot_cot_prompt"
     )
-    st.session_state.few_shot_cot_prompt = few_shot_cot_prompt
     
     # Generate responses and analyze buttons
     col1, col2 = st.columns([3, 1])
@@ -1161,31 +1711,35 @@ def tot_tab(model_id, params):
     )
     st.session_state.tot_system_prompt = system_prompt
     
+    # Callback function for when sample prompt changes
+    def on_tot_prompt_change():
+        selected_name = st.session_state.tot_select
+        selected_prompt = next(p for p in TOT_PROMPTS if p["name"] == selected_name)
+        st.session_state.tot_prompt = selected_prompt["prompt"]
+        st.session_state.tot_cot_prompt = selected_prompt["prompt"] + selected_prompt["tot_suffix"]
+    
     # Display sample prompts
     selected_prompt = display_sample_prompts(
         TOT_PROMPTS, 
         st.session_state.tot_prompt,
-        "tot"
+        "tot",
+        on_change_callback=on_tot_prompt_change
     )
 
     # ToT prompts (standard and ToT)
     st.markdown("#### Standard Prompt")
     tot_prompt = st.text_area(
         "Standard Prompt",
-        value=selected_prompt["prompt"],
         height=150,
-        key="tot_prompt_standard"
+        key="tot_prompt"
     )
-    st.session_state.tot_prompt = tot_prompt
     
     st.markdown("#### Tree of Thoughts Prompt")
     tot_enhanced_prompt = st.text_area(
         "Tree of Thoughts Prompt",
-        value=selected_prompt["prompt"] + selected_prompt["tot_suffix"],
         height=400,
-        key="tot_prompt_enhanced"
+        key="tot_cot_prompt"
     )
-    st.session_state.tot_cot_prompt = tot_enhanced_prompt
     
     # Generate responses and analyze buttons
     col1, col2 = st.columns([3, 1])
@@ -1317,7 +1871,7 @@ def main():
 
     # Footer
     st.markdown("---")
-    st.markdown("<div class='footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":

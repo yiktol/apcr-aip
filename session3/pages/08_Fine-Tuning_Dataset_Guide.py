@@ -745,6 +745,8 @@ def main():
     # Footer
     st.markdown("---")
     st.caption("Created for foundation model fine-tuning - For educational purposes only")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     if 'localhost' in st.context.headers["host"]:

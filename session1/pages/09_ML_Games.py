@@ -93,7 +93,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.caption("© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
+    st.caption("© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
 if __name__ == "__main__":
     with st.sidebar:

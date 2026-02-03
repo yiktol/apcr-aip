@@ -4,20 +4,27 @@ from datetime import datetime
 
 def reset_session():
     """Reset the session state"""
-    for key in st.session_state.keys():
-        if key not in ["authenticated", "user_cognito_groups", "auth_code","user_info"]:
-            del st.session_state[key]
+    # Create a list of keys to delete (avoid modifying dict during iteration)
+    keys_to_delete = [key for key in st.session_state.keys() 
+                      if key not in ["authenticated", "user_cognito_groups", "auth_code", "user_info"]]
+    
+    # Delete the keys
+    for key in keys_to_delete:
+        del st.session_state[key]
 
     
 def render_sidebar():
     """Render the sidebar with session information and reset button"""
     st.markdown("#### 🔑 Session Info")
-    if 'auth_code':
+    if 'session_id' in st.session_state:
         st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
-    else:
+    elif 'auth_code' in st.session_state:
         st.caption(f"**Session ID:** {st.session_state['auth_code'][:8]}")
+    else:
+        st.caption(f"**Session ID:** N/A")
 
-    if st.button("🔄 Reset Session",use_container_width=True ):
+    if st.button("🔄 Reset Session", use_container_width=True):
+        reset_session()
         st.success("Session has been reset successfully!")
         st.rerun()  # Force a rerun to refresh the page
 

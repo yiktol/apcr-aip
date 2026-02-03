@@ -186,7 +186,7 @@ def reset_session():
 def render_sidebar():
     """Render the sidebar content."""
     common.render_sidebar()  # From utils.common
-    clear_chat_btn = st.sidebar.button("🧹 Clear Chat History", key="clear_chat")
+    clear_chat_btn = st.sidebar.button("🧹 Clear Chat History", key="clear_chat", use_container_width=True)
     
     if clear_chat_btn:
         st.session_state.chat_history = [{"role": "assistant", "text": "Chat history cleared. How can I help you?"}]
@@ -208,7 +208,7 @@ def render_sidebar():
         - Streamlit
         """)
     
-    st.markdown("<div class='footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
                 unsafe_allow_html=True)
 
 def render_chat_messages():

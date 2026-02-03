@@ -465,6 +465,11 @@ def main():
     # Add a sidebar with additional information
     with st.sidebar:
         render_sidebar(housing_data)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 
 # Main execution flow

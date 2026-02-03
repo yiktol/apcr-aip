@@ -252,29 +252,22 @@ def main():
         with st.expander("📋 Sample Prompts", expanded=True):
             sample_prompts = get_sample_prompts()
             
-            # for i, prompt in enumerate(sample_prompts):
-                # if st.button(f"{prompt}", key=f"sample_{i}", help="Click to use this prompt"):
-                #     st.session_state.current_prompt = prompt
-                #     st.rerun()
-            # for i, prompt in enumerate(sample_prompts):
-            #     if st.selectbox("Select prompt", sample_prompts, key=f"sample_{i}", help="Select a prompt to use"):
-            #         st.session_state.current_prompt = prompt
-
-            #     if selected_prompt != st.session_state.get('previous_selection'):
-            #         st.session_state.current_prompt = selected_prompt
-            #         st.session_state.previous_selection = selected_prompt
-            #         st.rerun()
+            # Initialize session state for prompt
+            if 'user_input' not in st.session_state:
+                st.session_state.user_input = ""
+            
+            # Callback for selectbox change
+            def on_prompt_select():
+                selected = st.session_state.prompt_selector
+                st.session_state.user_input = selected
+            
             selected_prompt = st.selectbox(
                 "Select prompt", 
                 sample_prompts,
                 key="prompt_selector",
-                help="Select a prompt to use"
+                help="Select a prompt to use",
+                on_change=on_prompt_select
             )
-
-            if selected_prompt != st.session_state.get('previous_selection'):
-                st.session_state.current_prompt = selected_prompt
-                st.session_state.previous_selection = selected_prompt
-                st.rerun()
 
         
         # Text input for user prompt
@@ -282,13 +275,8 @@ def main():
             "Enter your prompt:",
             height=100,
             placeholder="Type your message here...",
-            key="user_input",
-            value=st.session_state.get("current_prompt", "")
+            key="user_input"
         )
-        
-        # Clear the current prompt if it was loaded from a sample
-        # if "current_prompt" in st.session_state:
-        #     del st.session_state.current_prompt
         
         col1, col2, col3 = st.columns([1, 1, 4])
         with col1:
@@ -377,7 +365,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("<div class='footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@ The Transformer architecture revolutionized AI by using self-attention mechanism
     
     # Footer
     st.markdown("---")
-    st.markdown("© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
+    st.markdown("© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
 
 def self_attention_tab():

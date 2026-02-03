@@ -413,21 +413,31 @@ def create_concern_interface(concern, model_id, params, api_method, system_promp
         ]
     }
     
+    # Initialize session state for this concern's input
+    input_key = f"{concern}_input"
+    if input_key not in st.session_state:
+        st.session_state[input_key] = sample_prompts.get(concern, [""])[0]
+    
+    # Callback for selectbox change
+    def on_prompt_change():
+        selected = st.session_state[f"{concern}_sample_select"]
+        st.session_state[input_key] = selected
+    
     # Create the interface
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     
     selected_prompt = st.selectbox(
         "Select a sample prompt",
         options=sample_prompts.get(concern, ["No sample prompts available"]),
-        key=f"{concern}_sample_select"
+        key=f"{concern}_sample_select",
+        on_change=on_prompt_change
     )
 
     user_prompt = st.text_area(
         "Your Input", 
-        value=selected_prompt, 
         height=150,
         placeholder="Enter your text here...",
-        key=f"{concern}_input"
+        key=input_key
     )
     
     generate_button = st.button(
@@ -590,7 +600,7 @@ def main():
     # Footer
     st.markdown("""
     <footer>
-        © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+        © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </footer>
     """, unsafe_allow_html=True)
 

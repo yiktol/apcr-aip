@@ -429,7 +429,7 @@ def main():
 
         # Footer
         st.divider()
-        st.caption("© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
+        st.caption("© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
     except FileNotFoundError as e:
         st.error(f"Dataset not found: {e}")

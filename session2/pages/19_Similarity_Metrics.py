@@ -427,13 +427,102 @@ def main():
     # Input section
     st.markdown('<div class="sub-header">Text Input</div>', unsafe_allow_html=True)
     
+    # Sample prompt examples
+    sample_prompts = {
+        "Custom": {
+            "prompt": "Hello",
+            "texts": ["Hi", "Good Day", "How are you", "Good Morning", "Goodbye"]
+        },
+        "Customer Support - Product Issue": {
+            "prompt": "My laptop won't turn on and the battery seems dead",
+            "texts": [
+                "The computer is not starting up",
+                "Battery is not charging properly",
+                "Screen remains black when I press power button",
+                "I need help with my coffee maker",
+                "The device makes a beeping sound"
+            ]
+        },
+        "E-commerce - Product Search": {
+            "prompt": "Looking for comfortable running shoes for marathon training",
+            "texts": [
+                "Athletic footwear for long-distance running",
+                "Cushioned sneakers for jogging",
+                "Formal leather dress shoes",
+                "Trail running shoes with good grip",
+                "Winter boots for hiking"
+            ]
+        },
+        "Healthcare - Symptom Analysis": {
+            "prompt": "Patient experiencing severe headache and sensitivity to light",
+            "texts": [
+                "Migraine with photophobia symptoms",
+                "Tension headache with mild discomfort",
+                "Broken arm requiring immediate attention",
+                "Cluster headache with eye pain",
+                "Common cold with runny nose"
+            ]
+        },
+        "Financial Services - Transaction Classification": {
+            "prompt": "Monthly subscription payment for streaming service",
+            "texts": [
+                "Recurring charge for Netflix subscription",
+                "One-time purchase at electronics store",
+                "Annual membership fee for gym",
+                "Grocery shopping at supermarket",
+                "Automatic payment for Spotify premium"
+            ]
+        },
+        "Content Moderation - Sentiment Detection": {
+            "prompt": "This product exceeded my expectations and I'm very satisfied",
+            "texts": [
+                "Absolutely love this purchase, highly recommend",
+                "The quality is acceptable but nothing special",
+                "Terrible experience, complete waste of money",
+                "Good value for the price, would buy again",
+                "Disappointed with the service and product quality"
+            ]
+        }
+    }
+    
+    # Initialize session state for prompt and texts
+    if 'prompt_text' not in st.session_state:
+        st.session_state.prompt_text = "Hello"
+    if 'text1' not in st.session_state:
+        st.session_state.text1 = "Hi"
+    if 'text2' not in st.session_state:
+        st.session_state.text2 = "Good Day"
+    if 'text3' not in st.session_state:
+        st.session_state.text3 = "How are you"
+    if 'text4' not in st.session_state:
+        st.session_state.text4 = "Good Morning"
+    if 'text5' not in st.session_state:
+        st.session_state.text5 = "Goodbye"
+    
+    # Callback for selectbox change
+    def on_example_change():
+        selected = st.session_state.example_selector
+        example_data = sample_prompts[selected]
+        st.session_state.prompt_text = example_data["prompt"]
+        for i, text in enumerate(example_data["texts"], 1):
+            st.session_state[f'text{i}'] = text
+    
+    # Dropdown to select sample prompt
+    selected_example = st.selectbox(
+        "💡 Select a practical example or choose 'Custom' to enter your own:",
+        options=list(sample_prompts.keys()),
+        key="example_selector",
+        on_change=on_example_change,
+        help="Choose from real-world scenarios to see how similarity metrics work in practice"
+    )
+    
     with st.form("embedding_form"):
         col1, col2 = st.columns([0.3, 0.7])
         
         with col1:
             prompt = st.text_area("📌 Reference Text:", 
-                                 height=100, 
-                                 value="Hello", 
+                                 height=100,
+                                 key="prompt_text",
                                  help="This is the reference text for comparison")
         
         with col2:
@@ -441,15 +530,12 @@ def main():
             sample_texts = {}
             cols = st.columns(2)
             
-            default_texts = ["Hi", "Good Day", "How are you", "Good Morning", "Goodbye"]
-            
-            for i, default_text in enumerate(default_texts):
-                col_idx = i % 2
+            for i in range(1, 6):
+                col_idx = (i - 1) % 2
                 with cols[col_idx]:
-                    sample_texts[f"text{i+1}"] = st.text_input(
-                        f'Text {i+1}', 
-                        value=default_text,
-                        key=f"text_input_{i}"
+                    sample_texts[f"text{i}"] = st.text_input(
+                        f'Text {i}',
+                        key=f"text{i}"
                     )
         
         submit = st.form_submit_button(
@@ -536,6 +622,11 @@ def main():
             - Euclidean distance closer to 0 = more similar vectors
             - Dot product magnitude indicates strength of relationship
             """)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     try:

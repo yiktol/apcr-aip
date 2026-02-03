@@ -2553,7 +2553,7 @@ print(f"Model monitoring scheduled for endpoint {predictor.endpoint_name}")
     # Add footer
     st.markdown("""
     <div class="footer">
-    © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+    © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </div>
     """, unsafe_allow_html=True)
 

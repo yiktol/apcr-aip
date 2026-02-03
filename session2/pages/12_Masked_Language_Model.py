@@ -249,7 +249,7 @@ def main():
                     st.error("Please include [MASK] token in your text.")
     
     # Footer
-    st.markdown("<div class='aws-footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='aws-footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     try:

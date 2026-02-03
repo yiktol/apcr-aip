@@ -236,6 +236,11 @@ def main() -> None:
     
     # Display additional information
     display_additional_info()
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     try:

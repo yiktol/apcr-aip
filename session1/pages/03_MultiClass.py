@@ -733,7 +733,7 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown(
-        "<div style='text-align: center; color: #666666; padding: 10px;'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+        "<div style='text-align: center; color: #666666; padding: 10px;'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
         unsafe_allow_html=True
     )
 

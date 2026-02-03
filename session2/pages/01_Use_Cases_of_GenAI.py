@@ -773,7 +773,7 @@ def main():
     # Footer
     st.markdown("""
     <footer>
-        © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+        © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </footer>
     """, unsafe_allow_html=True)
 

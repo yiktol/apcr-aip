@@ -372,6 +372,11 @@ def main():
     
     with tab3:
         render_model_based_tab(human_eval_data)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 # Main execution flow
 if __name__ == "__main__":

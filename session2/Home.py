@@ -1447,7 +1447,7 @@ def render_footer():
     """Render the footer content."""
     st.markdown("""
     <div class='aws-footer'>
-    © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+    © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </div>
     """, unsafe_allow_html=True)
 

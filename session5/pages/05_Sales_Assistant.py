@@ -262,6 +262,11 @@ def main():
         logger.error(f"Application error: {e}", exc_info=True)
         st.error(f"An unexpected error occurred: {e}")
         st.button("Reload Application", on_click=lambda: st.rerun())
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 
 # Main execution flow

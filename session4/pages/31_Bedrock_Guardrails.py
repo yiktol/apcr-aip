@@ -416,7 +416,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("<div class='footer'>© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":

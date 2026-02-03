@@ -1275,11 +1275,8 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center;">
-        <p>Made with ❤️ for Responsible AI | © 2023</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='footer'>© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>", 
+                unsafe_allow_html=True)
 
 if __name__ == "__main__":
     if 'localhost' in st.context.headers["host"]:
