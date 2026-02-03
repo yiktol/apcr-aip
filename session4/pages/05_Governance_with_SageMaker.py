@@ -3,24 +3,23 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import altair as alt
+import plotly.graph_objects as go
+import plotly.express as px
 import json
 import time
 import uuid
 from datetime import datetime, timedelta
 import random
-import networkx as nx
 from PIL import Image
 import io
 import base64
-from streamlit_lottie import st_lottie
 import requests
-import plotly.graph_objects as go
-import plotly.express as px
+import networkx as nx
 from streamlit.components.v1 import html
 import utils.authenticate as authenticate
 import utils.common as common
+from utils.styles import load_css
+
 # Set page configuration
 st.set_page_config(
     page_title="ML Governance with Amazon SageMaker",
@@ -542,18 +541,6 @@ def generate_roles_data():
     return roles
 
 
-def load_lottie_url(url: str):
-    """
-    Load lottie animation from URL
-    """
-    try:
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except:
-        return None
-
 
 # Visualization functions
 def create_model_card_visualization(model_card):
@@ -655,7 +642,7 @@ def create_model_card_visualization(model_card):
                 yaxis_range=[0, 1.0]
             )
             
-            st.plotly_chart(chart, use_column_width=True)
+            st.plotly_chart(chart, use_container_width=True)
         
         with col2:
             # Fairness metrics if available
@@ -731,7 +718,7 @@ def create_model_card_visualization(model_card):
                         ))
                         
                     fig.update_layout(height=200, margin=dict(l=20, r=20, t=30, b=20))
-                    st.plotly_chart(fig, use_column_width=True)
+                    st.plotly_chart(fig, use_container_width=True)
                     
                     # Add explanation of metric status
                     st.markdown(f"**Status: {status}** - {get_fairness_explanation(metric_name, status)}")
@@ -1027,7 +1014,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
             )
         )
         
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
         
         # Invocation metrics
         st.subheader("Model Usage")
@@ -1056,7 +1043,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 hovermode="x unified"
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
         with col2:
             # Latency chart
@@ -1095,7 +1082,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 )
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
     
     # Drift Analysis tab
     with tabs[1]:
@@ -1152,7 +1139,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 hovermode="x unified"
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
         with col2:
             # Model drift chart
@@ -1194,7 +1181,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 hovermode="x unified"
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
         
         # Feature importance drift visualization (mock)
         st.subheader("Feature Importance Drift")
@@ -1234,7 +1221,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
             )
         )
         
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     # Resource Utilization tab
     with tabs[2]:
@@ -1275,7 +1262,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 yaxis=dict(range=[0, 100])
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
         with col2:
             # Memory utilization
@@ -1310,7 +1297,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
                 yaxis=dict(range=[0, 100])
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
         
         # Cost analysis (mock)
         st.subheader("Cost Analysis")
@@ -1364,7 +1351,7 @@ def create_dashboard_visualization(dashboard_data, model_id):
         for i, trace in enumerate(fig.data):
             trace.name = new_names[trace.name]
             
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
             
     # Alerts tab
     with tabs[3]:
@@ -1571,7 +1558,7 @@ def create_role_manager_visualization(role_data):
             margin=dict(l=80, r=80, t=40, b=40)
         )
         
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     # Resource Access tab
     with tabs[1]:
@@ -1815,145 +1802,7 @@ def main():
         "red": "#D13212"
     }
     
-    # Custom CSS for styling
-    st.markdown("""
-    <style>
-        .main {
-            background-color: #F8F9FA;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
-            background-color: #F8F9FA;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 60px;
-            white-space: pre-wrap;
-            border-radius: 6px;
-            font-weight: 600;
-            background-color: #FFFFFF;
-            color: #232F3E;
-            border: 1px solid #E9ECEF;
-            padding: 5px 15px;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #FF9900 !important;
-            color: #FFFFFF !important;
-            border: 1px solid #FF9900 !important;
-        }
-        .stButton button {
-            background-color: #FF9900;
-            color: white;
-            border-radius: 4px;
-            border: none;
-            padding: 8px 16px;
-        }
-        .stButton button:hover {
-            background-color: #EC7211;
-        }
-        .info-box {
-            background-color: #E6F2FF;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 5px solid #00A1C9;
-        }
-        .warning-box {
-            background-color: #FFF8E6;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 5px solid #FF9900;
-        }
-        .code-box {
-            background-color: #232F3E;
-            color: #FFFFFF;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-        .card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        .metric-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .footer {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            left: 0;
-            background-color: #232F3E;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            font-size: 12px;
-        }
-        h1, h2, h3 {
-            color: #232F3E;
-        }
-        .status-card {
-            border: 1px solid #E9ECEF;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background-color: #FFFFFF;
-            transition: transform 0.2s;
-        }
-        .status-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .status-1 {
-            border-left: 5px solid #59BA47;
-        }
-        .status-2 {
-            border-left: 5px solid #D13212;
-        }
-        .status-3 {
-            border-left: 5px solid #FF9900;
-        }
-        .metrics-table th {
-            font-weight: normal;
-            color: #545B64;
-        }
-        .metrics-table td {
-            font-weight: bold;
-        }
-        .role-selection {
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #E9ECEF;
-            background-color: white;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .role-selection:hover {
-            border-color: #00A1C9;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .role-selected {
-            border-color: #FF9900;
-            border-width: 2px;
-            box-shadow: 0 2px 8px rgba(255, 153, 0, 0.3);
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    load_css()
     
     # Sidebar content
     with st.sidebar:
@@ -1965,11 +1814,6 @@ def main():
                 Learn about SageMaker Role Manager, Model Cards, and the Model Dashboard.
             """)
             
-            # Load lottie animation
-            lottie_url = "https://assets5.lottiefiles.com/packages/lf20_qp1q7mct.json"
-            lottie_json = load_lottie_url(lottie_url)
-            if lottie_json:
-                st_lottie(lottie_json, height=200, key="sidebar_animation")
             
             # Additional resources section
             st.subheader("Additional Resources")
@@ -1982,7 +1826,11 @@ def main():
     
     # Main app header
     st.title("ML Governance with Amazon SageMaker")
-    st.markdown("Learn how SageMaker helps organizations implement ML governance through role-based access control, model documentation, and continuous monitoring.")
+    st.markdown("""
+    <div class='info-box'>
+    Learn how SageMaker helps organizations implement ML governance through role-based access control, model documentation, and continuous monitoring.
+    </div>
+    """, unsafe_allow_html=True)
     
     # Tab-based navigation with emoji
     tab1, tab2, tab3, tab4 = st.tabs([
@@ -2028,7 +1876,7 @@ def main():
         with col2:
             # Governance diagram
             st.image("https://d1.awsstatic.com/aws-mls-platform/SageMaker%20assets/mlops-infinity-loop.485d11146c76f95123a2def677139b8d23e5c247.png", 
-                    caption="ML Governance within the ML lifecycle", use_column_width=True)
+                    caption="ML Governance within the ML lifecycle", use_container_width=True)
             
             # Add a key metrics card
             st.markdown("""
@@ -2228,7 +2076,7 @@ def main():
         with col2:
             # Role Manager diagram
             st.image("https://d1.awsstatic.com/ml-governance/persona-mgmt.daf5b956b050647c2c6b7ef6b5fc7e3c35c61651.png", 
-                    use_column_width=True)
+                    use_container_width=True)
             st.caption("SageMaker Role Manager supports different ML personas")
         
         st.subheader("Select ML Persona")
@@ -2376,7 +2224,7 @@ aws sagemaker create-role-from-persona \\
         with col2:
             # Model Card diagram
             st.image("https://d1.awsstatic.com/ml-governance/governance_model-cards_how-it-works-diagram.3df069ff7225d3a0ffadf524a87c84dcb88c097d.png", 
-                    caption="SageMaker Model Cards provide standardized documentation", use_column_width=True)
+                    caption="SageMaker Model Cards provide standardized documentation", use_container_width=True)
         
         st.subheader("Select a Model Card")
         
@@ -2569,7 +2417,7 @@ print(f"Created model card: {{response['ModelCardArn']}}")
         with col2:
             # Model Dashboard diagram
             st.image("https://d1.awsstatic.com/ml-governance/governance_model-dashboard_how-it-works-diagram.6ede2e9669f88c29eb59e6c66b9f3a28516e3fe9.png", 
-                    use_column_width=True)
+                    use_container_width=True)
             st.caption("SageMaker Model Dashboard provides centralized model monitoring")
         
         st.subheader("Model Dashboard Overview")
@@ -2711,9 +2559,12 @@ print(f"Model monitoring scheduled for endpoint {predictor.endpoint_name}")
 
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
+    if 'localhost' in st.context.headers["host"]:
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

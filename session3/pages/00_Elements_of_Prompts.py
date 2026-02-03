@@ -11,6 +11,7 @@ import time
 import json
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css, sub_header
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -22,178 +23,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-
-# Apply custom CSS for modern appearance
-st.markdown("""
-    <style>
-    .stApp {
-        margin: 0 auto;
-    }
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: #1E3A8A;
-        text-align: left;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #2563EB;
-    }
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        margin-bottom: 1rem;
-    }
-    .output-container {
-        background-color: #F3F4F6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-    }
-    .stButton>button {
-        background-color: #2563EB;
-        color: white;
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #1D4ED8;
-    }
-    .response-block {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #2563EB;
-        margin-top: 1rem;
-    }
-    .token-metrics {
-        display: flex;
-        justify-content: space-between;
-        background-color: #F0F4F8;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        margin-top: 0.5rem;
-    }
-    .metric-item {
-        text-align: center;
-    }
-    .metric-value {
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    .metric-label {
-        font-size: 0.8rem;
-        color: #4B5563;
-    }
-    .info-box {
-        background-color: #EFF6FF;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .example-box {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #6366F1;
-        margin-bottom: 1rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 4px 4px 0 0;
-        padding: 10px 16px;
-        background-color: #F3F4F6;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #E0E7FF;
-        border-bottom: 2px solid #4F46E5;
-    }
-    .session-info {
-        background-color: #EFF6FF;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.8rem;
-        margin-top: 1rem;
-    }
-    .highlight-text {
-        background-color: #FEF3C7;
-        padding: 0.2rem 0.4rem;
-        border-radius: 0.2rem;
-        font-weight: 500;
-    }
-    .prompt-analysis {
-        background-color: #F3F4F6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-        border-left: 4px solid #10B981;
-    }
-    .component-tag {
-        display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-right: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-    .tag-instruction {
-        background-color: #DBEAFE;
-        color: #1E40AF;
-    }
-    .tag-context {
-        background-color: #E0E7FF;
-        color: #4338CA;
-    }
-    .tag-input {
-        background-color: #FCE7F3;
-        color: #9D174D;
-    }
-    .tag-output {
-        background-color: #D1FAE5;
-        color: #065F46;
-    }
-    .tag-constraint {
-        background-color: #FEF3C7;
-        color: #92400E;
-    }
-    .tip-box {
-        background-color: #ECFDF5;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #10B981;
-        margin-top: 0.5rem;
-    }
-    .code-highlight {
-        background-color: #2D3748;
-        color: #E2E8F0;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        font-family: monospace;
-        font-size: 0.9rem;
-        overflow-x: auto;
-        margin-bottom: 1rem;
-    }
-    .footer {
-        text-align: center;
-        padding: 1rem 0;
-        color: #6B7280;
-        font-size: 0.8rem;
-        margin-top: 2rem;
-        border-top: 1px solid #E5E7EB;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # ------- SESSION MANAGEMENT -------
 
@@ -1318,6 +1147,8 @@ def output_indicator_tab(model_id, params):
 # ------- MAIN APP -------
 
 def main():
+    load_css()
+    
     # Initialize session state
     init_session_state()
     
@@ -1327,10 +1158,10 @@ def main():
     # Header
     st.markdown("<h1 class='main-header'>Effective Prompt Components</h1>", unsafe_allow_html=True)
     
-    st.markdown("""
+    st.markdown("""<div class="info-box">
     This interactive dashboard demonstrates the key components of effective prompts for Large Language Models.
-    Learn how each component contributes to creating clear, effective prompts that get the results you want.
-    """)
+    Learn how each component (Instruction, Context, Input Data, Output Indicator) contributes to creating clear, effective prompts that get the results you want.
+    </div>""", unsafe_allow_html=True)
 
 
     # Create a 70/30 layout

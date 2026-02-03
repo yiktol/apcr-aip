@@ -726,7 +726,11 @@ def main():
     
     # Main content area
     st.markdown("<h1>Prompt Engineering Practice</h1>", unsafe_allow_html=True)
-    st.write("Improve your prompt engineering skills with hands-on exercises from the Prompt Engineering Playbook.")
+    
+    st.markdown("""<div class="info-box">
+    Improve your prompt engineering skills with hands-on exercises from the Prompt Engineering Playbook. 
+    Practice crafting effective prompts and learn best practices for getting optimal results from foundation models.
+    </div>""", unsafe_allow_html=True)
     
         # Create a 70/30 layout
     col1, col2 = st.columns([0.7, 0.3])     

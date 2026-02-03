@@ -13,7 +13,9 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import base64
 from PIL import Image
 import io
+from utils.styles import load_css
 import utils.authenticate as authenticate
+
 # Initialize session state
 def initialize_session_state():
     if 'session_id' not in st.session_state:
@@ -824,73 +826,8 @@ def main():
     # Initialize session state
     initialize_session_state()
     
-
-    
-    # Custom CSS
-    st.markdown("""
-    <style>
-    /* General styling */
-    .stApp {{
-        color: '#232F3E';
-        background-color: '#FFFFFF';
-        font-family: 'Amazon Ember', Arial, sans-serif;
-    }}
-    .main {
-        background-color: #FAFAFA;
-    }
-    .st-emotion-cache-16txtl3 h1, .st-emotion-cache-16txtl3 h2, .st-emotion-cache-16txtl3 h3 {
-        color: #232F3E;
-    }
-    .st-emotion-cache-16txtl3 a {
-        color: #FF9900;
-    }
-    /* Tabs styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        padding: 8px 16px;
-        background-color: #f8f9fa;
-        border-radius: 4px 4px 0 0;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #00A1C9 !important;
-        color: white !important;
-    }
-    
-    /* Button styling */
-    .stButton>button {
-        background-color: #00A1C9;
-        color: white;
-        border-radius: 4px;
-        border: none;
-        padding: 0.5rem 1rem;
-    }
-    
-    .stButton>button:hover {
-        background-color: #1E88E5;
-    }
-    .aws-button {
-        background-color: #FF9900;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-        border: none;
-    }
-    .aws-button:hover {
-        background-color: #EC7211;
-    }
-    
-    </style>
-    """, unsafe_allow_html=True)
+    # Use centralized CSS
+    load_css()
     
     # Title
     st.title("🏭 Manufacturing Quality Control ML")

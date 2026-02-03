@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
 
 
 # Set page configuration
@@ -13,115 +14,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# AWS Color scheme and custom CSS
-def load_css():
-    st.markdown("""
-    <style>
-    /* AWS Color Scheme */
-    :root {
-        --aws-orange: #FF9900;
-        --aws-blue: #232F3E;
-        --aws-light-blue: #4B9CD3;
-        --aws-dark-blue: #16191F;
-        --aws-gray: #EAEDED;
-        --aws-white: #FFFFFF;
-    }
-    
-    /* Main styling */
-    .main-header {
-        background: linear-gradient(90deg, var(--aws-blue) 0%, var(--aws-light-blue) 100%);
-        padding: 2rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        color: white;
-        text-align: center;
-    }
-    
-    .main-header h1 {
-        color: white !important;
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .main-header p {
-        color: var(--aws-gray);
-        font-size: 1.1rem;
-        margin: 0;
-    }
-    
-    /* Cards styling */
-    .custom-card {
-        background: var(--aws-white);
-        border: 2px solid var(--aws-gray);
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .prompt-example {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-left: 4px solid var(--aws-orange);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 5px;
-    }
-    
-    .negative-prompt-highlight {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 5px;
-        padding: 0.75rem;
-        margin: 0.5rem 0;
-    }
-    
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, var(--aws-orange) 0%, #ff7700 100%);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(255,153,0,0.3);
-    }
-    
-    /* Sidebar styling */
-    .css-1d391kg {
-        background-color: var(--aws-blue);
-    }
-    
-    /* Footer */
-    .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: var(--aws-blue);
-        color: white;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.8rem;
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .main-header h1 {
-            font-size: 2rem;
-        }
-        
-        .custom-card {
-            padding: 1rem;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
 def initialize_session_state():
     """Initialize session state variables"""
@@ -236,6 +128,11 @@ def main():
         <p>AI-Powered Image Generation with Advanced Prompt Engineering</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown("""<div class="info-box">
+    Generate stunning AI images using AWS Nova Canvas. Learn how to craft effective prompts and use negative prompts 
+    to refine your image generation results. Experiment with different styles, dimensions, and quality settings.
+    </div>""", unsafe_allow_html=True)
 
     # Negative prompt explanation
     with st.expander("📚 Understanding Negative Prompts"):

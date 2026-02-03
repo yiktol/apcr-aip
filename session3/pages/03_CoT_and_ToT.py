@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 import uuid
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -21,169 +22,6 @@ st.set_page_config(
 )
 
 common.initialize_session_state()
-# Apply custom CSS for modern appearance
-st.markdown("""
-    <style>
-    .stApp {
-        margin: 0 auto;
-    }
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        background: linear-gradient(90deg, #4338CA, #6366F1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: left;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #2563EB;
-    }
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
-        border: 1px solid #E5E7EB;
-    }
-    .output-container {
-        background-color: #F9FAFB;
-        padding: 1.25rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-        height: 450px;
-        overflow-y: auto;
-        border: 1px solid #E5E7EB;
-    }
-    .stButton>button {
-        background-color: #4F46E5;
-        color: white;
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        border: none;
-        width: 100%;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stButton>button:hover {
-        background-color: #4338CA;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .reset-button>button {
-        background-color: #DC2626;
-    }
-    .reset-button>button:hover {
-        background-color: #B91C1C;
-    }
-    .analyze-button>button {
-        background-color: #059669;
-    }
-    .analyze-button>button:hover {
-        background-color: #047857;
-    }
-    .response-block {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #2563EB;
-        margin-top: 1rem;
-        overflow-wrap: break-word;
-    }
-    .standard-block {
-        border-left: 4px solid #3B82F6;
-    }
-    .cot-block {
-        border-left: 4px solid #8B5CF6;
-    }
-    .tot-block {
-        border-left: 4px solid #059669;
-    }
-    .token-metrics {
-        display: flex;
-        justify-content: space-between;
-        background-color: #F0F4F8;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        margin-top: 0.75rem;
-    }
-    .metric-item {
-        text-align: center;
-    }
-    .metric-value {
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    .metric-label {
-        font-size: 0.8rem;
-        color: #4B5563;
-    }
-    .analysis-container {
-        background-color: #EFF6FF;
-        padding: 1.25rem;
-        border-radius: 0.75rem;
-        margin-top: 1rem;
-        border-left: 4px solid #6366F1;
-    }
-    .comparison-header {
-        padding: 0.75rem;
-        background-color: #F3F4F6;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        text-align: center;
-        border-bottom: 2px solid #E5E7EB;
-    }
-    .tab-content {
-        padding: 1.25rem;
-        height: 100%;
-    }
-    .github-link {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #F9FAFB;
-        border-radius: 6px 6px 0px 0px;
-        padding: 10px 16px;
-        height: auto;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #4F46E5 !important;
-        color: white !important;
-        font-weight: 600;
-    }
-    .key-benefit {
-        background-color: #F3F4F6;
-        padding: 0.75rem;
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-        border-left: 3px solid #4F46E5;
-    }
-    .stSelectbox [data-baseweb=select] {
-        border-radius: 8px;
-    }
-    .stTextArea textarea {
-        border-radius: 8px;
-        border: 1px solid #D1D5DB;
-    }
-    div[data-testid="stExpander"] {
-        border-radius: 8px;
-    }
-    .stStatus {
-        border-radius: 8px;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # ------- API FUNCTIONS -------
 
@@ -1444,18 +1282,18 @@ def tot_tab(model_id, params):
     )
 
 def main():
+    load_css()
+    
     # Initialize session state
     init_session_state()
     
     # Header
     st.markdown("<h1 class='main-header'>Chain-of-Thought Prompting</h1>", unsafe_allow_html=True)
     
-    st.markdown("""
-    <p style="text-align:left; font-size:1.2rem; margin-bottom:2rem;">
+    st.markdown("""<div class="info-box">
     Explore and compare how different Chain-of-Thought prompting techniques improve the reasoning 
-    capabilities of large language models.
-    </p>
-    """, unsafe_allow_html=True)
+    capabilities of large language models. Learn about Zero-shot CoT, Few-shot CoT, and Tree-of-Thought approaches.
+    </div>""", unsafe_allow_html=True)
     
     # Create a 70/30 layout
     col1, col2 = st.columns([0.7, 0.3])     

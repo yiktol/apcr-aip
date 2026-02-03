@@ -1,13 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.preprocessing import StandardScaler
-import shap
 import plotly.express as px
 import plotly.graph_objects as go
 import time
@@ -15,6 +8,8 @@ from PIL import Image
 import random
 import hashlib
 import utils.authenticate as authenticate
+from utils.styles import load_css
+
 # Set page config
 st.set_page_config(
     page_title="Responsible AI Explorer",
@@ -23,54 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern UI
-st.markdown("""
-<style>
-    .main {
-        background-color: #f8f9fa;
-    }
-    .stApp {
-        # max-width: 1200px;
-        margin: 0 auto;
-    }
-    h1, h2, h3 {
-        color: #2c3e50;
-    }
-    .stButton button {
-        background-color: #4b6584;
-        color: white;
-        border-radius: 5px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-    }
-    .dimension-card {
-        background-color: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    .highlight {
-        background-color: #f1f8ff;
-        padding: 20px;
-        border-left: 4px solid #2196f3;
-        margin: 20px 0;
-    },
-        .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 4px 4px 0 0;
-        padding: 10px 16px;
-        background-color: #F3F4F6;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #E0E7FF;
-        border-bottom: 2px solid #4F46E5;
-    }
-    
-</style>
-""", unsafe_allow_html=True)
+load_css()
 
 # Function to generate a synthetic dataset for the examples
 @st.cache_data
@@ -142,7 +90,7 @@ def fairness_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=1200", 
-                 caption="Fairness means equal treatment across different groups", use_column_width =True)
+                 caption="Fairness means equal treatment across different groups", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -167,7 +115,7 @@ def fairness_demo():
                      labels={'approved': 'Approval Rate', 'gender': 'Gender'},
                      color='gender', color_discrete_sequence=['#3498db', '#e74c3c'])
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
         
         st.markdown("<div class='highlight'>", unsafe_allow_html=True)
         st.markdown("""
@@ -187,7 +135,7 @@ def fairness_demo():
                      labels={'approved': 'Approval Rate', 'ethnicity': 'Ethnicity'},
                      color='ethnicity')
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_column_width=True)
+        st.plotly_chart(fig, use_container_width=True)
         
         st.markdown("<div class='highlight'>", unsafe_allow_html=True)
         st.markdown("""
@@ -237,7 +185,7 @@ def explainability_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1200", 
-                 caption="Making AI decisions understandable to humans", use_column_width =True)
+                 caption="Making AI decisions understandable to humans", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -274,7 +222,7 @@ def explainability_demo():
             fig = px.bar(feature_importance, x='Feature', y='Importance', 
                          title='Feature Importance in Loan Approval Model',
                          color='Importance')
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
             st.markdown("<div class='highlight'>", unsafe_allow_html=True)
             st.markdown(f"""
@@ -319,7 +267,7 @@ def explainability_demo():
                      color='Contribution',
                      color_continuous_scale=['red', 'lightgrey', 'blue'])
             fig.update_layout(height=400)
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
             # Example explanation in natural language
             st.markdown("### Natural Language Explanation")
@@ -357,7 +305,7 @@ def privacy_security_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1614064642761-92b4c1dcf540?q=80&w=1200", 
-                 caption="Protecting sensitive data is essential for responsible AI", use_column_width =True)
+                 caption="Protecting sensitive data is essential for responsible AI", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -477,7 +425,7 @@ def safety_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?q=80&w=1200", 
-                 caption="AI systems must be designed with safety as a priority", use_column_width =True)
+                 caption="AI systems must be designed with safety as a priority", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -559,7 +507,7 @@ def safety_demo():
                 }
             ))
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
             if toxicity_score < 0.3:
                 st.success("✅ Content appears safe.")
@@ -611,7 +559,7 @@ def controllability_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200", 
-                 caption="Humans should maintain control over AI systems", use_column_width =True)
+                 caption="Humans should maintain control over AI systems", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -664,7 +612,7 @@ def controllability_demo():
                 barmode='stack',
                 color_discrete_sequence=['#2ecc71', '#3498db'])
     
-    st.plotly_chart(fig, use_column_width=True)
+    st.plotly_chart(fig, use_container_width=True)
     
     # Emergency override section
     st.markdown("#### Emergency Controls")
@@ -712,7 +660,7 @@ def veracity_robustness_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1569396116180-210c182bedb8?q=80&w=1200", 
-                 caption="AI systems must be robust against adversarial inputs", use_column_width =True)
+                 caption="AI systems must be robust against adversarial inputs", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -784,7 +732,7 @@ def veracity_robustness_demo():
     }
     
     # Show selected image
-    st.image(image_options[test_type], use_column_width =True)
+    st.image(image_options[test_type], use_container_width=True)
     
     if st.button("Run Robustness Test"):
         with st.spinner("Testing model robustness..."):
@@ -840,7 +788,7 @@ def veracity_robustness_demo():
                 fig = px.pie(class_dist, names='Class', values='Count', 
                             title='Prediction Distribution',
                             hole=0.4)
-                st.plotly_chart(fig, use_column_width=True)
+                st.plotly_chart(fig, use_container_width=True)
             
             with col2:
                 st.metric("Average Confidence", f"{avg_confidence:.0%}")
@@ -852,7 +800,7 @@ def veracity_robustness_demo():
                 fig = px.line(run_df, x='Run', y='Confidence', color='Classification',
                             title='Confidence Per Run',
                             markers=True)
-                st.plotly_chart(fig, use_column_width=True)
+                st.plotly_chart(fig, use_container_width=True)
             
             # Analysis
             st.markdown("#### Robustness Analysis")
@@ -913,7 +861,7 @@ def governance_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200", 
-                 caption="Proper governance ensures responsible AI across the entire pipeline", use_column_width =True)
+                 caption="Proper governance ensures responsible AI across the entire pipeline", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -1056,7 +1004,7 @@ def governance_demo():
                 title="AI Governance Maturity Assessment"
             )
             
-            st.plotly_chart(fig, use_column_width=True)
+            st.plotly_chart(fig, use_container_width=True)
             
             st.success(f"Your organization's AI governance maturity level: **{maturity_level}**")
             
@@ -1115,7 +1063,7 @@ def transparency_demo():
     
     with col1:
         st.image("https://images.unsplash.com/photo-1586892477838-2b96e85e0f96?q=80&w=1200", 
-                 caption="Transparent AI empowers users to understand how systems work", use_column_width =True)
+                 caption="Transparent AI empowers users to understand how systems work", use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -1289,9 +1237,11 @@ def transparency_demo():
 def main():
     st.title("🤖 Responsible AI Explorer")
     st.markdown("""
+    <div class='info-box'>
     Explore the core dimensions of responsible AI through interactive examples. 
     Select a dimension below to learn more and interact with demonstrations.
-    """)
+    </div>
+    """, unsafe_allow_html=True)
     
     # Create tabs for each dimension
     tabs = st.tabs([
@@ -1332,9 +1282,12 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
+    if 'localhost' in st.context.headers["host"]:
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

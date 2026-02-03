@@ -5,6 +5,10 @@ def initialize_session_state():
     """Initialize session state variables"""
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())[:8]
+    
+    # Initialize auth_code if not present (for localhost bypass)
+    if "auth_code" not in st.session_state:
+        st.session_state.auth_code = str(uuid.uuid4())
 
 def reset_session():
     """Reset the session state"""
@@ -15,10 +19,13 @@ def reset_session():
 def render_sidebar():
     """Render the sidebar with session information and reset button"""
     st.markdown("#### 🔑 Session Info")
-    # st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
-    st.caption(f"**Session ID:** {st.session_state['auth_code'][:8]}")
+    
+    if "auth_code" not in st.session_state:
+        st.caption(f"**Session ID:** {st.session_state.session_id[:8]}")
+    else:
+        st.caption(f"**Session ID:** {st.session_state['auth_code'][:8]}")
 
-    if st.button("🔄 Reset Session"):
+    if st.button("🔄 Reset Session", use_container_width=True):
         reset_session()
         st.success("Session has been reset successfully!")
         st.rerun()  # Force a rerun to refresh the page

@@ -15,6 +15,7 @@ import uuid
 import time
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css, sub_header
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -26,146 +27,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# Apply custom CSS for modern appearance
-st.markdown("""
-    <style>
-    .stApp {
-        margin: 0 auto;
-    }
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: #1E3A8A;
-        text-align: left;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #2563EB;
-    }
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        margin-bottom: 1rem;
-    }
-    .output-container {
-        background-color: #F3F4F6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-    }
-    .stButton>button {
-        background-color: #2563EB;
-        color: white;
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        border: none;
-        width: 100%;
-    }
-    .stButton>button:hover {
-        background-color: #1D4ED8;
-    }
-    .response-block {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #2563EB;
-        margin-top: 1rem;
-    }
-    .token-metrics {
-        display: flex;
-        justify-content: space-between;
-        background-color: #F0F4F8;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        margin-top: 0.5rem;
-    }
-    .metric-item {
-        text-align: center;
-    }
-    .metric-value {
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    .metric-label {
-        font-size: 0.8rem;
-        color: #4B5563;
-    }
-    .chat-message {
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-        border-radius: 0.5rem;
-        animation: fadeIn 0.5s;
-    }
-    .user-message {
-        background-color: #EBF5FF;
-        border-left: 3px solid #2563EB;
-    }
-    .assistant-message {
-        background-color: #F0FDF4;
-        border-left: 3px solid #10B981;
-    }
-    .template-card {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .template-card:hover {
-        background-color: #EFF6FF;
-        border-color: #BFDBFE;
-        transform: translateY(-2px);
-    }
-    .template-card h4 {
-        margin: 0 0 0.5rem 0;
-        color: #2563EB;
-    }
-    .template-card p {
-        margin: 0;
-        font-size: 0.85rem;
-        color: #4B5563;
-    }
-    @keyframes fadeIn {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-    }
-    .session-controls {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-bottom: 1rem;
-    }
-    .pill-button {
-        background-color: #F3F4F6;
-        color: #4B5563;
-        border-radius: 1rem;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.75rem;
-        border: 1px solid #E5E7EB;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .pill-button:hover {
-        background-color: #E5E7EB;
-        color: #1F2937;
-    }
-    .input-area {
-        background-color: #F9FAFB;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # ------- INITIALIZE SESSION STATE -------
 def init_session_state():
@@ -375,7 +236,7 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
 def parameter_sidebar():
     """Sidebar with model selection and parameter tuning."""
     with st.container(border=True):
-        st.markdown("<div class='sub-header'>Model Settings</div>", unsafe_allow_html=True)
+        st.markdown(sub_header("Model Settings", "⚙️", "aws"), unsafe_allow_html=True)
         
         MODEL_CATEGORIES = {
             "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
@@ -393,7 +254,7 @@ def parameter_sidebar():
         # Then create selectbox for models from that provider
         model_id = st.selectbox("Model", options=MODEL_CATEGORIES[provider])
         
-        st.markdown("<div class='sub-header'>Parameters</div>", unsafe_allow_html=True)
+        st.markdown(sub_header("Parameters", "🎛️", "aws"), unsafe_allow_html=True)
         
         temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.2, step=0.05, 
                             help="Higher values make output more random, lower values more deterministic")
@@ -439,8 +300,16 @@ def parameter_sidebar():
 
 def display_templates():
     """Display sample prompt templates in a user-friendly way."""
-    st.markdown("<div class='sub-header'>Choose a Template</div>", unsafe_allow_html=True)
-    st.markdown("---", unsafe_allow_html=True)
+    st.markdown(sub_header("Choose a Template", "🎯"), unsafe_allow_html=True)
+    
+    # Template icons mapping
+    template_icons = {
+        "Professional Email Writer": "✉️",
+        "Product Description Generator": "🛍️",
+        "Technical Documentation Writer": "📚",
+        "Social Media Post Generator": "📱",
+        "Customer Support Response": "💬"
+    }
     
     # Display templates in a grid
     cols = st.columns(3)
@@ -448,18 +317,29 @@ def display_templates():
     for idx, template in enumerate(st.session_state.templates):
         col = cols[idx % 3]
         with col:
+            icon = template_icons.get(template['name'], "📝")
+            
+            # Check if this template is currently selected
+            is_selected = st.session_state.selected_template == idx
+            selected_class = "template-selected" if is_selected else ""
+            
             card_html = f"""
-            <div class='template-card' onclick="alert('Selected template: {template['name']}')">
-                <h4>{template['name']}</h4>
-                <p>{template['description']}</p>
+            <div class='template-card {selected_class}'>
+                <div class='template-icon'>{icon}</div>
+                <h4 class='template-title'>{template['name']}</h4>
+                <p class='template-description'>{template['description']}</p>
             </div>
             """
             st.markdown(card_html, unsafe_allow_html=True)
             
-            # We need a button since HTML onclick doesn't work with Streamlit
-            if st.button(f"Use Template", key=f"template_{idx}"):
-                st.session_state.selected_template = idx
-                st.rerun()
+            # Use Template button
+            button_label = "✓ Selected" if is_selected else "Use Template"
+            button_type = "secondary" if is_selected else "primary"
+            
+            if st.button(button_label, key=f"template_{idx}", type=button_type, use_container_width=True):
+                if not is_selected:
+                    st.session_state.selected_template = idx
+                    st.rerun()
 
 def prompt_template_interface(model_id, params):
     """Interface using LangChain prompt templates."""
@@ -471,21 +351,58 @@ def prompt_template_interface(model_id, params):
     if st.session_state.selected_template is not None:
         template_data = st.session_state.templates[st.session_state.selected_template]
         
-        st.markdown(f"<div class='sub-header'>{template_data['name']}</div>", unsafe_allow_html=True)
+        # Template header with icon
+        template_icons = {
+            "Professional Email Writer": "✉️",
+            "Product Description Generator": "🛍️",
+            "Technical Documentation Writer": "📚",
+            "Social Media Post Generator": "📱",
+            "Customer Support Response": "💬"
+        }
+        icon = template_icons.get(template_data['name'], "📝")
+        
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
+            <h2 style='color: white; margin: 0; font-size: 1.8rem; font-weight: 700;'>
+                {icon} {template_data['name']}
+            </h2>
+            <p style='color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1rem;'>
+                {template_data['description']}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Show template and allow for editing
-        with st.expander("View/Edit Template", expanded=True):
+        with st.expander("🔧 View/Edit Template", expanded=False):
+            st.markdown("""
+            <div style='background: #f8f9fb; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;'>
+                <p style='margin: 0; color: #5A6D87; font-size: 0.9rem;'>
+                    💡 <strong>Tip:</strong> You can customize the template structure below. 
+                    Variables are enclosed in curly braces like <code>{'{variable_name}'}</code>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             template_content = st.text_area(
-                "Template", 
+                "Template Structure", 
                 value=template_data['template'].strip(), 
                 height=200,
-                key="template_content"
+                key="template_content",
+                help="Edit the template structure. Use {variable_name} for placeholders."
             )
         
         # Input form for template variables
-        st.markdown("<div class='input-area'>", unsafe_allow_html=True)
-        
-        st.markdown("#### Template Variables")
+        st.markdown("---")
+        st.markdown("### 📝 Fill in Template Variables")
+        st.markdown("""
+        <div style='background: #fff5e6; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #FF9900;'>
+            <p style='margin: 0; color: #232F3E; font-size: 0.9rem;'>
+                Customize the values below to generate your content. Each field corresponds to a variable in the template.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Dynamically create input fields for each variable
         variable_values = {}
@@ -495,28 +412,38 @@ def prompt_template_interface(model_id, params):
             col = cols[idx % 2]
             with col:
                 variable_values[var_name] = st.text_area(
-                    f"{var_name.replace('_', ' ').title()}", 
+                    f"📌 {var_name.replace('_', ' ').title()}", 
                     value=default_value,
                     height=100,
-                    key=f"var_{var_name}"
+                    key=f"var_{var_name}",
+                    help=f"Enter value for {var_name}"
                 )
         
         # Create LangChain prompt template
         prompt_template = PromptTemplate.from_template(template_content)
         
         # Preview formatted prompt
-        if st.checkbox("Preview formatted prompt", value=False):
+        st.markdown("---")
+        preview_col, button_col = st.columns([3, 1])
+        
+        with preview_col:
+            show_preview = st.checkbox("👁️ Preview formatted prompt", value=False)
+        
+        if show_preview:
             try:
                 formatted_prompt = prompt_template.format(**variable_values)
-                st.markdown("#### Formatted Prompt")
-                st.markdown(f"```\n{formatted_prompt}\n```")
+                st.markdown("""
+                <div style='background: #f0f7ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #0073BB;'>
+                    <h4 style='margin-top: 0; color: #0073BB;'>📄 Formatted Prompt Preview</h4>
+                </div>
+                """, unsafe_allow_html=True)
+                st.code(formatted_prompt, language="text")
             except KeyError as e:
-                st.error(f"Missing variable in template: {e}")
+                st.error(f"❌ Missing variable in template: {e}")
         
         # Submit button
-        submit = st.button("Generate Response", type="primary", key="template_submit")
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        submit = st.button("🚀 Generate Response", type="primary", key="template_submit", use_container_width=True)
         
         # Process submission
         if submit:
@@ -542,16 +469,21 @@ def prompt_template_interface(model_id, params):
                 # Get Bedrock client
                 bedrock_client = boto3.client(service_name='bedrock-runtime', region_name='us-east-1')
                 
-                # Display response area with a placeholder for streaming
-                st.markdown("<div class='response-block'>", unsafe_allow_html=True)
-                st.markdown("### Response")
+                # Display response area
+                st.markdown("---")
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+                            padding: 1.5rem; border-radius: 12px; margin-top: 1rem;'>
+                    <h3 style='margin: 0; color: #232F3E;'>🤖 AI Response</h3>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # Stream the response
-                with st.status("Generating response...") as status:
+                with st.status("⏳ Generating response...", expanded=True) as status:
                     result = stream_conversation(bedrock_client, model_id, messages, system_prompts, params)
                     
                     if result and "response" in result:
-                        status.update(label="Response generated!", state="complete")
+                        status.update(label="✅ Response generated successfully!", state="complete")
                         
                         # Add to conversation history (assistant message)
                         st.session_state.conversation_history.append({
@@ -561,27 +493,37 @@ def prompt_template_interface(model_id, params):
                         
                         # Display metrics if available
                         if "metrics" in result and result["metrics"]:
-                            st.markdown("### Response Details")
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            st.markdown("""
+                            <div style='background: #f8f9fb; padding: 1rem; border-radius: 8px; border: 1px solid #E9EBF0;'>
+                                <h4 style='margin-top: 0; color: #232F3E;'>📊 Response Metrics</h4>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
                             metrics = result["metrics"]
                             if "tokens" in metrics:
                                 token_info = metrics["tokens"]
-                                col1, col2, col3 = st.columns(3)
-                                col1.metric("Input Tokens", token_info.get('input', 'N/A'))
-                                col2.metric("Output Tokens", token_info.get('output', 'N/A'))
-                                col3.metric("Total Tokens", token_info.get('total', 'N/A'))
+                                col1, col2, col3, col4 = st.columns(4)
                                 
-                                if "latency_ms" in metrics:
-                                    st.caption(f"Latency: {metrics['latency_ms']}ms | Stop reason: {metrics.get('stop_reason', 'Unknown')}")
+                                with col1:
+                                    st.metric("📥 Input Tokens", token_info.get('input', 'N/A'))
+                                with col2:
+                                    st.metric("📤 Output Tokens", token_info.get('output', 'N/A'))
+                                with col3:
+                                    st.metric("📊 Total Tokens", token_info.get('total', 'N/A'))
+                                with col4:
+                                    if "latency_ms" in metrics:
+                                        st.metric("⚡ Latency", f"{metrics['latency_ms']}ms")
+                                
+                                if "stop_reason" in metrics:
+                                    st.caption(f"🛑 Stop reason: {metrics.get('stop_reason', 'Unknown')}")
                     
                     elif "error" in result:
-                        status.update(label="Error occurred", state="error")
+                        status.update(label="❌ Error occurred", state="error")
                         st.error(f"An error occurred: {result['error']}")
                 
-                st.markdown("</div>", unsafe_allow_html=True)
-                
             except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+                st.error(f"❌ An error occurred: {str(e)}")
     
     else:
         st.info("👆 Select a template above to get started")
@@ -589,31 +531,57 @@ def prompt_template_interface(model_id, params):
 def display_conversation_history():
     """Display the conversation history."""
     if st.session_state.conversation_history:
-        st.markdown("### Conversation History")
+        st.markdown("---")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 1rem; border-radius: 12px; margin: 1.5rem 0;'>
+            <h3 style='color: white; margin: 0;'>💬 Conversation History</h3>
+        </div>
+        """, unsafe_allow_html=True)
         
-        for msg in st.session_state.conversation_history:
-            role_class = "user-message" if msg["role"] == "user" else "assistant-message"
-            with st.container():
-                st.markdown(f"<div class='chat-message {role_class}'>", unsafe_allow_html=True)
-                st.markdown(f"**{msg['role'].capitalize()}:**")
-                st.markdown(msg["content"])
-                st.markdown("</div>", unsafe_allow_html=True)
+        for idx, msg in enumerate(st.session_state.conversation_history):
+            if msg["role"] == "user":
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                            padding: 1rem; border-radius: 12px; margin: 0.75rem 0;
+                            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);'>
+                    <div style='color: white; font-weight: 600; margin-bottom: 0.5rem;'>
+                        👤 User
+                    </div>
+                    <div style='color: rgba(255,255,255,0.95); line-height: 1.6;'>
+                        {msg["content"]}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+                            padding: 1rem; border-radius: 12px; margin: 0.75rem 0;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);'>
+                    <div style='color: #232F3E; font-weight: 600; margin-bottom: 0.5rem;'>
+                        🤖 Assistant
+                    </div>
+                    <div style='color: #232F3E; line-height: 1.6;'>
+                        {msg["content"]}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
 # ------- MAIN APP -------
 
 def main():
+    load_css()
+    
     # Initialize session state
     init_session_state()
     
     # Header
     st.markdown("<h1 class='main-header'>Prompt Template</h1>", unsafe_allow_html=True)
     
-    st.markdown("""
-    <div style="text-align: left; margin-bottom: 2rem;">
-        This interactive dashboard demonstrates how to use LangChain Prompt Templates with Amazon Bedrock's foundation models.
-        Select a template, customize the variables, and generate high-quality content with structured prompts.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div class="info-box">
+    This interactive dashboard demonstrates how to use LangChain Prompt Templates with Amazon Bedrock's foundation models.
+    Select a template, customize the variables, and generate high-quality content with structured prompts.
+    </div>""", unsafe_allow_html=True)
 
 
     # Create a 70/30 layout

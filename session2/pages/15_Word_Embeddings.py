@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import uuid
 from utils.common import render_sidebar
-from utils.styles import load_css, custom_header
+from utils.styles import load_css, custom_header, sub_header
 import utils.authenticate as authenticate
 
 
@@ -194,7 +194,7 @@ def render_sidebar_content():
 def render_config_panel():
     with st.container(border=True):
         # Word categories
-        st.markdown("#### ⚙️ Configuration")
+        st.markdown(sub_header("Configuration", "⚙️", "minimal"), unsafe_allow_html=True)
         categories = {
             "Animals": ["Coyotes", "Wolves", "Foxes", "Ducks", "Eagles", "Owls",
                     "Vultures", "Woodpeckers", "Cheetahs", "Jaguars", "Lions", "Tigers",
@@ -219,7 +219,7 @@ def render_config_panel():
         )
         st.session_state.selected_words = selected_words
         
-        st.markdown("#### 🔍 Custom Words")
+        st.markdown(sub_header("Custom Words", "🔍", "minimal"), unsafe_allow_html=True)
         custom_word = st.text_input("Add a custom word")
         
         if st.button("Add Custom Word"):
@@ -241,7 +241,7 @@ def render_config_panel():
                 st.rerun()
         
         # Visualization settings
-        st.markdown("#### 🎨 Visualization Settings")
+        st.markdown(sub_header("Visualization Settings", "🎨", "minimal"), unsafe_allow_html=True)
         chart_height = st.slider("Chart Height", min_value=400, max_value=800, value=600, step=50)
         chart_theme = st.select_slider("Color Theme", options=["viridis", "plasma", "inferno", "cividis", "rainbow"])
         show_annotations = st.checkbox("Show Word Labels", value=True)

@@ -12,8 +12,9 @@ import os
 import uuid
 import datetime
 
-from utils.styles import load_css
+from utils.styles import load_css, custom_header
 import utils.authenticate as authenticate
+
 # Initialize session state
 def init_session_state():
     if "session_id" not in st.session_state:
@@ -32,62 +33,12 @@ def reset_session():
 
 # Set page configuration with AWS color scheme
 def configure_page():
-   
-    # Custom CSS with AWS color scheme
-    st.markdown("""
-    <style>
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #FFFFFF;
-        border-radius: 5px;
-        padding: 10px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #FF9900 !important;
-        color: white !important;
-    }
-    .stButton>button {
-        background-color: #FF9900;
-        color: white;
-    }
-    .warning {
-        background-color: #FF9900;
-        padding: 15px;
-        border-radius: 5px;
-        color: white;
-    }
-    .success {
-        background-color: #008A17;
-        padding: 15px;
-        border-radius: 5px;
-        color: white;
-    }
-    .error {
-        background-color: #D13212;
-        padding: 15px;
-        border-radius: 5px;
-        color: white;
-    }
-    .aws-header {
-        color: #232F3E;
-        font-weight: bold;
-    }
-    footer {
-        visibility: hidden;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Use centralized CSS
+    load_css()
 
 # Home tab content
 def show_home_tab():
-    st.markdown("<h2>Welcome to Cybersecurity Threat Detection</h2>", unsafe_allow_html=True)
+    st.markdown(custom_header("Welcome to Cybersecurity Threat Detection", 2), unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 2])
     

@@ -9,9 +9,10 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from PIL import Image
-from utils.styles import load_css, custom_header
+from utils.styles import load_css, custom_header, create_footer
 import utils.common as common
 import utils.authenticate as authenticate
+
 # Set page configuration
 st.set_page_config(
     page_title="AWS AI Practitioner - Domain 4 & 5",
@@ -21,9 +22,9 @@ st.set_page_config(
 )
 
 common.initialize_session_state()
+
 # Initialize session state
 def initialize_session_state():
-   
     if "knowledge_check_progress" not in st.session_state:
         st.session_state.knowledge_check_progress = 0
     
@@ -51,88 +52,6 @@ def reset_knowledge_check():
     st.session_state.knowledge_check_answers = {}
     st.session_state.knowledge_check_feedback = {}
     st.rerun()
-
-# Apply custom styling
-def apply_styling():
-    st.markdown("""
-    <style>
-    .main {
-        background-color: #FFFFFF;
-    }
-    .st-emotion-cache-16txtl3 h1 {
-        color: #232F3E;
-    }
-    .st-emotion-cache-16txtl3 h2 {
-        color: #FF9900;
-    }
-    .st-emotion-cache-16txtl3 h3 {
-        color: #232F3E;
-    }
-    .st-emotion-cache-16txtl3 a {
-        color: #1E88E5;
-    }
-    .st-emotion-cache-16txtl3 code {
-        background-color: #F7F7F7;
-        color: #D13212;
-    }
-    footer {
-        visibility: hidden;
-    }
-    .custom-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: #232F3E;
-        color: white;
-        text-align: center;
-        padding: 10px;
-        font-size: 14px;
-    }
-    .tab-subheader {
-        font-size: 20px;
-        font-weight: bold;
-        color: #FF9900;
-        margin-bottom: 10px;
-    }
-    .info-box {
-        background-color: #f0f7fb;
-        border-left: 5px solid #3498db;
-        padding: 15px;
-        margin: 10px 0;
-    }
-    .warning-box {
-        background-color: #fff8e6;
-        border-left: 5px solid #f39c12;
-        padding: 15px;
-        margin: 10px 0;
-    }
-    .aws-button {
-        background-color: #FF9900;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Generate the footer
-def display_footer():
-    st.markdown(
-        """
-        <div class="custom-footer">
-            © 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
 
 # Home Tab Content
 def home_tab():
@@ -3531,13 +3450,16 @@ def main():
         knowledge_check_tab()
     
     # Add footer
-    display_footer()
+    create_footer()
 
 # Run the application
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
+    if 'localhost' in st.context.headers["host"]:
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

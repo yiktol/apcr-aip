@@ -21,44 +21,8 @@ st.set_page_config(
 
 # Set page configuration
 def configure_page():
-    
-    # AWS color scheme
-    AWS_COLORS = {
-        "primary": "#232F3E",     # AWS Navy
-        "secondary": "#FF9900",   # AWS Orange
-        "tertiary": "#1A476F",    # AWS Blue
-        "background": "#FFFFFF",
-        "text": "#232F3E"
-    }
-    
-    # Apply custom CSS
-    st.markdown(f"""
-    <style>
-        .stTabs [data-baseweb="tab-list"] {{
-            gap: 10px;
-        }}
-        .stTabs [data-baseweb="tab"] {{
-            background-color: {AWS_COLORS["background"]};
-            color: {AWS_COLORS["text"]};
-            border-radius: 4px 4px 0px 0px;
-            padding: 10px 20px;
-            border: 1px solid #ddd;
-        }}
-        .stTabs [aria-selected="true"] {{
-            background-color: {AWS_COLORS["secondary"]};
-            color: {AWS_COLORS["primary"]};
-            font-weight: bold;
-        }}
-        h1, h2, h3 {{
-            color: {AWS_COLORS["primary"]};
-        }}
-        .highlight {{
-            background-color: {AWS_COLORS["secondary"]};
-            padding: 5px;
-            border-radius: 5px;
-        }}
-    </style>
-    """, unsafe_allow_html=True)
+    """Configure page settings - CSS is handled by load_css() from utils.styles"""
+    pass
 
 # Initialize session state for knowledge check
 def init_session_state():

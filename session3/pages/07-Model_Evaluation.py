@@ -6,6 +6,7 @@ import utils.human_based_grading as hbg
 import utils.model_based_grading as mbg
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
 
 
 st.set_page_config(
@@ -39,45 +40,9 @@ def init_session_state():
 
 def setup_page_config():
     """Configure page settings and custom styling"""
-    
-    # Apply custom CSS styling
-    st.markdown("""
-    <style>
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1E88E5;
-            margin-bottom: 1rem;
-        }
-        .sub-header {
-            font-size: 1.5rem;
-            font-weight: 500;
-            color: #424242;
-        }
-        .info-box {
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 24px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            white-space: pre-wrap;
-            background-color: #f0f2f6;
-            border-radius: 4px 4px 0px 0px;
-            gap: 1px;
-            padding: 0px 16px;
-            font-weight: 600;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #1E88E5 !important;
-            color: white !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # CSS is now handled by load_css() from utils.styles
+    pass
+
 
 def render_sidebar():
     """Render the sidebar with model parameters and other settings"""
@@ -368,7 +333,7 @@ def render_model_based_tab(eval_data):
 def main():
     """Main application function that orchestrates the app flow"""
     # Apply page configuration and styling
-    setup_page_config()
+    load_css()
     
     # Initialize session state
     common.initialize_session_state()
@@ -384,8 +349,12 @@ def main():
     render_sidebar()
     
     # Main title
-    st.markdown('<div class="main-header">LLM Prompt Components Guide</div>', unsafe_allow_html=True)
-    st.markdown("Explore different methods for evaluating LLM outputs using Claude-3")
+    st.markdown("<h1 class='main-header'>LLM Model Evaluation Methods</h1>", unsafe_allow_html=True)
+    
+    st.markdown("""<div class="info-box">
+    Explore different methods for evaluating LLM outputs using Claude-3. Learn about code-based grading for objective answers, 
+    human-based grading for subjective responses, and model-based grading for automated evaluation at scale.
+    </div>""", unsafe_allow_html=True)
     
     # Get evaluation data
     code_eval_data, human_eval_data = get_evaluation_data()

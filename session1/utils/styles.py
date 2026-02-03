@@ -560,8 +560,373 @@ def load_css():
         background-color: #F1F8FF;
     }}    
     
+    /* Header container for page titles */
+    .header-container {{
+        background-color: {AWS_COLORS['secondary']};
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        margin-bottom: 2rem;
+    }}
     
+    .header-title {{
+        color: {AWS_COLORS['primary']};
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }}
     
+    .header-subtitle {{
+        color: white;
+        font-size: 1.2rem;
+        font-style: italic;
+    }}
+    
+    /* Risk score boxes */
+    .risk-score-high {{
+        background-color: #ffebee;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }}
+    
+    .risk-score-high h3 {{
+        color: #c62828;
+        margin: 0;
+    }}
+    
+    .risk-score-low {{
+        background-color: #e8f5e9;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }}
+    
+    .risk-score-low h3 {{
+        color: #2e7d32;
+        margin: 0;
+    }}
+    
+    .risk-score-value {{
+        font-size: 24px;
+        margin-top: 10px;
+    }}
+    
+    /* Form headers */
+    .form-header {{
+        background-color: {AWS_COLORS['accent']};
+        padding: 0.5rem;
+        border-radius: 0.3rem;
+        color: white;
+        margin-bottom: 0.5rem;
+    }}
+    
+    /* Prediction headers */
+    .prediction-header {{
+        background-color: {AWS_COLORS['secondary']};
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        font-size: 1.5rem;
+        text-align: center;
+    }}
+    
+    /* Warning boxes */
+    .warning-box {{
+        background-color: #FFF9E6;
+        border-left: 5px solid {AWS_COLORS['primary']};
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.3rem;
+    }}
+    
+    /* Recommendations */
+    .recommendations {{
+        background-color: #F3FFFC;
+        border-left: 5px solid {AWS_COLORS['success']};
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.3rem;
+    }}
+    
+    /* Disclaimer */
+    .disclaimer {{
+        background-color: #F0F7FF;
+        border-left: 5px solid {AWS_COLORS['info']};
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.3rem;
+        font-size: 0.9rem;
+        color: {AWS_COLORS['text_light']};
+    }}
+    
+    /* Stats box */
+    .stats-box {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid {AWS_COLORS['border']};
+    }}
+    
+    /* Patient profile */
+    .patient-profile {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid {AWS_COLORS['border']};
+        margin-bottom: 1rem;
+    }}
+    
+    /* Best model highlight */
+    .best-model {{
+        background-color: #FFF9E6 !important;
+        font-weight: bold;
+    }}
+    
+    /* Metric explanation */
+    .metric-explanation {{
+        padding: 10px;
+        background-color: {AWS_COLORS['code_bg']};
+        border-radius: 0.3rem;
+    }}
+    
+    /* CM interpretation */
+    .cm-interpretation {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.3rem;
+        margin: 1rem 0;
+    }}
+    
+    /* ROC explanation */
+    .roc-explanation {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.3rem;
+    }}
+    
+    /* Feature explanation */
+    .feature-explanation {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.3rem;
+    }}
+    
+    /* SHAP explanation */
+    .shap-explanation {{
+        background-color: #F7F9FA;
+        padding: 1rem;
+        border-radius: 0.3rem;
+    }}
+    
+    /* Intro header */
+    .intro-header {{
+        color: {AWS_COLORS['primary']};
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }}
+    
+    /* About header */
+    .about-header {{
+        color: {AWS_COLORS['primary']};
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }}
+    
+    /* Footer container */
+    .footer-container {{
+        background-color: {AWS_COLORS['secondary']};
+        padding: 0.8rem;
+        border-radius: 0.5rem;
+        margin-top: 2rem;
+        text-align: center;
+    }}
+    
+    .footer-text {{
+        color: white;
+        font-size: 0.8rem;
+    }}
+    
+    /* ===============================
+       SUB-HEADER STYLES
+       =============================== */
+    
+    /* Sub-header styling */
+    .sub-header {{
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 1.5rem 0 1rem 0;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.3px;
+    }}
+    
+    .sub-header::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }}
+    
+    .sub-header:hover::before {{
+        left: 100%;
+    }}
+    
+    /* Alternative sub-header styles */
+    .sub-header.style-aws {{
+        background: linear-gradient(135deg, {AWS_COLORS['primary']} 0%, {AWS_COLORS['accent']} 100%);
+        box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+    }}
+    
+    .sub-header.style-minimal {{
+        background: {AWS_COLORS['background']};
+        color: {AWS_COLORS['secondary']};
+        border-left: 5px solid {AWS_COLORS['primary']};
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }}
+    
+    .sub-header.style-outline {{
+        background: transparent;
+        color: {AWS_COLORS['secondary']};
+        border: 2px solid {AWS_COLORS['primary']};
+        box-shadow: none;
+    }}
+    
+    /* ===============================
+       TEMPLATE CARD STYLES
+       =============================== */
+    
+    /* Template card container */
+    .template-card {{
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fb 100%);
+        border: 2px solid {AWS_COLORS['border']};
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }}
+    
+    .template-card::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, {AWS_COLORS['primary']} 0%, {AWS_COLORS['accent']} 100%);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }}
+    
+    .template-card:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: {AWS_COLORS['primary']};
+    }}
+    
+    .template-card:hover::before {{
+        transform: scaleX(1);
+    }}
+    
+    /* Selected template card */
+    .template-card.template-selected {{
+        background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+        border: 2px solid {AWS_COLORS['primary']};
+        box-shadow: 0 4px 16px rgba(255, 153, 0, 0.2);
+    }}
+    
+    .template-card.template-selected::before {{
+        transform: scaleX(1);
+        height: 6px;
+    }}
+    
+    /* Template icon */
+    .template-icon {{
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        text-align: center;
+        filter: grayscale(0.3);
+        transition: all 0.3s ease;
+    }}
+    
+    .template-card:hover .template-icon {{
+        filter: grayscale(0);
+        transform: scale(1.1);
+    }}
+    
+    .template-card.template-selected .template-icon {{
+        filter: grayscale(0);
+        transform: scale(1.05);
+    }}
+    
+    /* Template title */
+    .template-title {{
+        color: {AWS_COLORS['secondary']};
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-align: center;
+        line-height: 1.3;
+        transition: color 0.3s ease;
+    }}
+    
+    .template-card:hover .template-title {{
+        color: {AWS_COLORS['primary']};
+    }}
+    
+    .template-card.template-selected .template-title {{
+        color: {AWS_COLORS['primary']};
+    }}
+    
+    /* Template description */
+    .template-description {{
+        color: {AWS_COLORS['text_light']};
+        font-size: 0.9rem;
+        line-height: 1.5;
+        text-align: center;
+        margin: 0;
+        flex-grow: 1;
+    }}
+    
+    /* Responsive adjustments for template cards */
+    @media (max-width: 768px) {{
+        .template-card {{
+            min-height: 160px;
+            padding: 1.25rem;
+        }}
+        
+        .template-icon {{
+            font-size: 2rem;
+        }}
+        
+        .template-title {{
+            font-size: 1rem;
+        }}
+        
+        .template-description {{
+            font-size: 0.85rem;
+        }}
+    }}
     
     
     </style>
@@ -648,3 +1013,25 @@ def create_footer():
         """, 
         unsafe_allow_html=True
     )
+
+
+def sub_header(text, icon="", style="default"):
+    """
+    Create a styled sub-header with optional icon and style variant.
+    
+    Args:
+        text (str): The header text
+        icon (str): Optional emoji icon to display before text
+        style (str): Style variant - "default", "aws", "minimal", or "outline"
+    
+    Returns:
+        str: HTML string for the sub-header
+    
+    Examples:
+        st.markdown(sub_header("Model Settings", "⚙️", "aws"), unsafe_allow_html=True)
+        st.markdown(sub_header("Choose a Template", "🎯"), unsafe_allow_html=True)
+    """
+    style_class = f"style-{style}" if style != "default" else ""
+    icon_html = f"{icon} " if icon else ""
+    
+    return f"<div class='sub-header {style_class}'>{icon_html}{text}</div>"

@@ -24,7 +24,7 @@ from scipy.spatial.distance import cdist
 from stqdm import stqdm
 import utils.authenticate as authenticate
 import utils.common as common
-from utils.styles import load_css
+from utils.styles import load_css, sub_header
 
 st.set_page_config(
     page_title="Multimodal Embedding",
@@ -376,7 +376,7 @@ def main():
                     
         with right_col:
             with st.container(border=True):
-                st.subheader("🖼️ Product Explorer")
+                st.markdown(sub_header("Product Explorer", "🖼️", "minimal"), unsafe_allow_html=True)
                 
                 option = st.selectbox("Select a product:", products)
                 idx = products.index(option)

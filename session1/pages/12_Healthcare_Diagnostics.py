@@ -420,43 +420,10 @@ def create_header():
     """Create the application header with AWS styling"""
     st.markdown(
         f"""
-        <style>
-        .header-container {{
-            background-color: {AWS_COLORS['secondary']};
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-        }}
-        .header-title {{
-            color: {AWS_COLORS['primary']};
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }}
-        .header-subtitle {{
-            color: white;
-            font-size: 1.2rem;
-            font-style: italic;
-        }}
-        
-        /* Tabs styling */
-        .stTabs [data-baseweb="tab-list"] {{
-            gap: 8px;
-        }}
-        
-        .stTabs [data-baseweb="tab"] {{
-            padding: 8px 16px;
-            background-color: #f8f9fa;
-            border-radius: 4px 4px 0 0;
-        }}
-        
-        .stTabs [aria-selected="true"] {{
-            background-color: {AWS_COLORS['primary']} !important;
-            color: white !important;
-        }}        
-        
-        </style>
-
+        <div class="header-container">
+            <div class="header-title">🏥 Healthcare Diagnostics with Machine Learning</div>
+            <div class="header-subtitle">Predicting Heart Disease and Diabetes Risk</div>
+        </div>
         """, 
         unsafe_allow_html=True
     )
@@ -465,19 +432,6 @@ def create_footer():
     """Create the application footer with AWS copyright"""
     st.markdown(
         f"""
-        <style>
-        .footer-container {{
-            background-color: {AWS_COLORS['secondary']};
-            padding: 0.8rem;
-            border-radius: 0.5rem;
-            margin-top: 2rem;
-            text-align: center;
-        }}
-        .footer-text {{
-            color: white;
-            font-size: 0.8rem;
-        }}
-        </style>
         <div class="footer-container">
             <div class="footer-text">© 2025, Amazon Web Services, Inc. or its affiliates. All rights reserved.</div>
         </div>
@@ -545,18 +499,7 @@ def show_heart_disease_prediction(results, X, scaler, feature_desc):
     
     # Create form for input
     with st.form(key="heart_disease_form"):
-        st.markdown(f"""
-        <style>
-        .form-header {{
-            background-color: {AWS_COLORS['tertiary']};
-            padding: 0.5rem;
-            border-radius: 0.3rem;
-            color: white;
-            margin-bottom: 0.5rem;
-        }}
-        </style>
-        <div class="form-header">Patient Information</div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="form-header">Patient Information</div>', unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns(3)
         

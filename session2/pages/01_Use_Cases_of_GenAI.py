@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from io import BytesIO
 from PIL import Image
 import time
-from utils.styles import load_css, custom_header, load_css
+from utils.styles import load_css, custom_header, sub_header
 import utils.common as common
 import utils.authenticate as authenticate
 # Configure logging
@@ -168,7 +168,7 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
 
 def model_selection_panel():
     """Model selection and parameters in the side panel"""
-    st.markdown("<h4>Model Selection</h4>", unsafe_allow_html=True)
+    st.markdown(sub_header("Model Selection", "⚙️", "minimal"), unsafe_allow_html=True)
     
     MODEL_CATEGORIES = {
         "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
@@ -198,7 +198,7 @@ def model_selection_panel():
     # Then create selectbox for models from that provider
     model_id = st.selectbox("Select Model", options=MODEL_CATEGORIES[provider], key="side_model")
     
-    st.markdown("<h4>API Method</h4>", unsafe_allow_html=True)
+    st.markdown(sub_header("API Method", "🔌", "minimal"), unsafe_allow_html=True)
     api_method = st.radio(
         "Select API Method", 
         ["Streaming", "Synchronous"], 
@@ -206,7 +206,7 @@ def model_selection_panel():
         help="Streaming provides real-time responses, while Synchronous waits for complete response",
         key="side_api_method"
     )
-    st.markdown("<h4>Parameter Tuning</h4>", unsafe_allow_html=True)
+    st.markdown(sub_header("Parameter Tuning", "🎛️", "minimal"), unsafe_allow_html=True)
 
     
     temperature = st.slider(

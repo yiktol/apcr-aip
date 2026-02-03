@@ -68,95 +68,9 @@ def initialize_session_state():
 initialize_session_state()
 
 # ------- CUSTOM CSS -------
+from utils.styles import load_css
 
-def load_custom_css():
-    """Load custom CSS for styling."""
-    st.markdown("""
-        <style>
-        .stApp {
-            margin: 0 auto;
-        }
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #232F3E;
-        }
-        .sub-header {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #FF9900;
-        }
-        .card {
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            background-color: #FFFFFF;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 1rem;
-        }
-        .stButton>button {
-            background-color: #FF9900;
-            color: white;
-            border-radius: 4px;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            border: none;
-            transition: background-color 0.3s;
-        }
-        .stButton>button:hover {
-            background-color: #EC7211;
-        }
-        .response-block {
-            background-color: #F8FAFC;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #FF9900;
-            margin-top: 1rem;
-        }
-        .user-message {
-            background-color: #E6F7FF;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #232F3E;
-            margin-top: 1rem;
-        }
-        .info-box {
-            background-color: #E8F4F8;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #0073BB;
-            margin: 1rem 0;
-        }
-        .success-box {
-            background-color: #D4EDDA;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #28A745;
-            margin: 1rem 0;
-        }
-        .warning-box {
-            background-color: #FFF3CD;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #FFC107;
-            margin: 1rem 0;
-        }
-        .footer {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            font-size: 12px;
-            color: #666;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-load_custom_css()
+load_css()
 
 # ------- BEDROCK CLIENT MANAGEMENT -------
 
@@ -1242,12 +1156,10 @@ def main():
         unsafe_allow_html=True
     )
     
-    st.markdown("""
-    **Retrieval Augmented Generation (RAG) with Amazon Bedrock & Chroma DB**
-    
-    Upload documents, process them into Chroma vector database, and ask questions to get 
-    answers grounded in your data using foundation models. Documents persist between sessions!
-    """)
+    st.markdown("""<div class="info-box">
+    Retrieval Augmented Generation (RAG) with Amazon Bedrock & Chroma DB. Upload documents, process them into a vector database, 
+    and ask questions to get answers grounded in your data using foundation models. Documents persist between sessions!
+    </div>""", unsafe_allow_html=True)
     
     # Get Bedrock client
     bedrock_client = get_bedrock_client()

@@ -7,6 +7,7 @@ import random
 from datetime import datetime
 import matplotlib.pyplot as plt
 import utils.authenticate as authenticate
+from utils.styles import load_css, sub_header
 
 # Page configuration for a modern look and feel
 st.set_page_config(
@@ -15,100 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Apply custom styles for modern UI
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
-        color: #1E3A8A !important;
-        margin-bottom: 1rem !important;
-    }
-    .sub-header {
-        font-size: 1.8rem !important;
-        font-weight: 600 !important;
-        color: #2563EB !important;
-        margin-top: 1.5rem !important;
-        margin-bottom: 1rem !important;
-    }
-    .section-header {
-        font-size: 1.4rem !important;
-        font-weight: 600 !important;
-        color: #3B82F6 !important;
-        margin-top: 1.2rem !important;
-        margin-bottom: 0.8rem !important;
-    }
-    .info-box {
-        background-color: #EFF6FF;
-        border-left: 5px solid #3B82F6;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    .warning-box {
-        background-color: #FFFBEB;
-        border-left: 5px solid #F59E0B;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    .success-box {
-        background-color: #ECFDF5;
-        border-left: 5px solid #10B981;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    .requirement-item {
-        background-color: #F3F4F6;
-        padding: 0.8rem;
-        border-radius: 0.5rem;
-        margin-bottom: 0.8rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #F3F4F6;
-        border-radius: 4px 4px 0px 0px;
-        gap: 1px;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #DBEAFE !important;
-        color: #1E40AF !important;
-        font-weight: bold;
-    }
-    .data-schema-container {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid #E2E8F0;
-        margin-bottom: 1rem;
-    }
-    /* Code block styling */
-    pre {
-        background-color: #1E293B !important;
-        color: #F1F5F9 !important;
-        padding: 1rem !important;
-        border-radius: 0.5rem !important;
-    }
-    code {
-        font-family: 'Courier New', Courier, monospace !important;
-    }
-    .download-button {
-        background-color: #2563EB;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.25rem;
-        text-decoration: none;
-    }
-    .download-button:hover {
-        background-color: #1D4ED8;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # Sidebar with project information
 with st.sidebar:
@@ -374,15 +281,16 @@ def generate_chat_dataset(n=5):
 
 # Main application
 def main():
+    load_css()
     st.markdown("<h1 class='main-header'>Foundation Model Fine-Tuning Dataset Guide</h1>", unsafe_allow_html=True)
     
-    st.markdown("""
+    st.markdown("""<div class="info-box">
     This guide demonstrates how to prepare datasets for fine-tuning foundation models. 
     Properly structured data is essential for successful model training and achieving desired outcomes.
-    """)
+    </div>""", unsafe_allow_html=True)
     
     # Dataset Requirements Section
-    st.markdown("<h2 class='sub-header' id='dataset-requirements'>Dataset Requirements</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header("Dataset Requirements", "📋"), unsafe_allow_html=True)
     
     with st.expander("Dataset Structure & Format", expanded=True):
         st.markdown("""
@@ -456,7 +364,7 @@ def main():
         st.markdown("</div>", unsafe_allow_html=True)
     
     # Example Datasets Section
-    st.markdown("<h2 class='sub-header' id='example-datasets'>Example Datasets</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header("Example Datasets", "📚"), unsafe_allow_html=True)
     
     dataset_tabs = st.tabs([
         "Text Classification", 
@@ -624,7 +532,7 @@ def main():
                     st.markdown(f"<div style='background-color: #F0FDF4; padding: 10px; border-radius: 5px; margin-bottom: 10px;'><strong>Assistant:</strong> {content[:200]}{'...' if len(content) > 200 else ''}</div>", unsafe_allow_html=True)
     
     # Data Preparation Section
-    st.markdown("<h2 class='sub-header' id='data-preparation'>Data Preparation</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header("Data Preparation", "🔧"), unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -713,7 +621,7 @@ def main():
         """)
     
     # Best Practices Section
-    st.markdown("<h2 class='sub-header' id='best-practices'>Best Practices</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header("Best Practices", "✨"), unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -815,7 +723,7 @@ def main():
         """)
     
     # # Download Example Datasets
-    # st.markdown("<h2 class='sub-header'>Download Example Datasets</h2>", unsafe_allow_html=True)
+    # st.markdown(sub_header("Download Example Datasets", "⬇️"), unsafe_allow_html=True)
     
     # col1, col2, col3, col4, col5 = st.columns(5)
     

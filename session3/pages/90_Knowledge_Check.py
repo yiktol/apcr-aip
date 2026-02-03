@@ -6,6 +6,7 @@ import pandas as pd
 import uuid
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css, sub_header
 
 
 # Set page configuration
@@ -142,115 +143,7 @@ def calculate_score():
     return correct_count
 
 # --- Page Styling ---
-def apply_custom_styling():
-    """Apply custom CSS styling for the app."""
-    st.markdown(f"""
-    <style>
-        .main-header {{
-            font-size: 2.5rem;
-            color: {AWS_ORANGE};
-            text-align: center;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }}
-        .sub-header {{
-            font-size: 1.5rem;
-            color: {AWS_BLUE};
-            margin-bottom: 1rem;
-        }}
-        .question-card {{
-            background-color: {AWS_WHITE};
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border-left: 5px solid {AWS_ORANGE};
-        }}
-        .option-radio {{
-            margin: 8px 0;
-            padding: 12px 15px;
-            border-radius: 5px;
-        }}
-        .category-tag {{
-            background-color: {AWS_BLUE};
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-bottom: 15px;
-        }}
-        .explanation-box {{
-            padding: 18px;
-            border-radius: 5px;
-            background-color: #f0f8ff;
-            margin-top: 20px;
-            border-left: 4px solid {AWS_LIGHT_BLUE};
-        }}
-        .stats-box {{
-            background-color: {AWS_LIGHT_GRAY};
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }}
-        .aws-button {{
-            background-color: {AWS_ORANGE};
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 18px;
-            margin: 8px 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }}
-        .aws-secondary-button {{
-            background-color: {AWS_BLUE};
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 18px;
-            margin: 8px 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }}
-        .progress-container {{
-            margin: 20px 0;
-            padding: 15px;
-            background-color: {AWS_WHITE};
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }}
-        .progress-label {{
-            font-weight: 600;
-            color: {AWS_BLUE};
-            margin-bottom: 8px;
-        }}
-        .stProgress > div > div > div > div {{
-            background-color: {AWS_ORANGE};
-        }}
-        .footer {{
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: {AWS_GRAY};
-            font-size: 0.8rem;
-        }}
-        /* Responsive styling */
-        @media (max-width: 768px) {{
-            .main-header {{
-                font-size: 2rem;
-            }}
-            .sub-header {{
-                font-size: 1.2rem;
-            }}
-            .question-card {{
-                padding: 15px;
-            }}
-        }}
-    </style>
-    """, unsafe_allow_html=True)
+from utils.styles import load_css
 
 # --- UI Components ---
 def render_sidebar(all_questions):
@@ -339,12 +232,11 @@ def display_question(q_index):
     st.markdown(f"<span class='category-tag'>{category}</span>", unsafe_allow_html=True)
     
     # Display question
-    st.markdown(f"<h2 class='sub-header'>Question {q_index + 1} of {len(st.session_state.selected_questions)}</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header(f"Question {q_index + 1} of {len(st.session_state.selected_questions)}", "❓"), unsafe_allow_html=True)
     st.write(question["question"])
     
     # Check if user has already answered
     user_answered = q_id in st.session_state.answers
-    
     # Display options as radio buttons
     if not user_answered:
         options = question["options"]
@@ -418,7 +310,7 @@ def display_question(q_index):
 def display_results():
     """Display the quiz results."""
     st.markdown("<div class='question-card'>", unsafe_allow_html=True)
-    st.markdown("<h2 class='sub-header'>Quiz Results</h2>", unsafe_allow_html=True)
+    st.markdown(sub_header("Quiz Results", "🎯"), unsafe_allow_html=True)
     
     # Calculate metrics
     total_questions = len(st.session_state.selected_questions)
@@ -820,7 +712,7 @@ def main():
     initialize_session_state()
     
     # Apply custom styling
-    apply_custom_styling()
+    load_css()
     
     # Load quiz data
     all_questions = get_quiz_data()
@@ -836,6 +728,11 @@ def main():
     with col2:
         st.markdown("<h1 class='main-header'>AWS AI Practitioner Quiz</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center'>Domain 3: Applications of Foundation Models</p>", unsafe_allow_html=True)
+    
+    st.markdown("""<div class="info-box">
+    Test your knowledge of foundation model applications including prompt engineering, fine-tuning, RAG, and model evaluation.
+    This quiz covers key concepts from Domain 3 of the AWS Certified AI Practitioner exam.
+    </div>""", unsafe_allow_html=True)
     
     with st.sidebar:
         common.render_sidebar()

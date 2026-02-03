@@ -8,6 +8,8 @@ import uuid
 from botocore.exceptions import ClientError
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
+
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -21,78 +23,7 @@ st.set_page_config(
 )
 
 common.initialize_session_state()
-# Apply custom CSS for a modern look
-st.markdown("""
-    <style>
-    .stApp {
-        # max-width: 1200px;
-        margin: 0 auto;
-    }
-    .output-container {
-        background-color: #f0f2f6;
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 20px;
-        border: 1px solid #ddd;
-    }
-    .assessment-container {
-        background-color: #e6f3ff;
-        border-radius: 10px;
-        padding: 15px;
-        margin-top: 15px;
-        border: 1px solid #b3d9ff;
-    }
-    .output-text {
-        white-space: pre-wrap;
-    }
-    .sub-header {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-top: 0.25rem;
-        margin-bottom: 1rem;
-        color: #0a58ca;
-    }
-    .user-message {
-        background-color: #f0f8ff;
-        padding: 15px;
-        border-radius: 15px;
-        margin-bottom: 10px;
-        border-left: 5px solid #4361ee;
-    }
-    .assistant-message {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 15px;
-        margin-bottom: 10px;
-        border-left: 5px solid #4cc9f0;
-    }
-    .sample-prompt {
-        padding: 10px;
-        background-color: #f1f3f5;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .sample-prompt:hover {
-        background-color: #e9ecef;
-    }
-    .sidebar-header {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .category-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 4px;
-        margin-right: 5px;
-        font-weight: bold;
-        font-size: 0.8rem;
-        color: white;
-        background-color: #0d6efd;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+load_css()
 
 def initialize_session_state():
     """Initialize session state variables."""
@@ -187,7 +118,7 @@ def parameter_sidebar():
     with st.sidebar:
         common.render_sidebar()
         
-        clear_button = st.button("🧹 Clear Conversation")
+        clear_button = st.button("🧹Clear Conversation", use_container_width=True)
         
         if clear_button:
             st.session_state.conversation = []
@@ -327,10 +258,12 @@ def main():
     # Main content area
     st.title("🛡️ Amazon Bedrock Guardrail")
     
-    st.info("""
+    st.markdown("""
+    <div class='info-box'>
     This application demonstrates how Amazon Bedrock Guardrails can be used to ensure responsible AI 
     by filtering harmful content, PII, and other sensitive information. Try submitting potentially problematic prompts to see how the guardrail evaluates and filters the content.
-    """)
+    </div>
+    """, unsafe_allow_html=True)
    
     
     # Create a 70/30 layout
@@ -487,9 +420,12 @@ def main():
                 unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
+    if 'localhost' in st.context.headers["host"]:
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            main()

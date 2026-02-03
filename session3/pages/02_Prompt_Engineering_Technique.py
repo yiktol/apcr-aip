@@ -10,6 +10,7 @@ from io import BytesIO
 from PIL import Image
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import load_css
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -23,121 +24,6 @@ st.set_page_config(
 )
 
 common.initialize_session_state()
-
-# Apply custom CSS for modern appearance
-st.markdown("""
-    <style>
-    .stApp {
-        margin: 0 auto;
-    }
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: #1E3A8A;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #2563EB;
-    }
-    .technique-title {
-        font-size: 1.3rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #4B5563;
-    }
-    .technique-description {
-        margin-bottom: 1.5rem;
-        padding: 0.8rem;
-        border-left: 3px solid #2563EB;
-        background-color: #F0F9FF;
-    }
-    .card {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        margin-bottom: 1rem;
-    }
-    .output-container {
-        background-color: #F3F4F6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-    }
-    .stButton>button {
-        background-color: #2563EB;
-        color: white;
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #1D4ED8;
-    }
-    .response-block {
-        background-color: #F8FAFC;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #2563EB;
-        margin-top: 1rem;
-    }
-    .token-metrics {
-        display: flex;
-        justify-content: space-between;
-        background-color: #F0F4F8;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        margin-top: 0.5rem;
-    }
-    .metric-item {
-        text-align: center;
-    }
-    .metric-value {
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    .metric-label {
-        font-size: 0.8rem;
-        color: #4B5563;
-    }
-    .prompt-label {
-        font-weight: bold;
-        color: #374151;
-        margin-bottom: 0.25rem;
-    }
-    .technique-examples pre {
-        background-color: #F1F5F9;
-        padding: 0.75rem;
-        border-radius: 0.25rem;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
-        white-space: pre-wrap;
-    }
-    
-    .tab-content {
-        padding: 1.5rem;
-        border: 1px solid #E5E7EB;
-        border-top: none;
-        border-radius: 0 0 0.5rem 0.5rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 4px 4px 0 0;
-        padding: 10px 16px;
-        background-color: #F3F4F6;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #E0E7FF;
-        border-bottom: 2px solid #4F46E5;    
-    
-    </style>
-""", unsafe_allow_html=True)
 
 # ------- API FUNCTIONS -------
 
@@ -685,14 +571,16 @@ With only $120,000 available to invest, what should they do?
 # ------- MAIN APP -------
 
 def main():
+    load_css()
+    
     # Header
     st.markdown("<h1 class='main-header'>Advanced LLM Prompting Techniques</h1>", unsafe_allow_html=True)
     
-    st.markdown("""
+    st.markdown("""<div class="info-box">
     This interactive dashboard demonstrates different prompting techniques for Large Language Models.
-    Select a technique tab below to explore how different prompting strategies affect model outputs.
+    Select a technique tab below to explore how different prompting strategies (Zero-shot, Few-shot, Role-based) affect model outputs.
     Adjust model parameters in the sidebar to see their impact on responses.
-    """)
+    </div>""", unsafe_allow_html=True)
     
     # Create a 70/30 layout
     col1, col2 = st.columns([0.7, 0.3])     

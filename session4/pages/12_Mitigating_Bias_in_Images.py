@@ -9,32 +9,14 @@ from langchain_core.prompts import (ChatPromptTemplate,
                                MessagesPlaceholder)
 from langchain_core.runnables import RunnablePassthrough
 import utils.sdxl as sdxl
-import nest_asyncio
-import threading
 import uuid
 import utils.authenticate as authenticate
+from utils.styles import load_css
 import logging
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-# Apply nest_asyncio to allow nested event loops
-nest_asyncio.apply()
-
-# Thread-safe session state access
-thread_local = threading.local()
-
-def safe_session_state_access(key, default=None):
-    """Access session state safely from any thread"""
-    try:
-        if key in st.session_state:
-            return st.session_state[key]
-        return default
-    except:
-        # Return default when called from background thread
-        logger.debug(f"Accessing session state from background thread, using default for {key}")
-        return default
 
 @st.cache_resource
 def get_bedrock_client():
@@ -87,14 +69,11 @@ For ANY prompt request involving human beings (either explicitly stated or impli
    - Clearly state that you don't know or cannot assist with that particular request
 """
         logger.info("Initialized system prompt")
-        
-    # Store system prompt in thread-safe variable
-    thread_local.system_prompt = st.session_state.system_prompt
 
 def update_conversation_chain(llm):
     """Create prompt template and conversation chain using LCEL"""
-    # Get system prompt safely for thread
-    system_prompt = safe_session_state_access(
+    # Get system prompt from session state
+    system_prompt = st.session_state.get(
         "system_prompt", 
         """You are a prompt generator for text to image models. If you detect bias in the question, ask relevant questions about gender, race and color. When ready to generate, use <imageprompt></imageprompt> XML tags."""
     )
@@ -149,7 +128,10 @@ def render_sidebar():
         st.title("⚙️ Options")
         
         st.subheader("Session Management")
-        st.caption(f"Session ID: {st.session_state['auth_code'][:8]}")
+        if "auth_code" not in st.session_state:
+            st.caption(f"Session ID: {st.session_state.session_id[:8]}")
+        else:
+            st.caption(f"Session ID: {st.session_state['auth_code'][:8]}")
         
         if st.button("🗑️ Clear Chat", use_container_width=True):
             logger.info("Clearing chat history")
@@ -184,7 +166,6 @@ def render_system_prompt_editor():
         if st.button("Update System Prompt"):
             logger.info("Updating system prompt")
             st.session_state.system_prompt = system_prompt_input
-            thread_local.system_prompt = system_prompt_input
             if "memory" in st.session_state:
                 st.session_state.memory = []
             st.session_state.messages = [{"role": "Assistant", "content": "System prompt updated. How may I assist you?"}]
@@ -264,11 +245,11 @@ def setup_page_config():
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    load_css()
 
 def main():
     """Main application logic"""
     logger.info("Starting AI Image Generator app")
-    
     
     # Initialize session state
     init_session_state()
@@ -279,25 +260,113 @@ def main():
     llm = ChatBedrock(model_id=model_id, client=bedrock)
     conversation = update_conversation_chain(llm)
     
-    # Render UI components
-    st.title("🎨 AI Image Generator")
-    st.caption("Create unbiased images with AI assistance")
+    # Modern gradient header
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; 
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);'>
+            <h1 style='color: white; margin: 0; font-size: 2.5rem; font-weight: 700;'>
+                🎨 AI Image Generator
+            </h1>
+            <p style='color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1.1rem;'>
+                Create unbiased images with AI assistance
+            </p>
+            <div style='margin-top: 1rem;'>
+                <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
+                            border-radius: 1rem; color: white; font-size: 0.85rem; margin-right: 0.5rem;'>
+                    🤖 Claude AI
+                </span>
+                <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
+                            border-radius: 1rem; color: white; font-size: 0.85rem; margin-right: 0.5rem;'>
+                    🎨 Stable Diffusion XL
+                </span>
+                <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
+                            border-radius: 1rem; color: white; font-size: 0.85rem;'>
+                    ⚖️ Bias Mitigation
+                </span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Custom CSS for modern chat interface
+    st.markdown("""
+        <style>
+        /* Modern chat message styling */
+        .stChatMessage {
+            border-radius: 1rem !important;
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .stChatMessage:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        }
+        
+        /* User messages with gradient */
+        .stChatMessage[data-testid="user-message"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .stChatMessage[data-testid="user-message"] p {
+            color: white !important;
+        }
+        
+        /* Assistant messages with light gradient */
+        .stChatMessage[data-testid="assistant-message"] {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+        }
+        
+        /* Chat input styling */
+        .stChatInput {
+            border-radius: 1rem !important;
+        }
+        
+        /* Expander styling */
+        .streamlit-expanderHeader {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     render_sidebar()
     render_system_prompt_editor()
     render_chat_messages()
     
     # Process user input
-    user_prompt = st.chat_input("Example: Create a photo of a doctor...")
+    user_prompt = st.chat_input("💭 Example: Create a photo of a doctor...")
     if user_prompt:
         process_user_input(user_prompt, conversation)
 
 if __name__ == "__main__":
     setup_page_config()
-    # First check authentication
-    is_authenticated = authenticate.login()
-    
-    # If authenticated, show the main app content
-    if is_authenticated:
-        logger.info("User authenticated successfully")
+    if 'localhost' in st.context.headers["host"]:
+        logger.info("Running on localhost, skipping authentication")
         main()
+    else:
+        # First check authentication
+        is_authenticated = authenticate.login()
+        
+        # If authenticated, show the main app content
+        if is_authenticated:
+            logger.info("User authenticated successfully")
+            main()

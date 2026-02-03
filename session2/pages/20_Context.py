@@ -6,6 +6,7 @@ import uuid
 from langchain_aws import ChatBedrock
 import utils.common as common
 import utils.authenticate as authenticate
+from utils.styles import sub_header
 
 # Configure the page
 st.set_page_config(
@@ -266,7 +267,7 @@ def render_control_panel():
     with st.container(border=True):
         st.markdown("<div class='sidebar-title'>Chat Controls</div>", unsafe_allow_html=True)
         
-        st.markdown("### Memory Settings")
+        st.markdown(sub_header("Memory Settings", "🧠", "minimal"), unsafe_allow_html=True)
         
         # Memory toggle
         memory_enabled = st.toggle("Enable Conversation Memory", value=st.session_state.memory_enabled)

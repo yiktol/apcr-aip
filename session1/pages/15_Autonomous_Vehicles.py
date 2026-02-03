@@ -10,7 +10,9 @@ import time
 import base64
 from PIL import Image
 import io
+from utils.styles import load_css, AWS_COLORS
 import utils.authenticate as authenticate
+
 # Set page configuration
 st.set_page_config(
     page_title="Autonomous Vehicles: ML for Object Detection",
@@ -19,70 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Define AWS color scheme
-AWS_COLORS = {
-    'primary': '#232F3E',
-    'secondary': '#FF9900',
-    'accent1': '#0073BB',
-    'accent2': '#D13212',
-    'light': '#FFFFFF',
-    'dark': '#161E2D'
-}
-
 # CSS styling
-def local_css():
-    st.markdown("""
-    <style>
-        .main {
-            background-color: #F9F9F9;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            white-space: pre-wrap;
-            background-color: #FFFFFF;
-            border-radius: 4px;
-            padding: 10px 16px;
-            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #FF9900;
-            color: #232F3E;
-            font-weight: bold;
-        }
-        .stButton button {
-            background-color: #FF9900;
-            color: #232F3E;
-        }
-        .sidebar .sidebar-content {
-            background-color: #232F3E;
-            color: white;
-        }
-        h1, h2, h3 {
-            color: #232F3E;
-        }
-        .highlight {
-            background-color: #FFF9EC;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 5px solid #FF9900;
-            margin-bottom: 20px;
-        }
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            padding: 10px;
-            background-color: #F9F9F9;
-            font-size: 12px;
-            color: #666;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
 # Initialize session state
 def init_session_state():
     if 'session_id' not in st.session_state:
@@ -1090,8 +1029,8 @@ def main():
     # Initialize session state
     init_session_state()
     
-    # Apply CSS
-    local_css()
+    # Apply centralized CSS
+    load_css()
     
     # Render sidebar
     render_sidebar()

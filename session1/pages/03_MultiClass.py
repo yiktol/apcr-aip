@@ -32,44 +32,53 @@ st.set_page_config(
 def init_session_state():
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())
-    if "model" not in st.session_state:
-        # Load and prepare data
-        iris = load_iris()
-        X = pd.DataFrame(iris.data, columns=iris.feature_names)
-        y = pd.Series(iris.target)
-        
-        # Store data in session state
-        st.session_state.X = X
-        st.session_state.y = y
-        st.session_state.feature_names = iris.feature_names
-        st.session_state.target_names = iris.target_names
-        
-        # Split the data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-        st.session_state.X_train = X_train
-        st.session_state.X_test = X_test
-        st.session_state.y_train = y_train
-        st.session_state.y_test = y_test
-        
-        # Train a model
-        model = RandomForestClassifier(n_estimators=100, random_state=42)
-        model.fit(X_train, y_train)
-        st.session_state.model = model
-        
-        # Make predictions for evaluation
-        y_pred = model.predict(X_test)
-        st.session_state.y_pred = y_pred
-        
-        # Calculate metrics
-        st.session_state.accuracy = accuracy_score(y_test, y_pred)
-        st.session_state.conf_matrix = confusion_matrix(y_test, y_pred)
-        st.session_state.class_report = classification_report(y_test, y_pred, output_dict=True)
-        
-        # Generate feature importance
-        st.session_state.feature_importance = pd.DataFrame({
-            'Feature': iris.feature_names,
-            'Importance': model.feature_importances_
-        }).sort_values('Importance', ascending=False)
+    
+    if "initialized" not in st.session_state:
+        try:
+            with st.spinner("Loading model and data..."):
+                # Load and prepare data
+                iris = load_iris()
+                X = pd.DataFrame(iris.data, columns=iris.feature_names)
+                y = pd.Series(iris.target)
+                
+                # Store data in session state
+                st.session_state.X = X
+                st.session_state.y = y
+                st.session_state.feature_names = iris.feature_names
+                st.session_state.target_names = iris.target_names
+                
+                # Split the data
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+                st.session_state.X_train = X_train
+                st.session_state.X_test = X_test
+                st.session_state.y_train = y_train
+                st.session_state.y_test = y_test
+                
+                # Train a model
+                model = RandomForestClassifier(n_estimators=100, random_state=42)
+                model.fit(X_train, y_train)
+                st.session_state.model = model
+                
+                # Make predictions for evaluation
+                y_pred = model.predict(X_test)
+                st.session_state.y_pred = y_pred
+                
+                # Calculate metrics
+                st.session_state.accuracy = accuracy_score(y_test, y_pred)
+                st.session_state.conf_matrix = confusion_matrix(y_test, y_pred)
+                st.session_state.class_report = classification_report(y_test, y_pred, output_dict=True)
+                
+                # Generate feature importance
+                st.session_state.feature_importance = pd.DataFrame({
+                    'Feature': iris.feature_names,
+                    'Importance': model.feature_importances_
+                }).sort_values('Importance', ascending=False)
+                
+                # Mark initialization as complete
+                st.session_state.initialized = True
+        except Exception as e:
+            st.error(f"Error initializing model: {str(e)}")
+            st.stop()
 
 
 # Function to create an image from a matplotlib figure
@@ -664,6 +673,11 @@ def show_ml_concepts():
 def main():
     # Initialize session state
     init_session_state()
+    
+    # Check if initialization is complete
+    if "initialized" not in st.session_state or not st.session_state.initialized:
+        st.warning("Initializing application... Please refresh the page if this message persists.")
+        st.stop()
     
     # Custom CSS
     load_css()

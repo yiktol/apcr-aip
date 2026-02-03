@@ -1152,10 +1152,10 @@ def display_fraud_detection_tab(df, models, metrics_df, feature_names, scaler):
             with col2:
                 if fraud_prediction == 1:
                     st.error(f"### ⚠️ FRAUD ALERT")
-                    st.markdown(f"<div style='background-color: #ffebee; padding: 20px; border-radius: 10px;'><h3 style='text-align: center; color: #c62828;'>High Risk Transaction</h3><p style='text-align: center; font-size: 24px;'>Risk Score: {risk_score}/100</p></div>", unsafe_allow_html=True)
+                    st.markdown(f'<div class="risk-score-high"><h3>High Risk Transaction</h3><p class="risk-score-value">Risk Score: {risk_score}/100</p></div>', unsafe_allow_html=True)
                 else:
                     st.success(f"### ✓ Transaction Appears Legitimate")
-                    st.markdown(f"<div style='background-color: #e8f5e9; padding: 20px; border-radius: 10px;'><h3 style='text-align: center; color: #2e7d32;'>Low Risk Transaction</h3><p style='text-align: center; font-size: 24px;'>Risk Score: {risk_score}/100</p></div>", unsafe_allow_html=True)
+                    st.markdown(f'<div class="risk-score-low"><h3>Low Risk Transaction</h3><p class="risk-score-value">Risk Score: {risk_score}/100</p></div>', unsafe_allow_html=True)
             
             # Show gauge chart for risk score
             fig = go.Figure(go.Indicator(
