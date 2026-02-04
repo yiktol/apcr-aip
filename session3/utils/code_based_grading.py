@@ -23,11 +23,16 @@ def build_input_prompt(animal_statement):
 # Using Converse API for unified interface across all models
 def get_completion(messages, model="anthropic.claude-3-sonnet-20240229-v1:0", max_tokens=2048, temperature=0.5, top_p=0.9):
     # Use Converse API for unified interface
+    # Note: Some models (like Claude) don't allow both temperature and top_p
+    # For Claude models, we'll use temperature only
     inference_config = {
         "maxTokens": max_tokens,
-        "temperature": temperature,
-        "topP": top_p
+        "temperature": temperature
     }
+    
+    # Only add topP for non-Anthropic models
+    if not model.startswith("anthropic.") and not model.startswith("us.anthropic."):
+        inference_config["topP"] = top_p
     
     try:
         response = bedrock_runtime.converse(
