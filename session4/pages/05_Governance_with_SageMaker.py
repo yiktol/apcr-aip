@@ -1874,9 +1874,121 @@ def main():
             """, unsafe_allow_html=True)
         
         with col2:
-            # Governance diagram
-            st.image("https://d1.awsstatic.com/aws-mls-platform/SageMaker%20assets/mlops-infinity-loop.485d11146c76f95123a2def677139b8d23e5c247.png", 
-                    caption="ML Governance within the ML lifecycle", use_container_width=True)
+            # Create MLOps lifecycle diagram using Plotly
+            st.markdown("**ML Governance within the ML Lifecycle**")
+            
+            import plotly.graph_objects as go
+            import numpy as np
+            
+            fig = go.Figure()
+            
+            # Define positions for circular layout
+            angles = np.linspace(0, 2*np.pi, 5)[:-1]  # 4 stages
+            radius = 1
+            
+            stages = [
+                {"name": "Data<br>Preparation", "angle": angles[0], "color": "#FF9900"},
+                {"name": "Model<br>Development", "angle": angles[1], "color": "#232F3E"},
+                {"name": "Model<br>Training", "angle": angles[2], "color": "#FF9900"},
+                {"name": "Model<br>Deployment", "angle": angles[3], "color": "#232F3E"},
+            ]
+            
+            # Calculate positions
+            for stage in stages:
+                stage["x"] = radius * np.cos(stage["angle"])
+                stage["y"] = radius * np.sin(stage["angle"])
+            
+            # Add arrow lines between stages (as traces, so they appear behind circles)
+            # Calculate arrow positions to end at circle edges, not centers
+            marker_radius = 0.15  # Approximate radius in data coordinates
+            
+            for i in range(len(stages)):
+                next_i = (i + 1) % len(stages)
+                
+                # Calculate direction vector from current stage to next stage
+                dx = stages[next_i]["x"] - stages[i]["x"]
+                dy = stages[next_i]["y"] - stages[i]["y"]
+                distance = np.sqrt(dx**2 + dy**2)
+                
+                # Normalize direction vector
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                # Calculate arrow start and end points (offset by marker radius)
+                arrow_start_x = stages[i]["x"] + dx_norm * marker_radius
+                arrow_start_y = stages[i]["y"] + dy_norm * marker_radius
+                arrow_end_x = stages[next_i]["x"] - dx_norm * marker_radius
+                arrow_end_y = stages[next_i]["y"] - dy_norm * marker_radius
+                
+                # Add line trace for arrow body
+                fig.add_trace(go.Scatter(
+                    x=[arrow_start_x, arrow_end_x],
+                    y=[arrow_start_y, arrow_end_y],
+                    mode='lines',
+                    line=dict(color='#0073BB', width=3),
+                    hoverinfo='skip',
+                    showlegend=False
+                ))
+            
+            # Add stage nodes (these will appear on top of arrows)
+            for stage in stages:
+                fig.add_trace(go.Scatter(
+                    x=[stage["x"]], y=[stage["y"]],
+                    mode='markers+text',
+                    marker=dict(size=100, color=stage["color"], 
+                               line=dict(width=3, color='white')),
+                    text=stage["name"],
+                    textposition="middle center",
+                    textfont=dict(color='white', size=10, family='Arial Black'),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            # Add governance in center (on top)
+            fig.add_trace(go.Scatter(
+                x=[0], y=[0],
+                mode='markers+text',
+                marker=dict(size=130, color='#16DB93', opacity=0.9,
+                           line=dict(width=3, color='#0073BB')),
+                text="ML<br>Governance",
+                textposition="middle center",
+                textfont=dict(color='#232F3E', size=11, family='Arial Black'),
+                hoverinfo='skip', showlegend=False
+            ))
+            
+            # Add arrowheads using annotations (these will be on top, but small enough to not overlap circles)
+            for i in range(len(stages)):
+                next_i = (i + 1) % len(stages)
+                
+                # Calculate direction vector
+                dx = stages[next_i]["x"] - stages[i]["x"]
+                dy = stages[next_i]["y"] - stages[i]["y"]
+                distance = np.sqrt(dx**2 + dy**2)
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                # Position arrowhead just before the target circle
+                arrow_end_x = stages[next_i]["x"] - dx_norm * marker_radius
+                arrow_end_y = stages[next_i]["y"] - dy_norm * marker_radius
+                arrow_start_x = arrow_end_x - dx_norm * 0.05
+                arrow_start_y = arrow_end_y - dy_norm * 0.05
+                
+                fig.add_annotation(
+                    x=arrow_end_x, y=arrow_end_y,
+                    ax=arrow_start_x, ay=arrow_start_y,
+                    xref="x", yref="y", axref="x", ayref="y",
+                    showarrow=True, arrowhead=2, arrowsize=1.5,
+                    arrowwidth=3, arrowcolor="#0073BB",
+                    standoff=0, startstandoff=0
+                )
+            
+            fig.update_layout(
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-1.5, 1.5]),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-1.5, 1.5]),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=350, margin=dict(l=20, r=20, t=20, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
             
             # Add a key metrics card
             st.markdown("""
@@ -2074,10 +2186,83 @@ def main():
             """, unsafe_allow_html=True)
         
         with col2:
-            # Role Manager diagram
-            st.image("https://d1.awsstatic.com/ml-governance/persona-mgmt.daf5b956b050647c2c6b7ef6b5fc7e3c35c61651.png", 
-                    use_container_width=True)
-            st.caption("SageMaker Role Manager supports different ML personas")
+            # Create Role Manager persona diagram using Plotly
+            st.markdown("**SageMaker Role Manager supports different ML personas**")
+            
+            import plotly.graph_objects as go
+            
+            fig = go.Figure()
+            
+            # Define personas in circular layout
+            personas = [
+                {"name": "Data<br>Scientist", "x": 0.2, "y": 0.85, "color": "#FF9900"},
+                {"name": "MLOps<br>Engineer", "x": 0.8, "y": 0.85, "color": "#232F3E"},
+                {"name": "Business<br>Analyst", "x": 0.15, "y": 0.35, "color": "#FF9900"},
+                {"name": "Governance<br>Officer", "x": 0.5, "y": 0.15, "color": "#232F3E"},
+                {"name": "ML<br>Architect", "x": 0.85, "y": 0.35, "color": "#FF9900"},
+            ]
+            
+            # Calculate marker radii in normalized coordinates
+            center_radius = 0.08  # For central hub (size 140)
+            persona_radius = 0.05  # For persona nodes (size 80)
+            
+            # Add connection lines first (background layer)
+            for persona in personas:
+                # Calculate direction vector from center to persona
+                dx = persona["x"] - 0.5
+                dy = persona["y"] - 0.5
+                distance = np.sqrt(dx**2 + dy**2)
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                # Calculate line start and end points (offset by marker radii)
+                line_start_x = 0.5 + dx_norm * center_radius
+                line_start_y = 0.5 + dy_norm * center_radius
+                line_end_x = persona["x"] - dx_norm * persona_radius
+                line_end_y = persona["y"] - dy_norm * persona_radius
+                
+                # Connection line
+                fig.add_trace(go.Scatter(
+                    x=[line_start_x, line_end_x], 
+                    y=[line_start_y, line_end_y],
+                    mode='lines',
+                    line=dict(color='#D5DBDB', width=2, dash='dot'),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            # Add central hub (middle layer)
+            fig.add_trace(go.Scatter(
+                x=[0.5], y=[0.5],
+                mode='markers+text',
+                marker=dict(size=140, color='#0073BB',
+                           line=dict(width=4, color='white')),
+                text="SageMaker<br>Role Manager",
+                textposition="middle center",
+                textfont=dict(color='white', size=11, family='Arial Black'),
+                hoverinfo='skip', showlegend=False
+            ))
+            
+            # Add persona nodes (foreground layer)
+            for persona in personas:
+                fig.add_trace(go.Scatter(
+                    x=[persona["x"]], y=[persona["y"]],
+                    mode='markers+text',
+                    marker=dict(size=80, color=persona["color"],
+                               line=dict(width=3, color='white')),
+                    text=persona["name"],
+                    textposition="middle center",
+                    textfont=dict(color='white', size=9, family='Arial'),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            fig.update_layout(
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=400, margin=dict(l=20, r=20, t=20, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         
         st.subheader("Select ML Persona")
         
@@ -2222,9 +2407,91 @@ aws sagemaker create-role-from-persona \\
             """, unsafe_allow_html=True)
         
         with col2:
-            # Model Card diagram
-            st.image("https://d1.awsstatic.com/ml-governance/governance_model-cards_how-it-works-diagram.3df069ff7225d3a0ffadf524a87c84dcb88c097d.png", 
-                    caption="SageMaker Model Cards provide standardized documentation", use_container_width=True)
+            # Create Model Cards workflow diagram using Plotly
+            st.markdown("**SageMaker Model Cards provide standardized documentation**")
+            
+            import plotly.graph_objects as go
+            
+            fig = go.Figure()
+            
+            # Define workflow stages
+            stages = [
+                {"name": "Model<br>Development", "x": 0.1, "y": 0.5, "color": "#FF9900"},
+                {"name": "Create<br>Model Card", "x": 0.3, "y": 0.5, "color": "#232F3E"},
+                {"name": "Review &<br>Approve", "x": 0.5, "y": 0.5, "color": "#FF9900"},
+                {"name": "Document<br>Metadata", "x": 0.7, "y": 0.5, "color": "#0073BB"},
+                {"name": "Share &<br>Collaborate", "x": 0.9, "y": 0.5, "color": "#0073BB"},
+            ]
+            
+            # Add arrow lines (background layer)
+            marker_radius = 0.055  # Approximate radius in normalized coordinates
+            for i in range(len(stages) - 1):
+                # Calculate direction and offset for arrow endpoints
+                dx = stages[i+1]["x"] - stages[i]["x"]
+                dy = stages[i+1]["y"] - stages[i]["y"]
+                distance = np.sqrt(dx**2 + dy**2)
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                # Calculate arrow start and end points (offset by marker radius)
+                arrow_start_x = stages[i]["x"] + dx_norm * marker_radius
+                arrow_start_y = stages[i]["y"] + dy_norm * marker_radius
+                arrow_end_x = stages[i+1]["x"] - dx_norm * marker_radius
+                arrow_end_y = stages[i+1]["y"] - dy_norm * marker_radius
+                
+                # Add line trace
+                fig.add_trace(go.Scatter(
+                    x=[arrow_start_x, arrow_end_x],
+                    y=[arrow_start_y, arrow_end_y],
+                    mode='lines',
+                    line=dict(color='#16DB93', width=2),
+                    hoverinfo='skip',
+                    showlegend=False
+                ))
+            
+            # Add stage nodes (foreground layer)
+            for stage in stages:
+                fig.add_trace(go.Scatter(
+                    x=[stage["x"]], y=[stage["y"]],
+                    mode='markers+text',
+                    marker=dict(size=90, color=stage["color"],
+                               line=dict(width=3, color='white')),
+                    text=stage["name"],
+                    textposition="middle center",
+                    textfont=dict(color='white', size=9, family='Arial'),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            # Add arrowheads (on top, but positioned at edges)
+            for i in range(len(stages) - 1):
+                dx = stages[i+1]["x"] - stages[i]["x"]
+                dy = stages[i+1]["y"] - stages[i]["y"]
+                distance = np.sqrt(dx**2 + dy**2)
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                arrow_end_x = stages[i+1]["x"] - dx_norm * marker_radius
+                arrow_end_y = stages[i+1]["y"] - dy_norm * marker_radius
+                arrow_start_x = arrow_end_x - dx_norm * 0.02
+                arrow_start_y = arrow_end_y - dy_norm * 0.02
+                
+                fig.add_annotation(
+                    x=arrow_end_x, y=arrow_end_y,
+                    ax=arrow_start_x, ay=arrow_start_y,
+                    xref="x", yref="y", axref="x", ayref="y",
+                    showarrow=True, arrowhead=2, arrowsize=1.5,
+                    arrowwidth=2, arrowcolor="#16DB93",
+                    standoff=0, startstandoff=0
+                )
+            
+            fig.update_layout(
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0.3, 0.7]),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=300, margin=dict(l=20, r=20, t=20, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         
         st.subheader("Select a Model Card")
         
@@ -2415,10 +2682,84 @@ print(f"Created model card: {{response['ModelCardArn']}}")
             """, unsafe_allow_html=True)
         
         with col2:
-            # Model Dashboard diagram
-            st.image("https://d1.awsstatic.com/ml-governance/governance_model-dashboard_how-it-works-diagram.6ede2e9669f88c29eb59e6c66b9f3a28516e3fe9.png", 
-                    use_container_width=True)
-            st.caption("SageMaker Model Dashboard provides centralized model monitoring")
+            # Create Model Dashboard architecture diagram using Plotly
+            st.markdown("**SageMaker Model Dashboard provides centralized model monitoring**")
+            
+            import plotly.graph_objects as go
+            
+            fig = go.Figure()
+            
+            # Define components
+            components = [
+                {"name": "Models in<br>Production", "x": 0.2, "y": 0.8, "color": "#FF9900"},
+                {"name": "Endpoints", "x": 0.5, "y": 0.9, "color": "#FF9900"},
+                {"name": "Batch<br>Transforms", "x": 0.8, "y": 0.8, "color": "#FF9900"},
+                {"name": "Model<br>Monitor", "x": 0.15, "y": 0.4, "color": "#0073BB"},
+                {"name": "CloudWatch", "x": 0.5, "y": 0.3, "color": "#0073BB"},
+                {"name": "Model<br>Registry", "x": 0.85, "y": 0.4, "color": "#0073BB"},
+            ]
+            
+            # Calculate marker radii in normalized coordinates
+            center_radius = 0.075  # For central dashboard (size 130)
+            component_radius = 0.045  # For component nodes (size 75)
+            
+            # Add connection lines first (background layer)
+            for comp in components:
+                # Calculate direction vector from component to center
+                dx = 0.5 - comp["x"]
+                dy = 0.6 - comp["y"]
+                distance = np.sqrt(dx**2 + dy**2)
+                dx_norm = dx / distance
+                dy_norm = dy / distance
+                
+                # Calculate line start and end points (offset by marker radii)
+                line_start_x = comp["x"] + dx_norm * component_radius
+                line_start_y = comp["y"] + dy_norm * component_radius
+                line_end_x = 0.5 - dx_norm * center_radius
+                line_end_y = 0.6 - dy_norm * center_radius
+                
+                # Connection line
+                fig.add_trace(go.Scatter(
+                    x=[line_start_x, line_end_x], 
+                    y=[line_start_y, line_end_y],
+                    mode='lines',
+                    line=dict(color='#16DB93', width=2),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            # Add central dashboard (middle layer)
+            fig.add_trace(go.Scatter(
+                x=[0.5], y=[0.6],
+                mode='markers+text',
+                marker=dict(size=130, color='#232F3E',
+                           line=dict(width=4, color='#FF9900')),
+                text="Model<br>Dashboard",
+                textposition="middle center",
+                textfont=dict(color='white', size=11, family='Arial Black'),
+                hoverinfo='skip', showlegend=False
+            ))
+            
+            # Add component nodes (foreground layer)
+            for comp in components:
+                fig.add_trace(go.Scatter(
+                    x=[comp["x"]], y=[comp["y"]],
+                    mode='markers+text',
+                    marker=dict(size=75, color=comp["color"],
+                               line=dict(width=3, color='white')),
+                    text=comp["name"],
+                    textposition="middle center",
+                    textfont=dict(color='white', size=8, family='Arial'),
+                    hoverinfo='skip', showlegend=False
+                ))
+            
+            fig.update_layout(
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0.2, 1]),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=400, margin=dict(l=20, r=20, t=20, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         
         st.subheader("Model Dashboard Overview")
         

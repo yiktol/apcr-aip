@@ -238,7 +238,7 @@ class BedrockService:
                 }
             )
             
-            return response['output']['message']['content'][0]['text']
+            return response['output']['message']['content'][0].get('text', '')
             
         except ClientError as err:
             logger.error(f"Bedrock API error: {err.response['Error']['Message']}")
@@ -321,7 +321,7 @@ class RAGQueryEngine:
     """Modern RAG query engine with improved retrieval"""
     
     def __init__(self, vectorstore: Optional[FAISS], bedrock_service: BedrockService, 
-                 model_id: str = "anthropic.claude-3-sonnet-20240229-v1:0"):
+                 model_id: str = "anthropic.claude-3-haiku-20240307-v1:0"):
         self.vectorstore = vectorstore
         self.bedrock_service = bedrock_service
         self.model_id = model_id
@@ -829,12 +829,40 @@ def create_sidebar() -> Tuple[str, int]:
         
         st.markdown("### ⚙️ Settings")
         
-        # Model selection
+        # Model selection (Amazon first, then alphabetical by provider)
         model_options = {
-            "Llama 3": "meta.llama3-70b-instruct-v1:0",
-            "Claude 3.5 Sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "Claude 3 Sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+            # Amazon models (default provider)
+            "Nova 2 Lite": "us.amazon.nova-2-lite-v1:0",
+            
+            # Anthropic models
             "Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0",
+            "Claude 3.5 Sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+            "Claude Sonnet 4.5": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            
+            # Google models
+            "Gemma 3 4B": "google.gemma-3-4b-it",
+            "Gemma 3 12B": "google.gemma-3-12b-it",
+            "Gemma 3 27B": "google.gemma-3-27b-it",
+            
+            # Meta models
+            "Llama 3 70B": "meta.llama3-70b-instruct-v1:0",
+            
+            # NVIDIA models
+            "Nemotron Nano 9B": "nvidia.nemotron-nano-9b-v2",
+            "Nemotron Nano 12B": "nvidia.nemotron-nano-12b-v2",
+            
+            # OpenAI models
+            "GPT OSS 20B": "openai.gpt-oss-20b-1:0",
+            "GPT OSS 120B": "openai.gpt-oss-120b-1:0",
+            
+            # Qwen models
+            "Qwen3 32B": "qwen.qwen3-32b-v1:0",
+            "Qwen3 Next 80B": "qwen.qwen3-next-80b-a3b",
+            "Qwen3 235B": "qwen.qwen3-235b-a22b-2507-v1:0",
+            
+            # Writer models
+            "Palmyra X4": "us.writer.palmyra-x4-v1:0",
+            "Palmyra X5": "us.writer.palmyra-x5-v1:0",
         }
         
         selected_model = st.selectbox(

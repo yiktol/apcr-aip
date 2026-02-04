@@ -88,10 +88,11 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
                 
                 if 'contentBlockDelta' in event:
                     chunk = event['contentBlockDelta']
-                    part = chunk['delta']['text']
-                    full_response += part
-                    with placeholder.container():
-                        st.markdown(f"**Response:**\n{full_response}")
+                    if 'text' in chunk['delta']:
+                        part = chunk['delta']['text']
+                        full_response += part
+                        with placeholder.container():
+                            st.markdown(f"**Response:**\n{full_response}")
                 
                 if 'messageStop' in event:
                     stop_reason = event['messageStop']['stopReason']
@@ -121,7 +122,7 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
             st.session_state.message_count += 1
             
             # Display token usage after streaming is complete
-            st.markdown("### Response Details")
+            st.markdown(sub_header("Response Details", "📊", "minimal"), unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             col1.metric("Input Tokens", token_info['input'])
             col2.metric("Output Tokens", token_info['output'])
@@ -140,16 +141,30 @@ def parameter_section():
     """Right column with model selection and parameter tuning."""
     
     with st.container(border=True):
-        st.markdown("<div class='sub-header'>Model Selection</div>", unsafe_allow_html=True)
+        st.markdown(sub_header("Model Selection", "🎯"), unsafe_allow_html=True)
         
         MODEL_CATEGORIES = {
-            "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
-            "Anthropic": ["anthropic.claude-v2:1", "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0"],
-            "Cohere": ["cohere.command-text-v14:0", "cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
-            "Meta": ["meta.llama3-70b-instruct-v1:0", "meta.llama3-8b-instruct-v1:0"],
-            "Mistral": ["mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
-                    "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"],
-            "AI21": ["ai21.jamba-1-5-large-v1:0", "ai21.jamba-1-5-mini-v1:0"]
+        "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0", 
+                  "us.amazon.nova-2-lite-v1:0"],
+        "Anthropic": ["anthropic.claude-3-haiku-20240307-v1:0",
+                         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+                         "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                         "us.anthropic.claude-opus-4-1-20250805-v1:0"],
+        "Cohere": ["cohere.command-r-v1:0", "cohere.command-r-plus-v1:0"],
+        "Google": ["google.gemma-3-4b-it", "google.gemma-3-12b-it", "google.gemma-3-27b-it"],
+        "Meta": ["us.meta.llama3-2-1b-instruct-v1:0", "us.meta.llama3-2-3b-instruct-v1:0",
+                    "meta.llama3-8b-instruct-v1:0", "us.meta.llama3-1-8b-instruct-v1:0",
+                    "us.meta.llama4-scout-17b-instruct-v1:0", "us.meta.llama4-maverick-17b-instruct-v1:0",
+                    "meta.llama3-70b-instruct-v1:0", "us.meta.llama3-1-70b-instruct-v1:0",
+                    "us.meta.llama3-3-70b-instruct-v1:0",
+                    "us.meta.llama3-2-11b-instruct-v1:0", "us.meta.llama3-2-90b-instruct-v1:0"],
+        "Mistral": ["mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0",
+                       "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1"],
+        "NVIDIA": ["nvidia.nemotron-nano-9b-v2", "nvidia.nemotron-nano-12b-v2"],
+        "OpenAI": ["openai.gpt-oss-20b-1:0", "openai.gpt-oss-120b-1:0"],
+        "Qwen": ["qwen.qwen3-32b-v1:0", "qwen.qwen3-next-80b-a3b", "qwen.qwen3-235b-a22b-2507-v1:0", "qwen.qwen3-vl-235b-a22b", "qwen.qwen3-coder-30b-a3b-v1:0", "qwen.qwen3-coder-480b-a35b-v1:0"],
+        "Writer": ["us.writer.palmyra-x4-v1:0", "us.writer.palmyra-x5-v1:0"]
         }
         
         # Create selectbox for provider first
@@ -158,7 +173,7 @@ def parameter_section():
         # Then create selectbox for models from that provider
         model_id = st.selectbox("Select Model", options=MODEL_CATEGORIES[provider])
         
-        st.markdown("<div class='sub-header'>Parameter Tuning</div>", unsafe_allow_html=True)
+        st.markdown(sub_header("Parameter Tuning", "⚙️"), unsafe_allow_html=True)
         
         temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1, 
                             help="Higher values make output more random, lower values more deterministic")
@@ -200,15 +215,10 @@ def sidebar_content():
             For more information, visit the [Amazon Bedrock documentation](https://docs.aws.amazon.com/bedrock/).
             """)
 
-def component_header(title, description, color="#3B82F6"):
-    """Displays a header for each prompt component section with appropriate styling."""
-    st.markdown(f"## {title}")
-    st.markdown(f"<div style='border-left: 4px solid {color}; padding-left: 1rem;'>{description}</div>", unsafe_allow_html=True)
-
 def display_chat_history(component_type):
     """Display the chat history for the given component type."""
     if st.session_state.chat_history[component_type]:
-        st.markdown("### Conversation History")
+        st.markdown(sub_header("Conversation History", "💬", "minimal"), unsafe_allow_html=True)
         for message in st.session_state.chat_history[component_type]:
             role = message["role"]
             content = message["content"]
@@ -221,10 +231,8 @@ def display_chat_history(component_type):
 
 def instruction_tab(model_id, params):
     """Interface for demonstrating the instruction component of prompts."""
-    component_header(
-        "Instruction Component",
-        "The instruction component clearly tells the model what task to perform or what you want it to do."
-    )
+    st.markdown(sub_header("Instruction Component", "📝"), unsafe_allow_html=True)
+    st.markdown("<div style='border-left: 4px solid #667eea; padding-left: 1rem; margin-bottom: 1.5rem;'>The instruction component clearly tells the model what task to perform or what you want it to do.</div>", unsafe_allow_html=True)
     
     # Information box
     with st.expander("Learn about Instruction Components", expanded=False):
@@ -314,7 +322,7 @@ def instruction_tab(model_id, params):
     # Display instruction quality analysis before sending
     if user_prompt and selected_example != "Select an example":
         st.markdown("<div class='prompt-analysis'>", unsafe_allow_html=True)
-        st.markdown("#### Instruction Analysis")
+        st.markdown(sub_header("Instruction Analysis", "🔍", "outline"), unsafe_allow_html=True)
         
         # Simple analysis of instruction quality
         instruction_quality = {
@@ -413,11 +421,8 @@ def instruction_tab(model_id, params):
 
 def context_tab(model_id, params):
     """Interface for demonstrating the context component of prompts."""
-    component_header(
-        "Context Component",
-        "The context component provides relevant background information that helps the model generate more accurate and appropriate responses.",
-        color="#8B5CF6"
-    )
+    st.markdown(sub_header("Context Component", "🔗"), unsafe_allow_html=True)
+    st.markdown("<div style='border-left: 4px solid #8B5CF6; padding-left: 1rem; margin-bottom: 1.5rem;'>The context component provides relevant background information that helps the model generate more accurate and appropriate responses.</div>", unsafe_allow_html=True)
     
     # Information box
     with st.expander("Learn about Context Components", expanded=False):
@@ -505,7 +510,7 @@ def context_tab(model_id, params):
     # Display context quality analysis
     if user_prompt and selected_example != "Select an example":
         st.markdown("<div class='prompt-analysis'>", unsafe_allow_html=True)
-        st.markdown("#### Context Analysis")
+        st.markdown(sub_header("Context Analysis", "🔍", "outline"), unsafe_allow_html=True)
         
         # Analysis of context quality
         context_quality = {
@@ -617,11 +622,8 @@ def context_tab(model_id, params):
 
 def input_data_tab(model_id, params):
     """Interface for demonstrating the input data component of prompts."""
-    component_header(
-        "Input Data Component",
-        "The input data component provides the specific information that the model needs to process or analyze.",
-        color="#EC4899"
-    )
+    st.markdown(sub_header("Input Data Component", "📊"), unsafe_allow_html=True)
+    st.markdown("<div style='border-left: 4px solid #EC4899; padding-left: 1rem; margin-bottom: 1.5rem;'>The input data component provides the specific information that the model needs to process or analyze.</div>", unsafe_allow_html=True)
     
     # Information box
     with st.expander("Learn about Input Data Components", expanded=False):
@@ -869,7 +871,7 @@ Location: San Francisco, CA""",
     # Display input data quality analysis
     if user_prompt:
         st.markdown("<div class='prompt-analysis'>", unsafe_allow_html=True)
-        st.markdown("#### Input Data Analysis")
+        st.markdown(sub_header("Input Data Analysis", "🔍", "outline"), unsafe_allow_html=True)
         
         # Simple quality analysis
         if input_type == "text analysis":
@@ -967,11 +969,8 @@ Location: San Francisco, CA""",
 
 def output_indicator_tab(model_id, params):
     """Interface for demonstrating the output indicator component of prompts."""
-    component_header(
-        "Output Indicator Component",
-        "The output indicator component specifies the desired format, structure, or style of the model's response.",
-        color="#10B981"
-    )
+    st.markdown(sub_header("Output Indicator Component", "🎯"), unsafe_allow_html=True)
+    st.markdown("<div style='border-left: 4px solid #10B981; padding-left: 1rem; margin-bottom: 1.5rem;'>The output indicator component specifies the desired format, structure, or style of the model's response.</div>", unsafe_allow_html=True)
     
     # Information box
     with st.expander("Learn about Output Indicator Components", expanded=False):
@@ -1056,7 +1055,7 @@ def output_indicator_tab(model_id, params):
     # Display output format quality analysis
     if format_instruction:
         st.markdown("<div class='prompt-analysis'>", unsafe_allow_html=True)
-        st.markdown("#### Output Format Analysis")
+        st.markdown(sub_header("Output Format Analysis", "🔍", "outline"), unsafe_allow_html=True)
         
         # Format quality analysis
         format_quality = {

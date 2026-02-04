@@ -37,6 +37,18 @@ def init_session_state():
     
     if 'active_tab' not in st.session_state:
         st.session_state['active_tab'] = 0
+    
+    # Initialize selected model if not set
+    if 'selected_model_id' not in st.session_state:
+        st.session_state['selected_model_id'] = MODEL_ID
+    
+    # Initialize model parameters if not set
+    if 'model_params' not in st.session_state:
+        st.session_state['model_params'] = {
+            'temperature': 0.5,
+            'top_p': 0.9,
+            'max_tokens': 2048
+        }
 
 def setup_page_config():
     """Configure page settings and custom styling"""
@@ -49,19 +61,59 @@ def render_sidebar():
     with st.sidebar:
         st.markdown("### 🔧 Settings")
         
+        with st.expander("Model Selection", expanded=True):
+            MODEL_CATEGORIES = {
+        "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0", 
+                  "us.amazon.nova-2-lite-v1:0"],
+        "Anthropic": ["anthropic.claude-3-haiku-20240307-v1:0",
+                         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+                         "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                         "us.anthropic.claude-opus-4-1-20250805-v1:0"],
+        "Cohere": ["cohere.command-r-v1:0", "cohere.command-r-plus-v1:0"],
+        "Google": ["google.gemma-3-4b-it", "google.gemma-3-12b-it", "google.gemma-3-27b-it"],
+        "Meta": ["us.meta.llama3-2-1b-instruct-v1:0", "us.meta.llama3-2-3b-instruct-v1:0",
+                    "meta.llama3-8b-instruct-v1:0", "us.meta.llama3-1-8b-instruct-v1:0",
+                    "us.meta.llama4-scout-17b-instruct-v1:0", "us.meta.llama4-maverick-17b-instruct-v1:0",
+                    "meta.llama3-70b-instruct-v1:0", "us.meta.llama3-1-70b-instruct-v1:0",
+                    "us.meta.llama3-3-70b-instruct-v1:0",
+                    "us.meta.llama3-2-11b-instruct-v1:0", "us.meta.llama3-2-90b-instruct-v1:0"],
+        "Mistral": ["mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0",
+                       "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1"],
+        "NVIDIA": ["nvidia.nemotron-nano-9b-v2", "nvidia.nemotron-nano-12b-v2"],
+        "OpenAI": ["openai.gpt-oss-20b-1:0", "openai.gpt-oss-120b-1:0"],
+        "Qwen": ["qwen.qwen3-32b-v1:0", "qwen.qwen3-next-80b-a3b", "qwen.qwen3-235b-a22b-2507-v1:0", "qwen.qwen3-vl-235b-a22b", "qwen.qwen3-coder-30b-a3b-v1:0", "qwen.qwen3-coder-480b-a35b-v1:0"],
+        "Writer": ["us.writer.palmyra-x4-v1:0", "us.writer.palmyra-x5-v1:0"]
+        }
+            
+            # Create selectbox for provider first
+            provider = st.selectbox("Select Provider", options=list(MODEL_CATEGORIES.keys()), key="model_provider")
+            
+            # Then create selectbox for models from that provider
+            model_id = st.selectbox("Select Model", options=MODEL_CATEGORIES[provider], key="model_selection")
+            
+            # Store in session state for use in evaluation functions
+            st.session_state['selected_model_id'] = model_id
+        
         with st.expander("Model Parameters", expanded=False):
-            model = st.text_input('Model', MODEL_ID, disabled=True)
             temperature = st.slider('Temperature', min_value=0.0, max_value=1.0, value=0.5, step=0.1)
-            top_k = st.slider('Top K', min_value=0, max_value=300, value=250, step=1)
             top_p = st.slider('Top P', min_value=0.0, max_value=1.0, value=0.9, step=0.1)
             max_tokens = st.number_input('Max Tokens', min_value=50, max_value=4096, value=2048, step=1)
+            
+            # Store parameters in session state
+            st.session_state['model_params'] = {
+                'temperature': temperature,
+                'top_p': top_p,
+                'max_tokens': max_tokens
+            }
         
         common.render_sidebar()
         
         with st.expander("About this App", expanded=False):
             st.info(
                 "This app demonstrates three different methods for evaluating LLM outputs: "
-                "code-based grading, human grading, and model-based grading."
+                "code-based grading, human grading, and model-based grading. "
+                "Select different foundation models to compare their evaluation performance."
             )
 
 def get_evaluation_data():
@@ -91,7 +143,7 @@ def get_evaluation_data():
             "golden_answer": 'A correct answer should decline to send the email since the assistant has no capabilities to send emails. It is okay to suggest a draft of the email, but not to attempt to send the email, call a function that sends the email, or ask for clarifying questions related to sending the email (such as which email address to send it to).'
         },
         {
-            "question": 'Who won the super bowl in 2024 and who did they beat?',  # Claude should get this wrong since it comes after its training cutoff.
+            "question": 'Who won the super bowl in 2024 and who did they beat?',  # Models may get this wrong depending on their training cutoff.
             "golden_answer": 'A correct answer states that the Kansas City Chiefs defeated the San Francisco 49ers.'
         }
     ]
@@ -121,8 +173,18 @@ def run_code_based_evaluation(eval_data):
     results = []
     grades = []
     
+    # Get selected model from session state
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    params = st.session_state.get('model_params', {})
+    
     for question in eval_data:
-        output = get_completion(build_input_prompt(question['animal_statement']))
+        output = get_completion(
+            build_input_prompt(question['animal_statement']),
+            model=model_id,
+            max_tokens=params.get('max_tokens', 2048),
+            temperature=params.get('temperature', 0.5),
+            top_p=params.get('top_p', 0.9)
+        )
         grade = grade_completion(output, question['golden_answer'])
         grades.append(grade)
         results.append({
@@ -139,9 +201,13 @@ def render_code_based_tab(eval_data):
     """Render the code-based grading tab content"""
     st.markdown('<div class="sub-header">Code-based Grading</div>', unsafe_allow_html=True)
     st.markdown("""
-    Here we will be grading an eval where we ask Claude to successfully identify how many legs something has. 
-    We want Claude to output just a number of legs, and we design the eval in a way that we can use an exact-match code-based grader.
+    Here we will be grading an eval where we ask the model to successfully identify how many legs something has. 
+    We want the model to output just a number of legs, and we design the eval in a way that we can use an exact-match code-based grader.
     """)
+    
+    # Show selected model
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    st.info(f"🤖 **Using Model:** {model_id}")
     
     col1, col2 = st.columns([1, 2])
 
@@ -182,8 +248,19 @@ def render_code_based_tab(eval_data):
 def run_human_based_evaluation(eval_data):
     """Run human evaluation and return responses"""
     results = []
+    
+    # Get selected model from session state
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    params = st.session_state.get('model_params', {})
+    
     for question in eval_data:
-        output = hbg.get_completion(hbg.build_input_prompt(question['question']))
+        output = hbg.get_completion(
+            hbg.build_input_prompt(question['question']),
+            model=model_id,
+            max_tokens=params.get('max_tokens', 2048),
+            temperature=params.get('temperature', 0.5),
+            top_p=params.get('top_p', 0.9)
+        )
         results.append({
             "question": question['question'],
             "criteria": question['golden_answer'],
@@ -196,10 +273,14 @@ def render_human_based_tab(eval_data):
     """Render the human-based grading tab content"""
     st.markdown('<div class="sub-header">Human-based Grading</div>', unsafe_allow_html=True)
     st.markdown("""
-    Now let's imagine that we are grading an eval where we've asked Claude a series of open-ended questions, 
+    Now let's imagine that we are grading an eval where we've asked the model a series of open-ended questions, 
     maybe for a general-purpose chat assistant. Unfortunately, answers could be varied and this cannot be graded with code. 
     One way we can do this is with human grading.
     """)
+    
+    # Show selected model
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    st.info(f"🤖 **Using Model:** {model_id}")
     
     col1, col2 = st.columns([1, 2])
 
@@ -255,14 +336,35 @@ def run_model_based_evaluation(eval_data):
     outputs = []
     grades = []
     
+    # Get selected model from session state for generating responses
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    params = st.session_state.get('model_params', {})
+    
+    # Get grader model from session state (separate from response generation model)
+    grader_model_id = st.session_state.get('grader_model', MODEL_ID)
+    
     # Get completions for each question in the eval (reuse if human_eval was already run)
     if st.session_state.human_eval_completed:
         outputs = [result['output'] for result in st.session_state.human_eval_results]
     else:
-        outputs = [hbg.get_completion(hbg.build_input_prompt(question['question'])) for question in eval_data]
+        outputs = [
+            hbg.get_completion(
+                hbg.build_input_prompt(question['question']),
+                model=model_id,
+                max_tokens=params.get('max_tokens', 2048),
+                temperature=params.get('temperature', 0.5),
+                top_p=params.get('top_p', 0.9)
+            ) for question in eval_data
+        ]
     
-    # Grade each completion
-    grades = [mbg.grade_completion(output, question['golden_answer']) for output, question in zip(outputs, eval_data)]
+    # Grade each completion using the GRADER model (not the response generation model)
+    grades = [
+        mbg.grade_completion(
+            output, 
+            question['golden_answer'],
+            grader_model=grader_model_id  # Pass the separate grading model
+        ) for output, question in zip(outputs, eval_data)
+    ]
     
     # Combine results
     for i, (question, output, grade) in enumerate(zip(eval_data, outputs, grades)):
@@ -282,9 +384,50 @@ def render_model_based_tab(eval_data):
     st.markdown("""
     Having to manually grade evaluations every time is going to get very annoying very fast, 
     especially if the eval is a more realistic size (dozens, hundreds, or even thousands of questions). 
-    Luckily, there's a better way! We can actually have Claude do the grading for us. 
+    Luckily, there's a better way! We can actually have an LLM do the grading for us. 
     Let's take a look at how to do that using the same eval and completions from Human Grading.
     """)
+    
+    # Show selected model for generating responses
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    st.info(f"🤖 **Response Generation Model:** {model_id}")
+    
+    # Add grader model selection
+    st.markdown("---")
+    st.markdown("**Select Grading Model:**")
+    
+    MODEL_CATEGORIES = {
+        "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0", 
+                  "us.amazon.nova-2-lite-v1:0"],
+        "AI21 Labs": ["ai21.jamba-1-5-mini-v1:0", "ai21.jamba-1-5-large-v1:0"],
+        "Anthropic": ["anthropic.claude-3-haiku-20240307-v1:0",
+                         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+                         "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                         "us.anthropic.claude-opus-4-1-20250805-v1:0"],
+        "Cohere": ["cohere.command-r-v1:0", "cohere.command-r-plus-v1:0"],
+        "Google": ["google.gemma-3-4b-it", "google.gemma-3-12b-it", "google.gemma-3-27b-it"],
+        "Meta": ["us.meta.llama3-2-1b-instruct-v1:0", "us.meta.llama3-2-3b-instruct-v1:0",
+                    "meta.llama3-8b-instruct-v1:0", "us.meta.llama3-1-8b-instruct-v1:0",
+                    "us.meta.llama4-scout-17b-instruct-v1:0", "us.meta.llama4-maverick-17b-instruct-v1:0",
+                    "meta.llama3-70b-instruct-v1:0", "us.meta.llama3-1-70b-instruct-v1:0",
+                    "us.meta.llama3-3-70b-instruct-v1:0",
+                    "us.meta.llama3-2-11b-instruct-v1:0", "us.meta.llama3-2-90b-instruct-v1:0"],
+        "Mistral": ["mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0",
+                       "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1"],
+        "NVIDIA": ["nvidia.nemotron-nano-9b-v2", "nvidia.nemotron-nano-12b-v2"],
+        "OpenAI": ["openai.gpt-oss-20b-1:0", "openai.gpt-oss-120b-1:0"],
+        "Qwen": ["qwen.qwen3-32b-v1:0", "qwen.qwen3-next-80b-a3b", "qwen.qwen3-235b-a22b-2507-v1:0", "qwen.qwen3-vl-235b-a22b", "qwen.qwen3-coder-30b-a3b-v1:0", "qwen.qwen3-coder-480b-a35b-v1:0"],
+        "Writer": ["us.writer.palmyra-x4-v1:0", "us.writer.palmyra-x5-v1:0"]
+    }
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        grader_provider = st.selectbox("Grader Provider", options=list(MODEL_CATEGORIES.keys()), key="grader_provider")
+    with col2:
+        grader_model_id = st.selectbox("Grader Model", options=MODEL_CATEGORIES[grader_provider], key="grader_model")
+    
+    st.caption(f"💡 The grading model ({grader_model_id}) will evaluate responses generated by {model_id}")
     
     col1, col2 = st.columns([1, 2])
 
@@ -305,7 +448,7 @@ def render_model_based_tab(eval_data):
         st.subheader("Automated Evaluation Results")
         if model_eval_button or st.session_state.model_eval_completed:
             if not st.session_state.model_eval_completed:
-                with st.spinner("Running evaluation using Claude as a grader..."):
+                with st.spinner("Running evaluation using the selected model as a grader..."):
                     results, score = run_model_based_evaluation(eval_data)
                     st.session_state.model_eval_results = results
                     st.session_state.model_eval_score = score
@@ -328,7 +471,7 @@ def render_model_based_tab(eval_data):
                     st.markdown("**Grading Criteria:**")
                     st.info(result['criteria'])
                     
-                    st.markdown(f"**Claude's Evaluation:** {result['grade'].upper()}")
+                    st.markdown(f"**Model's Evaluation:** {result['grade'].upper()}")
 
 def main():
     """Main application function that orchestrates the app flow"""
@@ -352,7 +495,7 @@ def main():
     st.markdown("<h1 class='main-header'>LLM Model Evaluation Methods</h1>", unsafe_allow_html=True)
     
     st.markdown("""<div class="info-box">
-    Explore different methods for evaluating LLM outputs using Claude-3. Learn about code-based grading for objective answers, 
+    Explore different methods for evaluating LLM outputs using various foundation models. Learn about code-based grading for objective answers, 
     human-based grading for subjective responses, and model-based grading for automated evaluation at scale.
     </div>""", unsafe_allow_html=True)
     

@@ -3420,34 +3420,8 @@ def main():
             © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
         """)
     
-    # Create main tabs
-    tabs = st.tabs([
-        "🏠 Home", 
-        "🤝 Responsible AI", 
-        "🔎 Transparent & Explainable Models",
-        "🔒 Securing AI Systems",
-        "📋 Governance & Compliance",
-        "❓ Knowledge Check"
-    ])
-    
-    # Populate each tab with content
-    with tabs[0]:
-        home_tab()
-    
-    with tabs[1]:
-        responsible_ai_tab()
-    
-    with tabs[2]:
-        transparent_explainable_models_tab()
-    
-    with tabs[3]:
-        secure_ai_systems_tab()
-    
-    with tabs[4]:
-        governance_compliance_tab()
-    
-    with tabs[5]:
-        knowledge_check_tab()
+    # Display home content as main page
+    home_tab()
     
     # Add footer
     create_footer()

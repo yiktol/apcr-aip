@@ -194,10 +194,11 @@ def stream_conversation(bedrock_client, model_id, messages, system_prompts, infe
                 
                 if 'contentBlockDelta' in event:
                     chunk = event['contentBlockDelta']
-                    part = chunk['delta']['text']
-                    full_response += part
-                    with placeholder.container():
-                        st.markdown(full_response)
+                    if 'text' in chunk['delta']:
+                        part = chunk['delta']['text']
+                        full_response += part
+                        with placeholder.container():
+                            st.markdown(full_response)
                 
                 if 'messageStop' in event:
                     stop_reason = event['messageStop']['stopReason']
@@ -239,13 +240,27 @@ def parameter_sidebar():
         st.markdown(sub_header("Model Settings", "⚙️", "aws"), unsafe_allow_html=True)
         
         MODEL_CATEGORIES = {
-            "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"],
-            "Anthropic": ["anthropic.claude-v2:1", "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0"],
-            "Cohere": ["cohere.command-text-v14:0", "cohere.command-r-plus-v1:0", "cohere.command-r-v1:0"],
-            "Meta": ["meta.llama3-70b-instruct-v1:0", "meta.llama3-8b-instruct-v1:0"],
-            "Mistral": ["mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1", 
-                       "mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0"],
-            "AI21": ["ai21.jamba-1-5-large-v1:0", "ai21.jamba-1-5-mini-v1:0"]
+        "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0", 
+                  "us.amazon.nova-2-lite-v1:0"],
+        "Anthropic": ["anthropic.claude-3-haiku-20240307-v1:0",
+                         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+                         "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                         "us.anthropic.claude-opus-4-1-20250805-v1:0"],
+        "Cohere": ["cohere.command-r-v1:0", "cohere.command-r-plus-v1:0"],
+        "Google": ["google.gemma-3-4b-it", "google.gemma-3-12b-it", "google.gemma-3-27b-it"],
+        "Meta": ["us.meta.llama3-2-1b-instruct-v1:0", "us.meta.llama3-2-3b-instruct-v1:0",
+                    "meta.llama3-8b-instruct-v1:0", "us.meta.llama3-1-8b-instruct-v1:0",
+                    "us.meta.llama4-scout-17b-instruct-v1:0", "us.meta.llama4-maverick-17b-instruct-v1:0",
+                    "meta.llama3-70b-instruct-v1:0", "us.meta.llama3-1-70b-instruct-v1:0",
+                    "us.meta.llama3-3-70b-instruct-v1:0",
+                    "us.meta.llama3-2-11b-instruct-v1:0", "us.meta.llama3-2-90b-instruct-v1:0"],
+        "Mistral": ["mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0",
+                       "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1"],
+        "NVIDIA": ["nvidia.nemotron-nano-9b-v2", "nvidia.nemotron-nano-12b-v2"],
+        "OpenAI": ["openai.gpt-oss-20b-1:0", "openai.gpt-oss-120b-1:0"],
+        "Qwen": ["qwen.qwen3-32b-v1:0", "qwen.qwen3-next-80b-a3b", "qwen.qwen3-235b-a22b-2507-v1:0", "qwen.qwen3-vl-235b-a22b", "qwen.qwen3-coder-30b-a3b-v1:0", "qwen.qwen3-coder-480b-a35b-v1:0"],
+        "Writer": ["us.writer.palmyra-x4-v1:0", "us.writer.palmyra-x5-v1:0"]
         }
         
         # Create selectbox for provider first

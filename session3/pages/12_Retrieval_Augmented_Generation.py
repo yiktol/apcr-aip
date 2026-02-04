@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 import os
 from pathlib import Path
 import uuid
+import time
 from typing import List, Dict, Any, Optional
 import tempfile
 import shutil
@@ -608,38 +609,27 @@ def render_sidebar() -> tuple[str, Dict, int, bool]:
         st.markdown("<div class='sub-header'>Model Selection</div>", unsafe_allow_html=True)
         
         MODEL_CATEGORIES = {
-            "Amazon": [
-                "amazon.nova-micro-v1:0",
-                "amazon.nova-lite-v1:0",
-                "amazon.nova-pro-v1:0"
-            ],
-            "Anthropic": [
-                "anthropic.claude-v2:1",
-                "anthropic.claude-3-sonnet-20240229-v1:0",
-                "anthropic.claude-3-haiku-20240307-v1:0",
-                "anthropic.claude-3-5-sonnet-20241022-v2:0"
-            ],
-            "Cohere": [
-                "cohere.command-r-plus-v1:0",
-                "cohere.command-r-v1:0"
-            ],
-            "Meta": [
-                "meta.llama3-70b-instruct-v1:0",
-                "meta.llama3-8b-instruct-v1:0",
-                "meta.llama3-1-70b-instruct-v1:0",
-                "meta.llama3-1-8b-instruct-v1:0"
-            ],
-            "Mistral": [
-                "mistral.mistral-large-2402-v1:0",
-                "mistral.mistral-large-2407-v1:0",
-                "mistral.mixtral-8x7b-instruct-v0:1",
-                "mistral.mistral-7b-instruct-v0:2",
-                "mistral.mistral-small-2402-v1:0"
-            ],
-            "AI21": [
-                "ai21.jamba-1-5-large-v1:0",
-                "ai21.jamba-1-5-mini-v1:0"
-            ]
+        "Amazon": ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0", 
+                  "us.amazon.nova-2-lite-v1:0"],
+        "Anthropic": ["anthropic.claude-3-haiku-20240307-v1:0",
+                         "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+                         "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                         "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                         "us.anthropic.claude-opus-4-1-20250805-v1:0"],
+        "Cohere": ["cohere.command-r-v1:0", "cohere.command-r-plus-v1:0"],
+        "Google": ["google.gemma-3-4b-it", "google.gemma-3-12b-it", "google.gemma-3-27b-it"],
+        "Meta": ["us.meta.llama3-2-1b-instruct-v1:0", "us.meta.llama3-2-3b-instruct-v1:0",
+                    "meta.llama3-8b-instruct-v1:0", "us.meta.llama3-1-8b-instruct-v1:0",
+                    "us.meta.llama4-scout-17b-instruct-v1:0", "us.meta.llama4-maverick-17b-instruct-v1:0",
+                    "meta.llama3-70b-instruct-v1:0", "us.meta.llama3-1-70b-instruct-v1:0",
+                    "us.meta.llama3-3-70b-instruct-v1:0",
+                    "us.meta.llama3-2-11b-instruct-v1:0", "us.meta.llama3-2-90b-instruct-v1:0"],
+        "Mistral": ["mistral.mistral-7b-instruct-v0:2", "mistral.mistral-small-2402-v1:0",
+                       "mistral.mistral-large-2402-v1:0", "mistral.mixtral-8x7b-instruct-v0:1"],
+        "NVIDIA": ["nvidia.nemotron-nano-9b-v2", "nvidia.nemotron-nano-12b-v2"],
+        "OpenAI": ["openai.gpt-oss-20b-1:0", "openai.gpt-oss-120b-1:0"],
+        "Qwen": ["qwen.qwen3-32b-v1:0", "qwen.qwen3-next-80b-a3b", "qwen.qwen3-235b-a22b-2507-v1:0", "qwen.qwen3-vl-235b-a22b", "qwen.qwen3-coder-30b-a3b-v1:0", "qwen.qwen3-coder-480b-a35b-v1:0"],
+        "Writer": ["us.writer.palmyra-x4-v1:0", "us.writer.palmyra-x5-v1:0"]
         }
         
         provider = st.selectbox(
@@ -816,7 +806,38 @@ def render_document_uploader(bedrock_client) -> bool:
             st.success("✅ Ready")
     
     if process_button and uploaded_files:
-        progress_bar = st.progress(0, text="Processing documents...")
+        # Create a container for real-time processing updates
+        process_container = st.container()
+        
+        with process_container:
+            st.markdown("### 🔄 Document Processing Pipeline")
+            st.markdown("Watch how documents are processed for RAG in real-time:")
+            st.markdown("---")
+            
+            # Step 1: Document Loading
+            step1 = st.empty()
+            step1.info("**Step 1/5:** 📂 Loading documents...")
+            time.sleep(0.5)
+            step1.success(f"**Step 1/5:** ✅ Loaded {len(uploaded_files)} document(s)")
+            
+            # Show file details
+            with st.expander("📋 Files loaded", expanded=False):
+                for file in uploaded_files:
+                    st.write(f"- {file.name} ({file.size:,} bytes)")
+            
+            # Step 2: Text Extraction
+            step2 = st.empty()
+            step2.info("**Step 2/5:** 📝 Extracting text from documents...")
+            time.sleep(0.5)
+            step2.success("**Step 2/5:** ✅ Text extracted successfully")
+            st.caption("💡 *Text is extracted from PDFs, preserving structure and metadata*")
+            
+            # Step 3: Chunking
+            step3 = st.empty()
+            step3.info("**Step 3/5:** ✂️ Splitting text into chunks...")
+            st.caption("💡 *Documents are split into smaller chunks for better retrieval. Each chunk is sized to fit within the embedding model's context window.*")
+            
+        progress_bar = st.progress(0, text="Chunking documents...")
         
         vectorstore, document_chunks = processor.process_files(
             uploaded_files,
@@ -824,6 +845,64 @@ def render_document_uploader(bedrock_client) -> bool:
         )
         
         if vectorstore and document_chunks:
+            with process_container:
+                step3.success(f"**Step 3/5:** ✅ Created {len(document_chunks)} chunks")
+                
+                # Show chunking details
+                with st.expander("🔍 Chunking strategy", expanded=False):
+                    st.markdown("""
+                    **Chunking Parameters:**
+                    - **Chunk size:** ~1000 characters
+                    - **Overlap:** ~200 characters (to preserve context across chunks)
+                    - **Strategy:** Recursive character splitting (respects sentence boundaries)
+                    
+                    **Why chunking matters:**
+                    - Smaller chunks = more precise retrieval
+                    - Overlap ensures context isn't lost at boundaries
+                    - Optimal chunk size balances detail vs. context
+                    """)
+                
+                # Step 4: Embedding Generation
+                step4 = st.empty()
+                step4.info("**Step 4/5:** 🧠 Generating embeddings with Amazon Titan...")
+                st.caption("💡 *Each chunk is converted into a vector embedding using Amazon Titan Embeddings model. These vectors capture semantic meaning.*")
+                time.sleep(1.0)
+                step4.success(f"**Step 4/5:** ✅ Generated {len(document_chunks)} embeddings")
+                
+                with st.expander("🔬 About embeddings", expanded=False):
+                    st.markdown("""
+                    **Embedding Model:** Amazon Titan Text Embeddings v2
+                    - **Dimension:** 1024-dimensional vectors
+                    - **Purpose:** Convert text into numerical representations
+                    - **Benefit:** Enables semantic similarity search
+                    
+                    **How it works:**
+                    - Each chunk → Vector of 1024 numbers
+                    - Similar chunks have similar vectors
+                    - Enables finding relevant content by meaning, not just keywords
+                    """)
+                
+                # Step 5: Vector Storage
+                step5 = st.empty()
+                step5.info("**Step 5/5:** 💾 Storing vectors in ChromaDB...")
+                st.caption("💡 *Embeddings are stored in a vector database for fast similarity search during retrieval.*")
+                time.sleep(0.5)
+                step5.success("**Step 5/5:** ✅ Vectors stored in ChromaDB")
+                
+                with st.expander("🗄️ Vector database details", expanded=False):
+                    st.markdown("""
+                    **Vector Database:** ChromaDB
+                    - **Storage:** Local persistent storage
+                    - **Index:** Optimized for similarity search
+                    - **Query method:** Cosine similarity
+                    
+                    **During retrieval:**
+                    1. User question → Embedding
+                    2. Find most similar chunk embeddings
+                    3. Return top-k relevant chunks
+                    4. Use chunks as context for LLM
+                    """)
+            
             st.session_state.vectorstore = vectorstore
             st.session_state.documents = document_chunks
             st.session_state.document_processed = True
@@ -831,10 +910,11 @@ def render_document_uploader(bedrock_client) -> bool:
             
             progress_bar.progress(1.0, text="✅ Processing complete!")
             
+            st.markdown("---")
             # Display statistics
             st.markdown(
                 "<div class='success-box'>"
-                f"<strong>Successfully processed {len(uploaded_files)} files "
+                f"<strong>✅ Successfully processed {len(uploaded_files)} files "
                 f"into {len(document_chunks)} chunks!</strong>"
                 "</div>",
                 unsafe_allow_html=True
@@ -846,7 +926,8 @@ def render_document_uploader(bedrock_client) -> bool:
             col3.metric("💾 Stored in Chroma", len(document_chunks))
             
             # Show sample chunks
-            with st.expander("🔍 Preview Document Chunks", expanded=False):
+            with st.expander("🔍 Preview Document Chunks", expanded=True):
+                st.markdown("**Sample chunks from your documents:**")
                 for i, chunk in enumerate(document_chunks[:3]):
                     st.markdown(f"**Chunk {i+1}:**")
                     preview_text = chunk.page_content[:300]
@@ -856,7 +937,7 @@ def render_document_uploader(bedrock_client) -> bool:
                     
                     # Show metadata if available
                     if chunk.metadata:
-                        st.caption(f"Source: {chunk.metadata.get('source', 'Unknown')}")
+                        st.caption(f"📄 Source: {chunk.metadata.get('source', 'Unknown')}")
                     
                     st.divider()
                 
@@ -867,6 +948,7 @@ def render_document_uploader(bedrock_client) -> bool:
     
     elif process_button:
         st.warning("⚠️ Please upload files first.")
+    
     
     st.markdown("</div>", unsafe_allow_html=True)
     
@@ -1010,7 +1092,7 @@ def render_rag_interface(model_id: str, params: Dict, k_results: int, show_score
                 status.update(label="✅ Response received!", state="complete")
                 
                 output_message = response['output']['message']
-                response_text = output_message['content'][0]['text']
+                response_text = output_message['content'][0].get('text', '')
                 
                 # Add to history
                 st.session_state.conversation_history.append({
@@ -1120,7 +1202,7 @@ def render_normal_conversation_interface(model_id: str, params: Dict):
                 status.update(label="✅ Response received!", state="complete")
                 
                 output_message = response['output']['message']
-                response_text = output_message['content'][0]['text']
+                response_text = output_message['content'][0].get('text', '')
                 
                 # Add to history
                 st.session_state.conversation_history.append({

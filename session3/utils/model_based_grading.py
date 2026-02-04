@@ -21,38 +21,37 @@ def build_grader_prompt(answer, rubric):
     An answer is correct if it entirely meets the rubric criteria, and is otherwise incorrect. =
     First, think through whether the answer is correct or incorrect based on the rubric inside <thinking></thinking> tags. Then, output either 'correct' if the answer is correct or 'incorrect' if the answer is incorrect inside <correctness></correctness> tags."""
 
-    messages = [{'role': 'user', 'content': user_content}]
+    messages = [{'role': 'user', 'content': [{'text': user_content}]}]
     return messages
 
 # Now we define the full grade_completion function.
 
 
-def get_completion(messages,model="anthropic.claude-3-sonnet-20240229-v1:0",max_tokens=2048,temperature=0.5,top_k=100,top_p=0.9):
-    body = {"max_tokens": max_tokens, 
-            "temperature": temperature,
-            "top_k": top_k,
-            "top_p": top_p,
-            "stop_sequences": ["\\n\\nHuman:"],
-            "anthropic_version": "bedrock-2023-05-31",
-            "messages": messages}    
-
-    accept = 'application/json'
-    contentType = 'application/json'
+def get_completion(messages, model="anthropic.claude-3-sonnet-20240229-v1:0", max_tokens=2048, temperature=0.5, top_p=0.9):
+    # Use Converse API for unified interface
+    inference_config = {
+        "maxTokens": max_tokens,
+        "temperature": temperature,
+        "topP": top_p
+    }
     
-    response = bedrock_runtime.invoke_model(body=json.dumps(body), # Encode to bytes
-                                    modelId=model, 
-                                    accept=accept, 
-                                    contentType=contentType)
+    try:
+        response = bedrock_runtime.converse(
+            modelId=model,
+            messages=messages,
+            inferenceConfig=inference_config
+        )
+        
+        # Extract text from response
+        return response['output']['message']['content'][0]['text']
+        
+    except Exception as e:
+        return f"Error calling model: {str(e)}"
 
-    response_body = json.loads(response.get('body').read())
 
-
-    return response_body.get('content')[0]['text']
-
-
-def grade_completion(output, golden_answer):
+def grade_completion(output, golden_answer, grader_model="anthropic.claude-3-sonnet-20240229-v1:0"):
     messages = build_grader_prompt(output, golden_answer)
-    completion = get_completion(messages)
+    completion = get_completion(messages, model=grader_model)
     st.info(completion)
     # Extract just the label from the completion (we don't care about the thinking)
     pattern = r'<correctness>(.*?)</correctness>'

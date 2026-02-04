@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 import utils.common as common
 import utils.authenticate as authenticate
-from utils.styles import load_css
+from utils.styles import load_css, sub_header
 
 
 # Set page configuration
@@ -159,7 +159,7 @@ def main():
         common.render_sidebar()
                 
         st.markdown("---")
-        st.markdown("### 💡 Tips")
+        st.markdown(sub_header("Tips", "💡", "minimal"), unsafe_allow_html=True)
         st.markdown("""
         - Be specific and descriptive
         - Use negative prompts effectively
@@ -171,7 +171,7 @@ def main():
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### ✨ Create Your Image")
+        st.markdown(sub_header("Create Your Image", "✨"), unsafe_allow_html=True)
         
         # Main form
         with st.form("image_generation_form", clear_on_submit=False):
@@ -238,7 +238,7 @@ def main():
 
     
     with col2:
-        st.markdown("### 🖼️ Generated Image")
+        st.markdown(sub_header("Generated Image", "🖼️"), unsafe_allow_html=True)
         
         if generate_button and prompt.strip():
             try:
@@ -280,7 +280,7 @@ def main():
     
     # Prompt examples section
     st.markdown("---")
-    st.markdown("### 💡 Prompt Examples & Inspiration")
+    st.markdown(sub_header("Prompt Examples & Inspiration", "💡", "minimal"), unsafe_allow_html=True)
     
     examples = get_prompt_examples()
     
@@ -316,7 +316,7 @@ def main():
     # Image history
     if st.session_state.generated_images:
         st.markdown("---")
-        st.markdown("### 🕰️ Recent Generations")
+        st.markdown(sub_header("Recent Generations", "🕰️", "minimal"), unsafe_allow_html=True)
         
         for idx, img_data in enumerate(st.session_state.generated_images[:3]):
             with st.expander(f"Image {idx + 1} - {img_data['timestamp'].strftime('%H:%M:%S')}", expanded=False):
