@@ -739,7 +739,6 @@ def render_document_uploader(bedrock_client) -> bool:
     Returns:
         Boolean indicating if documents are processed
     """
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='sub-header'>📄 Document Upload</div>", unsafe_allow_html=True)
     
     # Check if existing vectorstore can be loaded

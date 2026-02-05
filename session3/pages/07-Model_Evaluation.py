@@ -35,6 +35,10 @@ def init_session_state():
         st.session_state['model_eval_results'] = []
         st.session_state['model_eval_score'] = 0
     
+    if 'multi_metric_eval_completed' not in st.session_state:
+        st.session_state['multi_metric_eval_completed'] = False
+        st.session_state['multi_metric_eval_results'] = []
+    
     if 'active_tab' not in st.session_state:
         st.session_state['active_tab'] = 0
     
@@ -378,6 +382,172 @@ def run_model_based_evaluation(eval_data):
     score = grades.count('correct')/len(grades)*100
     return results, score
 
+def run_multi_metric_evaluation(eval_data, selected_metrics):
+    """Run multi-metric evaluation and return results"""
+    results = []
+    
+    # Get selected model from session state for generating responses
+    model_id = st.session_state.get('selected_model_id', MODEL_ID)
+    params = st.session_state.get('model_params', {})
+    
+    # Get grader model from session state
+    grader_model_id = st.session_state.get('grader_model', MODEL_ID)
+    
+    # Get completions for each question (reuse if already generated)
+    if st.session_state.human_eval_completed:
+        outputs = [result['output'] for result in st.session_state.human_eval_results]
+    else:
+        outputs = [
+            hbg.get_completion(
+                hbg.build_input_prompt(question['question']),
+                model=model_id,
+                max_tokens=params.get('max_tokens', 2048),
+                temperature=params.get('temperature', 0.5),
+                top_p=params.get('top_p', 0.9)
+            ) for question in eval_data
+        ]
+    
+    # Grade each completion using multiple metrics
+    for i, (question, output) in enumerate(zip(eval_data, outputs)):
+        metric_results, raw_completion = mbg.grade_completion_multi_metric(
+            output, 
+            question['question'],
+            question['golden_answer'],
+            selected_metrics,
+            grader_model=grader_model_id
+        )
+        
+        results.append({
+            "question": question['question'],
+            "criteria": question['golden_answer'],
+            "output": output,
+            "metrics": metric_results,
+            "raw_evaluation": raw_completion
+        })
+    
+    return results
+
+def render_multi_metric_section(eval_data):
+    """Render the multi-metric evaluation section"""
+    st.markdown("---")
+    st.markdown('<div class="sub-header" style="margin-top: 2rem;">📊 Multi-Metric Evaluation</div>', unsafe_allow_html=True)
+    st.markdown("""
+    Evaluate responses across multiple quality dimensions simultaneously. This provides a comprehensive 
+    assessment of model performance beyond simple correct/incorrect judgments.
+    """)
+    
+    # Metric selection
+    st.markdown("**Select Evaluation Metrics:**")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        correctness = st.checkbox("Correctness", value=True, key="metric_correctness", 
+                                 help="Accuracy of responses")
+        completeness = st.checkbox("Completeness", value=True, key="metric_completeness",
+                                  help="Coverage of all questions")
+        faithfulness = st.checkbox("Faithfulness", value=True, key="metric_faithfulness",
+                                  help="Adherence to provided context")
+        helpfulness = st.checkbox("Helpfulness", value=True, key="metric_helpfulness",
+                                help="Overall usefulness")
+    
+    with col2:
+        logical_coherence = st.checkbox("Logical Coherence", value=True, key="metric_logical_coherence",
+                                       help="Consistency and logic")
+        relevance = st.checkbox("Relevance", value=True, key="metric_relevance",
+                              help="Pertinence to the prompt")
+        following_instructions = st.checkbox("Following Instructions", value=True, key="metric_following_instructions",
+                                           help="Compliance with directions")
+        professional_style = st.checkbox("Professional Style & Tone", value=True, key="metric_professional_style",
+                                       help="Appropriateness for professional use")
+    
+    with col3:
+        harmfulness = st.checkbox("Harmfulness", value=False, key="metric_harmfulness",
+                                help="Detection of harmful content")
+        stereotyping = st.checkbox("Stereotyping", value=False, key="metric_stereotyping",
+                                  help="Identification of stereotypes")
+        refusal = st.checkbox("Refusal", value=False, key="metric_refusal",
+                            help="Detection of declined responses")
+    
+    # Collect selected metrics
+    selected_metrics = []
+    if correctness: selected_metrics.append("correctness")
+    if completeness: selected_metrics.append("completeness")
+    if faithfulness: selected_metrics.append("faithfulness")
+    if helpfulness: selected_metrics.append("helpfulness")
+    if logical_coherence: selected_metrics.append("logical_coherence")
+    if relevance: selected_metrics.append("relevance")
+    if following_instructions: selected_metrics.append("following_instructions")
+    if professional_style: selected_metrics.append("professional_style")
+    if harmfulness: selected_metrics.append("harmfulness")
+    if stereotyping: selected_metrics.append("stereotyping")
+    if refusal: selected_metrics.append("refusal")
+    
+    if not selected_metrics:
+        st.warning("⚠️ Please select at least one metric to evaluate.")
+        return
+    
+    st.info(f"📋 Selected {len(selected_metrics)} metric(s) for evaluation")
+    
+    multi_metric_button = st.button("Run Multi-Metric Evaluation", type="primary", key="multi_metric_eval", use_container_width=True)
+    
+    if multi_metric_button or st.session_state.multi_metric_eval_completed:
+        if not st.session_state.multi_metric_eval_completed:
+            with st.spinner("Running comprehensive multi-metric evaluation..."):
+                results = run_multi_metric_evaluation(eval_data, selected_metrics)
+                st.session_state.multi_metric_eval_results = results
+                st.session_state.multi_metric_eval_completed = True
+        
+        # Display results
+        st.markdown("### Evaluation Results")
+        
+        for i, result in enumerate(st.session_state.multi_metric_eval_results):
+            with st.expander(f"Question {i+1}: {result['question'][:60]}...", expanded=True):
+                st.markdown(f"**Question:** {result['question']}")
+                
+                with st.container(border=True):
+                    st.markdown("**Model Response:**")
+                    st.markdown(result['output'])
+                
+                st.markdown("**Metric Scores:**")
+                
+                # Display metrics in a grid
+                metric_cols = st.columns(3)
+                for idx, (metric, data) in enumerate(result['metrics'].items()):
+                    col_idx = idx % 3
+                    with metric_cols[col_idx]:
+                        score = data['score']
+                        # Color code based on score
+                        if score >= 4:
+                            color = "#4CAF50"  # Green
+                        elif score >= 3:
+                            color = "#FF9800"  # Orange
+                        else:
+                            color = "#F44336"  # Red
+                        
+                        st.markdown(f"""
+                        <div style="background-color: {color}; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                            <div style="color: white; font-weight: bold; text-align: center;">
+                                {metric.replace('_', ' ').title()}
+                            </div>
+                            <div style="color: white; font-size: 24px; text-align: center;">
+                                {score}/5
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Display detailed analysis
+                st.markdown("**Detailed Analysis:**")
+                for metric, data in result['metrics'].items():
+                    with st.expander(f"{metric.replace('_', ' ').title()} - Score: {data['score']}/5"):
+                        st.markdown(data['analysis'])
+                
+                # Show raw evaluation (optional)
+                with st.expander("View Raw Evaluation Output"):
+                    st.code(result['raw_evaluation'], language="xml")
+                
+                st.divider()
+
 def render_model_based_tab(eval_data):
     """Render the model-based grading tab content"""
     st.markdown('<div class="sub-header">Model-based Grading</div>', unsafe_allow_html=True)
@@ -472,6 +642,9 @@ def render_model_based_tab(eval_data):
                     st.info(result['criteria'])
                     
                     st.markdown(f"**Model's Evaluation:** {result['grade'].upper()}")
+    
+    # Add multi-metric evaluation section
+    render_multi_metric_section(eval_data)
 
 def main():
     """Main application function that orchestrates the app flow"""
