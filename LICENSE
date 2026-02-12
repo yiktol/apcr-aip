@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 yiktol
+Copyright (c) 2025-2026 yiktol
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+DISCLAIMER:
+
+This project is an educational training application designed to help users 
+prepare for the AWS Certified AI Practitioner exam. It is NOT officially 
+endorsed by, affiliated with, or sponsored by Amazon Web Services, Inc. or 
+its affiliates.
+
+AWS, Amazon Web Services, Amazon Bedrock, Amazon SageMaker, Amazon Comprehend,
+Amazon Textract, Amazon Rekognition, Amazon Transcribe, Amazon Translate,
+Amazon Augmented AI (A2I), and other AWS service names mentioned in this 
+project are trademarks of Amazon.com, Inc. or its affiliates.
+
+All AWS service information, best practices, and technical details are based 
+on publicly available AWS documentation and are subject to change. Users 
+should always refer to official AWS documentation for the most current and 
+accurate information.
+
+The exam preparation content in this application is created independently and 
+is not derived from or based on actual AWS certification exam questions. It 
+is designed to help users understand concepts covered in the exam domains as 
+outlined in the official AWS Certified AI Practitioner exam guide.

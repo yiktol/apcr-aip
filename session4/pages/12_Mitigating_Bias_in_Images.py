@@ -69,14 +69,22 @@ For ANY prompt request involving human beings (either explicitly stated or impli
    - Clearly state that you don't know or cannot assist with that particular request
 """
         logger.info("Initialized system prompt")
+    
+    if "bias_mitigation_enabled" not in st.session_state:
+        st.session_state.bias_mitigation_enabled = True
+        logger.info("Initialized bias mitigation toggle to True")
+    
+    if "unbiased_system_prompt" not in st.session_state:
+        st.session_state.unbiased_system_prompt = """You are a prompt generator for text-to-image models. Generate creative and detailed prompts based on user requests. Present the final prompt within `<imageprompt></imageprompt>` tags."""
+        logger.info("Initialized unbiased system prompt")
 
 def update_conversation_chain(llm):
     """Create prompt template and conversation chain using LCEL"""
-    # Get system prompt from session state
-    system_prompt = st.session_state.get(
-        "system_prompt", 
-        """You are a prompt generator for text to image models. If you detect bias in the question, ask relevant questions about gender, race and color. When ready to generate, use <imageprompt></imageprompt> XML tags."""
-    )
+    # Get system prompt based on bias mitigation toggle
+    if st.session_state.get("bias_mitigation_enabled", True):
+        system_prompt = st.session_state.get("system_prompt", "")
+    else:
+        system_prompt = st.session_state.get("unbiased_system_prompt", "")
     
     prompt_template = ChatPromptTemplate(
         messages=[
@@ -102,7 +110,7 @@ def update_conversation_chain(llm):
         | llm
     )
     
-    logger.info("Updated conversation chain with current system prompt")
+    logger.info(f"Updated conversation chain with bias mitigation: {st.session_state.get('bias_mitigation_enabled', True)}")
     return chain
 
 def generate_image(prompt_data):
@@ -127,6 +135,36 @@ def render_sidebar():
     with st.sidebar:
         st.title("⚙️ Options")
         
+        # Bias Mitigation Toggle
+        st.subheader("🎯 Bias Mitigation")
+        
+        bias_enabled = st.toggle(
+            "Enable Bias Mitigation",
+            value=st.session_state.bias_mitigation_enabled,
+            help="When enabled, the AI will ask clarifying questions about gender, race, and age before generating images of people."
+        )
+        
+        if bias_enabled != st.session_state.bias_mitigation_enabled:
+            st.session_state.bias_mitigation_enabled = bias_enabled
+            # Clear conversation memory when toggling to reset the AI's behavior
+            st.session_state.memory = []
+            st.session_state.messages = [{
+                "role": "Assistant", 
+                "content": f"Bias mitigation is now {'ACTIVE' if bias_enabled else 'OFF'}. How can I help you generate an image?"
+            }]
+            logger.info(f"Bias mitigation toggled to: {bias_enabled}, memory cleared")
+            st.rerun()
+        
+        # Status indicator
+        if st.session_state.bias_mitigation_enabled:
+            st.success("✅ Bias mitigation is ACTIVE")
+            st.caption("The AI will ask for demographic details before generating images of people.")
+        else:
+            st.warning("⚠️ Bias mitigation is OFF")
+            st.caption("The AI will generate images directly without asking clarifying questions.")
+        
+        st.markdown("---")
+        
         st.subheader("Session Management")
         if "auth_code" not in st.session_state:
             st.caption(f"Session ID: {st.session_state.session_id[:8]}")
@@ -149,14 +187,40 @@ def render_sidebar():
             st.session_state.session_id = session_id
             st.rerun()
         
+        st.markdown("---")
+        
         with st.expander("ℹ️ About this app"):
             st.markdown("""
-            This application generates unbiased image prompts using AI. It helps mitigate potential biases 
-            by asking clarifying questions about race, gender, and other attributes when creating images of people.
+            This application demonstrates bias mitigation in AI image generation.
             
-            The app uses:
+            **With Bias Mitigation ON:**
+            - AI asks clarifying questions about demographics
+            - Ensures fair representation
+            - Prevents stereotypical assumptions
+            
+            **With Bias Mitigation OFF:**
+            - AI generates images directly
+            - May rely on training data biases
+            - Could produce stereotypical results
+            
+            **Technology:**
             - Claude AI for prompt generation
             - Stable Diffusion XL for image creation
+            - AWS Bedrock for model hosting
+            """)
+        
+        with st.expander("💡 Try These Examples"):
+            st.markdown("""
+            **Test with bias mitigation ON:**
+            - "Create a photo of a doctor"
+            - "Generate an image of a CEO"
+            - "Show me a nurse"
+            
+            **Then turn it OFF and try again!**
+            
+            Notice how the AI behaves differently:
+            - With mitigation: Asks for details
+            - Without mitigation: Makes assumptions
             """)
 
 def render_system_prompt_editor():
@@ -258,10 +322,19 @@ def main():
     bedrock = get_bedrock_client()
     model_id = "anthropic.claude-3-haiku-20240307-v1:0"
     llm = ChatBedrock(model_id=model_id, client=bedrock)
+    
+    # Render sidebar first (contains the toggle)
+    render_sidebar()
+    
+    # Create conversation chain AFTER sidebar (so toggle state is current)
     conversation = update_conversation_chain(llm)
     
-    # Modern gradient header
-    st.markdown("""
+    # Modern gradient header with status
+    mitigation_status = "ACTIVE" if st.session_state.bias_mitigation_enabled else "OFF"
+    mitigation_color = "rgba(62, 180, 137, 0.3)" if st.session_state.bias_mitigation_enabled else "rgba(209, 50, 18, 0.3)"
+    mitigation_icon = "✅" if st.session_state.bias_mitigation_enabled else "⚠️"
+    
+    st.markdown(f"""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                     padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; 
                     box-shadow: 0 10px 30px rgba(0,0,0,0.1);'>
@@ -269,24 +342,41 @@ def main():
                 🎨 AI Image Generator
             </h1>
             <p style='color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1.1rem;'>
-                Create unbiased images with AI assistance
+                Demonstrating bias mitigation in AI image generation
             </p>
-            <div style='margin-top: 1rem;'>
+            <div style='margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;'>
                 <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
-                            border-radius: 1rem; color: white; font-size: 0.85rem; margin-right: 0.5rem;'>
+                            border-radius: 1rem; color: white; font-size: 0.85rem;'>
                     🤖 Claude AI
                 </span>
                 <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
-                            border-radius: 1rem; color: white; font-size: 0.85rem; margin-right: 0.5rem;'>
+                            border-radius: 1rem; color: white; font-size: 0.85rem;'>
                     🎨 Stable Diffusion XL
                 </span>
-                <span style='background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; 
-                            border-radius: 1rem; color: white; font-size: 0.85rem;'>
-                    ⚖️ Bias Mitigation
+                <span style='background: {mitigation_color}; padding: 0.4rem 0.8rem; 
+                            border-radius: 1rem; color: white; font-size: 0.85rem; font-weight: 600;
+                            border: 2px solid rgba(255,255,255,0.5);'>
+                    {mitigation_icon} Bias Mitigation: {mitigation_status}
                 </span>
             </div>
         </div>
     """, unsafe_allow_html=True)
+    
+    # Info box explaining the demonstration
+    if st.session_state.bias_mitigation_enabled:
+        st.info("""
+        **🎯 Bias Mitigation is ACTIVE**: The AI will ask clarifying questions about gender, race, and age 
+        before generating images of people. This ensures fair and balanced representation.
+        
+        💡 **Try it**: Ask for "a photo of a doctor" and see how the AI responds!
+        """)
+    else:
+        st.warning("""
+        **⚠️ Bias Mitigation is OFF**: The AI will generate images directly without asking clarifying questions. 
+        This may result in stereotypical or biased representations based on training data.
+        
+        💡 **Try it**: Ask for "a photo of a doctor" and compare the difference!
+        """)
     
     # Custom CSS for modern chat interface
     st.markdown("""
@@ -348,7 +438,6 @@ def main():
         </style>
     """, unsafe_allow_html=True)
     
-    render_sidebar()
     render_system_prompt_editor()
     render_chat_messages()
     

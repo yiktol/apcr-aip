@@ -1,0 +1,152 @@
+# NOTICE
+
+AWS AI Practitioner Certification Readiness Training Application
+Copyright (c) 2025-2026 yiktol
+
+This project includes software and content from third parties under various licenses.
+
+---
+
+## Third-Party Software Dependencies
+
+### Python Libraries
+
+**Streamlit** (Apache License 2.0)
+- Copyright (c) Streamlit Inc.
+- https://github.com/streamlit/streamlit
+- Used for building the interactive web application interface
+
+**Boto3 / Botocore** (Apache License 2.0)
+- Copyright (c) Amazon Web Services, Inc.
+- https://github.com/boto/boto3
+- AWS SDK for Python - used for AWS service integration
+
+**Pandas** (BSD 3-Clause License)
+- Copyright (c) pandas Development Team
+- https://github.com/pandas-dev/pandas
+- Used for data manipulation and analysis
+
+**NumPy** (BSD 3-Clause License)
+- Copyright (c) NumPy Developers
+- https://github.com/numpy/numpy
+- Used for numerical computing
+
+**Plotly** (MIT License)
+- Copyright (c) Plotly, Inc.
+- https://github.com/plotly/plotly.py
+- Used for interactive data visualizations
+
+**Matplotlib** (PSF License)
+- Copyright (c) Matplotlib Development Team
+- https://github.com/matplotlib/matplotlib
+- Used for static data visualizations
+
+**Pillow** (HPND License)
+- Copyright (c) PIL Software
+- https://github.com/python-pillow/Pillow
+- Used for image processing
+
+**scikit-learn** (BSD 3-Clause License)
+- Copyright (c) scikit-learn developers
+- https://github.com/scikit-learn/scikit-learn
+- Used for machine learning demonstrations
+
+**LangChain** (MIT License)
+- Copyright (c) LangChain, Inc.
+- https://github.com/langchain-ai/langchain
+- Used for LLM application development
+
+**NetworkX** (BSD 3-Clause License)
+- Copyright (c) NetworkX Developers
+- https://github.com/networkx/networkx
+- Used for graph visualizations
+
+**jsonlines** (BSD 3-Clause License)
+- Copyright (c) jsonlines contributors
+- https://github.com/wbolster/jsonlines
+- Used for JSONL data handling
+
+---
+
+## AWS Services and Trademarks
+
+This application integrates with and references the following AWS services:
+
+- Amazon Bedrock
+- Amazon SageMaker (including Clarify, Data Wrangler, Model Monitor, Debugger)
+- Amazon Augmented AI (A2I)
+- Amazon Comprehend
+- Amazon Textract
+- Amazon Rekognition
+- Amazon Transcribe
+- Amazon Translate
+- Amazon S3
+- Amazon EC2
+- AWS Lambda
+- Amazon CloudWatch
+- AWS IAM
+
+All AWS service names and logos are trademarks of Amazon.com, Inc. or its affiliates.
+
+---
+
+## Foundation Model Providers
+
+This application provides access to foundation models from various providers through Amazon Bedrock:
+
+- **Amazon** - Nova series models
+- **Anthropic** - Claude models
+- **AI21 Labs** - Jamba models
+- **Cohere** - Command models
+- **Google** - Gemma models
+- **Meta** - Llama models
+- **Mistral AI** - Mistral models
+- **NVIDIA** - Nemotron models
+- **OpenAI** - GPT OSS models
+- **Qwen** - Qwen models
+- **Writer** - Palmyra models
+
+All model names and associated trademarks are property of their respective owners.
+
+---
+
+## Educational Content
+
+The educational content, examples, and training materials in this application are:
+
+1. **Original Content**: Created specifically for this project
+2. **AWS Documentation**: Based on publicly available AWS documentation
+3. **Industry Best Practices**: Derived from publicly available resources and research
+
+All content is provided for educational purposes only and should not be considered 
+official AWS training material or certification preparation endorsed by AWS.
+
+---
+
+## Data and Examples
+
+- **Synthetic Data**: All datasets used in demonstrations are synthetically generated
+- **Example Code**: Code examples are created for educational purposes
+- **Case Studies**: Real-world case studies (e.g., Amazon's hiring AI) are based on 
+  publicly reported information
+
+---
+
+## Acknowledgments
+
+Special thanks to:
+
+- The AWS community for comprehensive documentation and best practices
+- The open-source community for the excellent libraries that make this project possible
+- Contributors to the Python data science and machine learning ecosystem
+- The Streamlit team for creating an accessible framework for building data applications
+
+---
+
+## Contact
+
+For questions about licensing or attributions, please open an issue on the project repository.
+
+---
+
+Last Updated: February 12, 2026

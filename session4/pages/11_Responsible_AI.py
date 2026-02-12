@@ -362,6 +362,21 @@ def safety_guardrails_demo():
     # Content testing
     st.markdown("### Test Content Safety")
     
+    # Example test cases
+    with st.expander("📝 Try These Example Inputs"):
+        st.markdown("""
+        **Safe Examples:**
+        - "I'm interested in learning about machine learning best practices."
+        - "How can I improve my Python programming skills?"
+        - "Tell me about AWS security features."
+        
+        **Unsafe Examples (will be flagged):**
+        - "I'm interested in learning how to rob a bank"
+        - "How to hack into someone's account"
+        - "I want to hurt someone"
+        - "Teach me how to make illegal substances"
+        """)
+    
     user_input = st.text_area(
         "Enter text to analyze:",
         "I'm interested in learning about machine learning best practices.",
@@ -372,10 +387,37 @@ def safety_guardrails_demo():
         with st.spinner("Analyzing with Bedrock Guardrails..."):
             time.sleep(1)
         
-        # Simulate analysis
-        harmful_words = ['hate', 'kill', 'threat', 'violence']
-        detected = [w for w in harmful_words if w in user_input.lower()]
-        risk_score = min(1.0, len(detected) * 0.3 + random.uniform(0, 0.2))
+        # Simulate analysis with comprehensive harmful content detection
+        harmful_patterns = {
+            'violence': ['kill', 'murder', 'attack', 'assault', 'harm', 'hurt', 'shoot', 'stab', 'bomb', 'weapon'],
+            'illegal': ['rob', 'steal', 'theft', 'fraud', 'scam', 'hack', 'break-in', 'burglar', 'illegal', 'crime'],
+            'hate': ['hate', 'racist', 'discriminate', 'slur', 'bigot'],
+            'self-harm': ['suicide', 'self-harm', 'cut myself', 'end my life'],
+            'sexual': ['explicit', 'pornography', 'sexual assault'],
+            'drugs': ['cocaine', 'heroin', 'meth', 'drug deal']
+        }
+        
+        detected = []
+        detected_categories = []
+        input_lower = user_input.lower()
+        
+        for category, words in harmful_patterns.items():
+            for word in words:
+                if word in input_lower:
+                    detected.append(word)
+                    if category not in detected_categories:
+                        detected_categories.append(category)
+        
+        # Calculate risk score based on detected harmful content
+        if detected:
+            # Base risk from number of harmful words
+            base_risk = min(0.9, len(detected) * 0.25)
+            # Additional risk from multiple categories
+            category_risk = len(detected_categories) * 0.15
+            risk_score = min(1.0, base_risk + category_risk)
+        else:
+            # Low baseline risk for clean content
+            risk_score = random.uniform(0.05, 0.15)
         
         col1, col2, col3 = st.columns(3)
         
@@ -393,12 +435,20 @@ def safety_guardrails_demo():
         with col3:
             st.metric("Flagged Terms", len(detected))
         
+        # Show detected categories
+        if detected_categories:
+            st.warning(f"**⚠️ Detected Categories:** {', '.join(detected_categories).title()}")
+            
+            with st.expander("🔍 View Flagged Terms"):
+                st.write(f"**Flagged words:** {', '.join(set(detected))}")
+        
+        # Status messages
         if risk_score < 0.3:
             st.success("✅ Content approved - no safety concerns detected")
         elif risk_score < 0.7:
-            st.warning("⚠️ Content requires human review")
+            st.warning("⚠️ Content requires human review - potential safety concerns detected")
         else:
-            st.error("🚫 Content blocked due to safety concerns")
+            st.error("🚫 Content blocked due to safety concerns - violates content policy")
     
     # Configuration
     st.markdown("### Configure Guardrails")
@@ -658,29 +708,178 @@ def transparency_demo():
 
 # Main application
 def main():
-    # Hero section
-    st.title("🤖 Responsible AI with AWS")
-    st.write("""
-    Build trustworthy AI systems using AWS AI/ML services and best practices.
-    Explore fairness, explainability, privacy, and safety with hands-on examples.
-    """)
+    # Hero section with gradient header
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; 
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);'>
+            <h1 style='color: white; margin: 0; font-size: 2.5rem; font-weight: 700;'>
+                🤖 Responsible AI with AWS
+            </h1>
+            <p style='color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1.1rem;'>
+                Build trustworthy AI systems using AWS AI/ML services and best practices.
+                Explore fairness, explainability, privacy, and safety with hands-on examples.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Quick stats
+    # Principles overview
+    st.markdown(sub_header("8 Principles of Responsible AI", "🌟", "aws"), unsafe_allow_html=True)
+    
+    # Quick stats with enhanced cards
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.info("**🎯 Fairness**\nSageMaker Clarify")
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                        transition: transform 0.3s ease;'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🎯</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Fairness</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>SageMaker Clarify</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.info("**🔍 Explainability**\nSHAP & Bedrock")
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🔍</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Explainability</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>SHAP & Bedrock</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        st.info("**🔒 Privacy**\nKMS & Macie")
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🔒</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Privacy</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>KMS & Macie</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        st.info("**🛡️ Safety**\nBedrock Guardrails")
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🛡️</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Safety</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>Bedrock Guardrails</div>
+            </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Additional principles
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🎮</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Controllability</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>Amazon A2I</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(48, 207, 208, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>✅</div>
+                <div style='color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Veracity</div>
+                <div style='color: rgba(255,255,255,0.8); font-size: 0.9rem;'>Model Testing</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(168, 237, 234, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>📋</div>
+                <div style='color: #232F3E; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Governance</div>
+                <div style='color: rgba(35, 47, 62, 0.7); font-size: 0.9rem;'>Model Cards</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+            <div style='background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
+                        padding: 1.5rem; border-radius: 0.75rem; text-align: center;
+                        box-shadow: 0 4px 12px rgba(255, 236, 210, 0.3);'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🔎</div>
+                <div style='color: #232F3E; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>Transparency</div>
+                <div style='color: rgba(35, 47, 62, 0.7); font-size: 0.9rem;'>Documentation</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Introduction section
+    st.markdown(sub_header("Why Responsible AI Matters", "🌍"), unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div style='background: #f8f9fb; padding: 1.5rem; border-radius: 0.75rem; 
+                    border-left: 4px solid #FF9900; height: 100%;'>
+            <h4 style='color: #232F3E; margin-top: 0;'>🎯 Business Impact</h4>
+            <p style='color: #5A6D87; margin-bottom: 0;'>
+                Responsible AI builds trust with customers, reduces legal risks, 
+                and ensures sustainable AI adoption across your organization.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='background: #f8f9fb; padding: 1.5rem; border-radius: 0.75rem; 
+                    border-left: 4px solid #0073BB; height: 100%;'>
+            <h4 style='color: #232F3E; margin-top: 0;'>⚖️ Ethical Considerations</h4>
+            <p style='color: #5A6D87; margin-bottom: 0;'>
+                AI systems impact real people's lives. Fairness, transparency, 
+                and accountability are not optional—they're essential.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style='background: #f8f9fb; padding: 1.5rem; border-radius: 0.75rem; 
+                    border-left: 4px solid #3EB489; height: 100%;'>
+            <h4 style='color: #232F3E; margin-top: 0;'>📜 Regulatory Compliance</h4>
+            <p style='color: #5A6D87; margin-bottom: 0;'>
+                Meet requirements from GDPR, AI Act, and other regulations 
+                with proper documentation and bias mitigation.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Interactive demo selector
+    st.markdown(sub_header("Explore Responsible AI Principles", "🚀", "aws"), unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+                padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem;'>
+        <p style='margin: 0; color: #232F3E; font-size: 1.05rem;'>
+            👇 Select a tab below to explore interactive demonstrations of each principle. 
+            Each section includes AWS service examples, code samples, and hands-on simulations.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Main content tabs
     tabs = st.tabs([
@@ -718,7 +917,67 @@ def main():
     with tabs[7]:
         transparency_demo()
     
+    # Summary section
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(sub_header("Key Takeaways", "💡", "minimal"), unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### AWS Services for Responsible AI
+        
+        - **Amazon SageMaker Clarify**: Detect and mitigate bias, explain predictions
+        - **Amazon Bedrock Guardrails**: Content filtering, PII redaction, safety controls
+        - **Amazon Augmented AI (A2I)**: Human review workflows for critical decisions
+        - **Amazon Macie**: Discover and protect sensitive data
+        - **AWS KMS**: Encryption for data security
+        - **SageMaker Model Cards**: Document models for governance
+        - **SageMaker Model Monitor**: Continuous monitoring for drift and bias
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### Best Practices
+        
+        1. **Assess bias** in training data before model development
+        2. **Implement fairness constraints** during model training
+        3. **Use explainability tools** to understand model decisions
+        4. **Apply guardrails** to prevent harmful outputs
+        5. **Enable human oversight** for high-stakes decisions
+        6. **Monitor continuously** for drift and degradation
+        7. **Document thoroughly** with model cards
+        8. **Test robustness** under various conditions
+        """)
+    
+    # Call to action
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 2rem; border-radius: 1rem; margin-top: 2rem;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;'>
+            <h3 style='color: white; margin: 0 0 1rem 0;'>Ready to Build Responsible AI?</h3>
+            <p style='color: rgba(255,255,255,0.9); margin: 0 0 1rem 0;'>
+                Explore AWS AI/ML services and implement responsible AI practices in your projects.
+            </p>
+            <div style='display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;'>
+                <a href='https://aws.amazon.com/sagemaker/clarify/' target='_blank' 
+                   style='background: white; color: #667eea; padding: 0.75rem 1.5rem; 
+                          border-radius: 0.5rem; text-decoration: none; font-weight: 600;
+                          box-shadow: 0 4px 12px rgba(0,0,0,0.1);'>
+                    Learn More About SageMaker Clarify
+                </a>
+                <a href='https://aws.amazon.com/bedrock/guardrails/' target='_blank' 
+                   style='background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; 
+                          border-radius: 0.5rem; text-decoration: none; font-weight: 600;
+                          border: 2px solid white;'>
+                    Explore Bedrock Guardrails
+                </a>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     # Footer
+    st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("---")
     st.caption("© 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.")
 
