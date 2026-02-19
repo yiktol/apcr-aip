@@ -19,7 +19,7 @@ import utils.authenticate as authenticate
 import utils.styles as styles
 
 # Updated LangChain imports (v0.1.0+)
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_aws import BedrockEmbeddings
 from langchain_community.document_loaders import (
@@ -33,6 +33,56 @@ from langchain_core.vectorstores import VectorStoreRetriever
 # Configure logging with structured logging
 import structlog
 logger = structlog.get_logger()
+
+# Utility functions
+def safe_extract_numeric(text: str, default: float = 0.0) -> float:
+    """Safely extract numeric value from text with multiple pattern support"""
+    if not text or text == "Not specified":
+        return default
+    
+    patterns = [
+        r'(\d+(?:\.\d+)?)\s*%',  # "5.5%"
+        r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)',  # "5-7"
+        r'(\d+(?:\.\d+)?)'  # "5.5"
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            try:
+                # For range, take average
+                if match.lastindex == 2:
+                    return (float(match.group(1)) + float(match.group(2))) / 2
+                return float(match.group(1))
+            except (ValueError, AttributeError):
+                continue
+    
+    return default
+
+def clean_markdown_for_display(text: str) -> str:
+    """Clean markdown formatting from text for better display in Streamlit"""
+    if not text:
+        return text
+    
+    # Remove markdown headers (##, ###, etc.) but keep the text
+    text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
+    
+    # Remove bold markers but keep the text
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+    
+    # Remove italic markers but keep the text
+    text = re.sub(r'\*([^*]+)\*', r'\1', text)
+    
+    # Remove inline code markers
+    text = re.sub(r'`([^`]+)`', r'\1', text)
+    
+    # Clean up multiple spaces
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Clean up leading/trailing whitespace
+    text = text.strip()
+    
+    return text
 
 # Configure page settings
 st.set_page_config(
@@ -58,6 +108,14 @@ class SessionState:
             st.session_state.documents = []
         if "bedrock_client" not in st.session_state:
             st.session_state.bedrock_client = None
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+        if "comparison_analyses" not in st.session_state:
+            st.session_state.comparison_analyses = []
+        if "recommendations" not in st.session_state:
+            st.session_state.recommendations = None
+        if "specifications" not in st.session_state:
+            st.session_state.specifications = None
 
 SessionState.initialize()
 
@@ -66,125 +124,424 @@ def load_custom_css():
     """Load custom CSS for modern UI/UX design"""
     st.markdown("""
     <style>
+    /* Import modern font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Root variables */
     :root {
-        --primary-color: #3b82f6;
-        --secondary-color: #8b5cf6;
-        --success-color: #10b981;
-        --warning-color: #f59e0b;
-        --danger-color: #ef4444;
-        --dark-color: #1f2937;
-        --light-color: #f8fafc;
+        --primary-color: #FF9900;
+        --primary-dark: #EC7211;
+        --secondary-color: #232F3E;
+        --accent-color: #146EB4;
+        --success-color: #1D8102;
+        --warning-color: #FF9900;
+        --danger-color: #D13212;
+        --dark-color: #16191F;
+        --light-color: #FAFAFA;
+        --border-color: #E5E7EB;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
     
+    /* Global styles */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    /* Main container */
+    .main {
+        background: linear-gradient(135deg, #FAFAFA 0%, #F3F4F6 100%);
+        padding: 2rem 1rem;
+    }
+    
+    /* Header styles */
     .main-header {
-        font-size: 2.5rem;
+        font-size: 2.75rem;
         font-weight: 700;
-        color: var(--dark-color);
+        color: var(--secondary-color);
         text-align: center;
-        margin-bottom: 2rem;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeInDown 0.6s ease-out;
     }
     
     .subtitle {
-        font-size: 1.2rem;
-        color: #6b7280;
+        font-size: 1.125rem;
+        color: #6B7280;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+        font-weight: 400;
+        animation: fadeInUp 0.6s ease-out;
     }
     
+    /* Card styles */
     .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        padding: 1.75rem;
+        border-radius: 16px;
         color: white;
         text-align: center;
         margin: 0.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .metric-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
     }
     
     .analysis-card {
-        background: var(--light-color);
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin: 1.25rem 0;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .analysis-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-color);
     }
     
     .recommendation-item {
-        background: #ecfdf5;
+        background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
         border-left: 4px solid var(--success-color);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 4px;
+        padding: 1.25rem;
+        margin: 0.75rem 0;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .recommendation-item:hover {
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
     }
     
     .specification-item {
-        background: #fef7ff;
-        border-left: 4px solid var(--secondary-color);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 4px;
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        border-left: 4px solid var(--warning-color);
+        padding: 1.25rem;
+        margin: 0.75rem 0;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
     }
     
+    .specification-item:hover {
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* Footer styles */
     .footer {
-        margin-top: 3rem;
-        padding: 2rem 0;
-        background-color: var(--dark-color);
+        margin-top: 4rem;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, var(--secondary-color) 0%, #16191F 100%);
         color: white;
         text-align: center;
-        font-size: 0.9rem;
-        border-radius: 10px 10px 0 0;
+        border-radius: 16px 16px 0 0;
+        box-shadow: var(--shadow-xl);
+        position: relative;
+        overflow: hidden;
     }
     
+    .footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    }
+    
+    .footer-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .footer-text {
+        color: #D1D5DB;
+        margin: 0;
+        line-height: 1.6;
+    }
+    
+    /* Tab styles */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
+        gap: 8px;
         background-color: transparent;
+        padding: 0.5rem 0;
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-        background-color: #f1f5f9;
-        border-radius: 8px 8px 0px 0px;
-        color: #475569;
+        height: 56px;
+        padding: 0 24px;
+        background: white;
+        border-radius: 12px 12px 0 0;
+        color: #6B7280;
         font-weight: 500;
+        font-size: 0.95rem;
         transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        border-bottom: none;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: #F9FAFB;
+        color: var(--secondary-color);
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: var(--primary-color);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-color);
     }
     
-    /* Modern button styles */
+    /* Button styles */
     .stButton > button {
-        background-color: var(--primary-color);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
         border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-md);
+        letter-spacing: 0.01em;
     }
     
     .stButton > button:hover {
-        background-color: #2563eb;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #C45500 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+    }
+    
+    /* Download button */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, var(--accent-color) 0%, #0D5A94 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stDownloadButton > button:hover {
+        background: linear-gradient(135deg, #0D5A94 0%, #084673 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Input styles */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border-radius: 10px;
+        border: 2px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.1);
+    }
+    
+    /* File uploader */
+    .stFileUploader {
+        background: white;
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stFileUploader:hover {
+        border-color: var(--primary-color);
+        background: #FFFBF5;
+    }
+    
+    /* Metric styles */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Expander styles */
+    .streamlit-expanderHeader {
+        background: white;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: #F9FAFB;
+        border-color: var(--primary-color);
+    }
+    
+    /* Dataframe styles */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Chat message styles */
+    .stChatMessage {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 0.75rem 0;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Sidebar styles */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, white 0%, #F9FAFB 100%);
+        border-right: 1px solid var(--border-color);
+    }
+    
+    [data-testid="stSidebar"] .stSelectbox,
+    [data-testid="stSidebar"] .stSlider {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0.5rem 0;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+    }
+    
+    /* Info/Warning/Error boxes */
+    .stAlert {
+        border-radius: 10px;
+        border: none;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Animations */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .main-header {
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+        }
+        
+        .metric-card {
+            padding: 1.25rem;
+            margin: 0.5rem 0;
+        }
+        
+        .analysis-card {
+            padding: 1.25rem;
+        }
+        
+        .footer {
+            padding: 2rem 1rem;
+        }
+        
+        .stButton > button {
+            width: 100%;
+            padding: 0.875rem;
+        }
+    }
+    
+    /* Tablet */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .main-header {
+            font-size: 2.25rem;
+        }
+        
+        .subtitle {
+            font-size: 1.0625rem;
+        }
+    }
+    
+    /* Dark mode support (optional) */
+    @media (prefers-color-scheme: dark) {
+        .main {
+            background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        }
+        
+        .analysis-card {
+            background: #1F2937;
+            border-color: #374151;
+            color: #F9FAFB;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -233,7 +590,6 @@ class BedrockService:
                 system=system_prompts,
                 inferenceConfig={
                     "temperature": temperature,
-                    "topP": 0.9,
                     "maxTokens": max_tokens
                 }
             )
@@ -254,9 +610,9 @@ class DocumentProcessor:
     def __init__(self, bedrock_service: BedrockService):
         self.bedrock_service = bedrock_service
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=100,
-            separators=["\n\n", "\n", " ", ""],
+            chunk_size=1200,  # Increased for better context
+            chunk_overlap=200,  # Increased for better continuity
+            separators=["\n\n\n", "\n\n", "\n", ". ", " ", ""],
             length_function=len,
         )
     
@@ -276,6 +632,15 @@ class DocumentProcessor:
                     
                     # Load document
                     documents = self._load_document(str(temp_path))
+                    
+                    # Add metadata
+                    for doc in documents:
+                        doc.metadata.update({
+                            'source_file': file.name,
+                            'file_type': Path(file.name).suffix,
+                            'upload_time': datetime.now().isoformat()
+                        })
+                    
                     all_documents.extend(documents)
                     
                 except Exception as e:
@@ -449,16 +814,32 @@ class MarketAnalyzer:
     
     def _extract_customer_segments(self) -> List[Dict[str, str]]:
         """Extract customer segments with improved structure"""
-        query = """What customer segments are mentioned in the document? 
-        For each segment, include their characteristics, market size, and preferences if available."""
-        system_prompt = "You are a market analyst. Extract detailed customer segment information from the context."
+        query = """Based on the market research document, identify and describe 3-5 distinct customer segments.
         
-        response = self.rag_engine.query(query, system_prompt)
+        For EACH segment, provide:
+        1. Segment Name (e.g., "Young Professionals", "Athletes", "Eco-Conscious Consumers")
+        2. Market Size or percentage if available
+        3. Key characteristics, needs, and preferences
+        
+        Format your response as:
+        
+        SEGMENT 1: [Name]
+        Size: [percentage or description]
+        Characteristics: [detailed description]
+        
+        SEGMENT 2: [Name]
+        Size: [percentage or description]
+        Characteristics: [detailed description]
+        """
+        
+        system_prompt = "You are a market analyst. Extract detailed customer segment information from the context. Format your response clearly with segment names, sizes, and characteristics."
+        
+        response = self.rag_engine.query(query, system_prompt, k=6)
         
         if response:
             segments = self._parse_segments(response)
-            if segments:
-                return segments[:3]
+            if segments and len(segments) > 0:
+                return segments[:5]
         
         return self._get_default_segments()
     
@@ -545,46 +926,117 @@ class MarketAnalyzer:
             if (line[0].isdigit() and '.' in line[:3]) or line.startswith('•') or line.startswith('-'):
                 # Clean up the line
                 clean_line = re.sub(r'^[\d\.\-\•\*]+\s*', '', line)
+                # Clean markdown formatting
+                clean_line = clean_markdown_for_display(clean_line)
                 if keyword and keyword.lower() not in clean_line.lower():
                     continue
                 items.append(clean_line)
             elif keyword and keyword.lower() in line.lower():
-                items.append(line)
+                # Clean markdown formatting
+                clean_line = clean_markdown_for_display(line)
+                items.append(clean_line)
         
         return items[:max_items]
     
     def _parse_segments(self, response: str) -> List[Dict[str, str]]:
-        """Parse customer segments from response"""
+        """Parse customer segments from response with improved logic"""
         segments = []
         current_segment = None
         
         lines = response.split('\n')
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
             
-            # Check if this is a segment header
-            if any(word in line.lower() for word in ['segment', 'demographic', 'customer', 'market']):
-                if current_segment:
+            # Check if this is a segment header (SEGMENT 1:, SEGMENT 2:, etc.)
+            segment_match = re.match(r'(?:SEGMENT|Segment)\s*(\d+)[:\-\s]+(.+)', line, re.IGNORECASE)
+            if segment_match:
+                # Save previous segment
+                if current_segment and current_segment.get('segment'):
                     segments.append(current_segment)
                 
+                # Start new segment
+                segment_name = clean_markdown_for_display(segment_match.group(2))
                 current_segment = {
-                    'segment': line,
+                    'segment': segment_name,
                     'size': 'Not specified',
                     'characteristics': ''
                 }
-            elif current_segment:
-                # Add to characteristics
-                if 'size' in line.lower() or '%' in line:
-                    size_match = re.search(r'\d+[\-\d]*\s*%', line)
-                    if size_match:
-                        current_segment['size'] = size_match.group()
-                else:
-                    current_segment['characteristics'] += line + ' '
+                continue
+            
+            # Check for numbered list items (1., 2., etc.) as segment headers
+            numbered_match = re.match(r'^\d+[\.\)]\s*(.+)', line)
+            if numbered_match and not current_segment:
+                segment_name = clean_markdown_for_display(numbered_match.group(1))
+                # Only treat as segment if it looks like a segment name (not too long)
+                if len(segment_name) < 100 and not segment_name.lower().startswith(('size:', 'characteristics:')):
+                    if current_segment and current_segment.get('segment'):
+                        segments.append(current_segment)
+                    current_segment = {
+                        'segment': segment_name,
+                        'size': 'Not specified',
+                        'characteristics': ''
+                    }
+                    continue
+            
+            # Parse size information
+            if current_segment and (line.lower().startswith('size:') or line.lower().startswith('market size:')):
+                size_text = re.sub(r'^(?:market\s+)?size:\s*', '', line, flags=re.IGNORECASE)
+                current_segment['size'] = clean_markdown_for_display(size_text)
+                continue
+            
+            # Parse characteristics
+            if current_segment and (line.lower().startswith('characteristics:') or 
+                                   line.lower().startswith('description:') or
+                                   line.lower().startswith('needs:')):
+                char_text = re.sub(r'^(?:characteristics|description|needs):\s*', '', line, flags=re.IGNORECASE)
+                current_segment['characteristics'] = clean_markdown_for_display(char_text)
+                continue
+            
+            # Add to characteristics if we have a current segment and line has content
+            if current_segment and len(line) > 10:
+                # Skip lines that look like headers
+                if not any(line.lower().startswith(prefix) for prefix in ['segment', 'based on', 'according to']):
+                    clean_line = clean_markdown_for_display(line)
+                    if current_segment['characteristics']:
+                        current_segment['characteristics'] += ' ' + clean_line
+                    else:
+                        current_segment['characteristics'] = clean_line
         
-        if current_segment:
+        # Add the last segment
+        if current_segment and current_segment.get('segment'):
             segments.append(current_segment)
+        
+        # If no segments found with structured parsing, try alternative approach
+        if not segments:
+            # Look for any lines that might be segment names
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if not line or len(line) < 5:
+                    continue
+                
+                # Check if line looks like a segment name (capitalized, not too long)
+                if (line[0].isupper() and len(line) < 80 and 
+                    not line.lower().startswith(('the ', 'this ', 'these ', 'based ', 'according '))):
+                    
+                    # Get next few lines as characteristics
+                    characteristics = []
+                    for j in range(i+1, min(i+4, len(lines))):
+                        next_line = lines[j].strip()
+                        if next_line and len(next_line) > 10:
+                            characteristics.append(clean_markdown_for_display(next_line))
+                    
+                    if characteristics:
+                        segments.append({
+                            'segment': clean_markdown_for_display(line),
+                            'size': 'Not specified',
+                            'characteristics': ' '.join(characteristics)
+                        })
+                        
+                        if len(segments) >= 5:
+                            break
         
         return segments
     
@@ -683,20 +1135,20 @@ class ProductRecommender:
         
         # Extract segments
         if 'segment' in response.lower():
-            recommendations['target_segments'] = analyzer._parse_list_response(
-                response, keyword='segment', max_items=3
-            )
+            segments = analyzer._parse_list_response(response, keyword='segment', max_items=3)
+            recommendations['target_segments'] = segments
         
         # Extract attributes
         if 'attribute' in response.lower() or 'feature' in response.lower():
-            recommendations['key_attributes'] = analyzer._parse_list_response(
-                response, keyword='', max_items=5
-            )
+            attributes = analyzer._parse_list_response(response, keyword='', max_items=5)
+            recommendations['key_attributes'] = attributes
         
         # Extract positioning
         position_match = re.search(r'position[^\n]*:\s*([^\n]+)', response, re.IGNORECASE)
         if position_match:
-            recommendations['positioning'] = position_match.group(1).strip()
+            positioning = position_match.group(1).strip()
+            # Clean markdown from positioning
+            recommendations['positioning'] = clean_markdown_for_display(positioning)
         
         # Extract pricing safely
         price_match = re.search(r'\$(\d+)[\-\s]*(?:to|\-)?\s*\$?(\d+)?', response)
@@ -803,6 +1255,155 @@ class ProductRecommender:
         }
 
 # UI Components
+def create_model_selection_panel():
+    """Model selection and parameters panel"""
+    st.markdown("<h4>Model Selection</h4>", unsafe_allow_html=True)
+    
+    # Model categories by provider with most advanced models as defaults
+    MODEL_CATEGORIES = {
+        "Amazon": {
+            "Nova 2 Lite": "us.amazon.nova-2-lite-v1:0",
+            "Nova Pro": "us.amazon.nova-pro-v1:0",
+            "Nova Lite": "us.amazon.nova-lite-v1:0",
+            "Nova Micro": "us.amazon.nova-micro-v1:0",
+        },
+        "Anthropic": {
+            "Claude Sonnet 4.5": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "Claude Sonnet 4": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+            "Claude Opus 4.1": "us.anthropic.claude-opus-4-1-20250805-v1:0",
+            "Claude Haiku 4.5": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "Claude 3.5 Haiku": "anthropic.claude-3-5-haiku-20241022-v1:0",
+            "Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0",
+        },
+        "Meta": {
+            "Llama 4 Maverick 17B": "us.meta.llama4-maverick-17b-instruct-v1:0",
+            "Llama 4 Scout 17B": "us.meta.llama4-scout-17b-instruct-v1:0",
+            "Llama 3.3 70B": "us.meta.llama3-3-70b-instruct-v1:0",
+            "Llama 3.2 90B": "us.meta.llama3-2-90b-instruct-v1:0",
+            "Llama 3.2 11B": "us.meta.llama3-2-11b-instruct-v1:0",
+            "Llama 3.2 3B": "us.meta.llama3-2-3b-instruct-v1:0",
+            "Llama 3.2 1B": "us.meta.llama3-2-1b-instruct-v1:0",
+            "Llama 3.1 70B": "us.meta.llama3-1-70b-instruct-v1:0",
+            "Llama 3.1 8B": "us.meta.llama3-1-8b-instruct-v1:0",
+            "Llama 3 70B": "meta.llama3-70b-instruct-v1:0",
+            "Llama 3 8B": "meta.llama3-8b-instruct-v1:0",
+        },
+        "Mistral AI": {
+            "Mistral Large 3": "mistral.mistral-large-3-675b-instruct",
+            "Pixtral Large": "mistral.pixtral-large-2502-v1:0",
+            "Magistral Small": "mistral.magistral-small-2509",
+            "Ministral 14B": "mistral.ministral-3-14b-instruct",
+            "Ministral 8B": "mistral.ministral-3-8b-instruct",
+            "Ministral 3B": "mistral.ministral-3-3b-instruct",
+            "Voxtral Small 24B": "mistral.voxtral-small-24b-2507",
+            "Voxtral Mini 3B": "mistral.voxtral-mini-3b-2507",
+            "Mistral Large (24.07)": "mistral.mistral-large-2407-v1:0",
+            "Mistral Large (24.02)": "mistral.mistral-large-2402-v1:0",
+            "Mixtral 8x7B": "mistral.mixtral-8x7b-instruct-v0:1",
+            "Mistral 7B": "mistral.mistral-7b-instruct-v0:2",
+        },
+        "Google": {
+            "Gemma 3 27B": "google.gemma-3-27b-it",
+            "Gemma 3 12B": "google.gemma-3-12b-it",
+            "Gemma 3 4B": "google.gemma-3-4b-it",
+        },
+        "Qwen": {
+            "Qwen3 Coder 480B": "qwen.qwen3-coder-480b-a35b-v1:0",
+            "Qwen3 VL 235B": "qwen.qwen3-vl-235b-a22b",
+            "Qwen3 235B": "qwen.qwen3-235b-a22b-2507-v1:0",
+            "Qwen3 Next 80B": "qwen.qwen3-next-80b-a3b",
+            "Qwen3 32B": "qwen.qwen3-32b-v1:0",
+            "Qwen3 Coder 30B": "qwen.qwen3-coder-30b-a3b-v1:0",
+        },
+        "DeepSeek": {
+            "DeepSeek-R1": "deepseek.r1-v1:0",
+            "DeepSeek-V3.1": "deepseek.v3-v1:0",
+        },
+        "NVIDIA": {
+            "Nemotron Nano 12B": "nvidia.nemotron-nano-12b-v2",
+            "Nemotron Nano 9B": "nvidia.nemotron-nano-9b-v2",
+        },
+        "OpenAI": {
+            "GPT OSS 120B": "openai.gpt-oss-120b-1:0",
+            "GPT OSS 20B": "openai.gpt-oss-20b-1:0",
+            "GPT OSS Safeguard 120B": "openai.gpt-oss-safeguard-120b",
+            "GPT OSS Safeguard 20B": "openai.gpt-oss-safeguard-20b",
+        },
+        "Cohere": {
+            "Command R+": "cohere.command-r-plus-v1:0",
+            "Command R": "cohere.command-r-v1:0",
+        },
+        "AI21 Labs": {
+            "Jamba 1.5 Large": "ai21.jamba-1-5-large-v1:0",
+            "Jamba 1.5 Mini": "ai21.jamba-1-5-mini-v1:0",
+        },
+        "MiniMax": {
+            "MiniMax M2": "minimax.minimax-m2",
+        },
+        "Moonshot AI": {
+            "Kimi K2 Thinking": "moonshot.kimi-k2-thinking",
+        },
+    }
+    
+    # Provider selection
+    provider = st.selectbox(
+        "Model Provider",
+        options=list(MODEL_CATEGORIES.keys()),
+        index=0,  # Amazon as default
+        key="side_provider",
+        help="Select the AI model provider"
+    )
+    
+    # Model selection based on provider
+    models = MODEL_CATEGORIES[provider]
+    selected_model = st.selectbox(
+        "Model",
+        options=list(models.keys()),
+        index=0,  # Most advanced model as default
+        key="side_model",
+        help="Select the specific model"
+    )
+    
+    model_id = models[selected_model]
+    
+    st.markdown("<h4>RAG Configuration</h4>", unsafe_allow_html=True)
+    
+    k_chunks = st.slider(
+        "Context Chunks",
+        min_value=2,
+        max_value=10,
+        value=6,
+        key="side_k_chunks",
+        help="Number of document chunks to retrieve for each query"
+    )
+    
+    temperature = st.slider(
+        "Temperature",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.7,
+        step=0.1,
+        key="side_temperature",
+        help="Controls randomness in AI responses"
+    )
+    
+    # Add helpful tips
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
+                padding: 1rem; border-radius: 10px; margin: 1.5rem 0;
+                border-left: 4px solid #146EB4;">
+        <h4 style="margin: 0 0 0.5rem 0; color: #232F3E; font-size: 0.85rem;">💡 Pro Tips</h4>
+        <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #4B5563;">
+            <li>Use comprehensive documents for best results</li>
+            <li>Try different AI models for varied insights</li>
+            <li>Export results before closing</li>
+            <li>Save scenarios for comparison</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    return model_id, k_chunks
+
 def create_sidebar() -> Tuple[str, int]:
     """Create enhanced sidebar with settings"""
     with st.sidebar:
@@ -820,101 +1421,48 @@ def create_sidebar() -> Tuple[str, int]:
             - 🎯 Product Justification
             - 💡 Strategic Recommendations
             - 📋 Technical Specifications
+            - 💬 Interactive Chat Assistant
             
             **How to use:**
             1. Upload your market research document
-            2. Click "Analyze Document"
+            2. Click "Process" to analyze
             3. Explore insights across all tabs
             """)
-        
-        st.markdown("### ⚙️ Settings")
-        
-        # Model selection (Amazon first, then alphabetical by provider)
-        model_options = {
-            # Amazon models (default provider)
-            "Nova 2 Lite": "us.amazon.nova-2-lite-v1:0",
-            
-            # Anthropic models
-            "Claude 3 Haiku": "anthropic.claude-3-haiku-20240307-v1:0",
-            "Claude 3.5 Sonnet": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "Claude Sonnet 4.5": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-            
-            # Google models
-            "Gemma 3 4B": "google.gemma-3-4b-it",
-            "Gemma 3 12B": "google.gemma-3-12b-it",
-            "Gemma 3 27B": "google.gemma-3-27b-it",
-            
-            # Meta models
-            "Llama 3 70B": "meta.llama3-70b-instruct-v1:0",
-            
-            # NVIDIA models
-            "Nemotron Nano 9B": "nvidia.nemotron-nano-9b-v2",
-            "Nemotron Nano 12B": "nvidia.nemotron-nano-12b-v2",
-            
-            # OpenAI models
-            "GPT OSS 20B": "openai.gpt-oss-20b-1:0",
-            "GPT OSS 120B": "openai.gpt-oss-120b-1:0",
-            
-            # Qwen models
-            "Qwen3 32B": "qwen.qwen3-32b-v1:0",
-            "Qwen3 Next 80B": "qwen.qwen3-next-80b-a3b",
-            "Qwen3 235B": "qwen.qwen3-235b-a22b-2507-v1:0",
-            
-            # Writer models
-            "Palmyra X4": "us.writer.palmyra-x4-v1:0",
-            "Palmyra X5": "us.writer.palmyra-x5-v1:0",
-        }
-        
-        selected_model = st.selectbox(
-            "AI Model",
-            options=list(model_options.keys()),
-            index=0,
-            help="Select the AI model for analysis"
-        )
-        
-        # Advanced settings
-        with st.expander("Advanced Settings"):
-            k_chunks = st.slider(
-                "Context chunks",
-                min_value=2,
-                max_value=10,
-                value=6,
-                help="Number of document chunks to retrieve for each query"
-            )
-            
-            temperature = st.slider(
-                "Temperature",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.7,
-                step=0.1,
-                help="Controls randomness in AI responses"
-            )
-        
-        return model_options[selected_model], k_chunks
+    
+    # Return None, None since we're using the panel now
+    return None, None
 
 def create_document_upload_section(bedrock_service: BedrockService) -> bool:
     """Create enhanced document upload section"""
-    st.markdown("### 📄 Document Upload")
+    st.markdown("""
+    <div style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 2rem;">
+        <h3 style="color: #232F3E; margin-bottom: 1rem; display: flex; align-items: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="#FF9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="13 2 13 9 20 9" stroke="#FF9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Document Upload
+        </h3>
+        <p style="color: #6B7280; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Upload your market research documents to begin AI-powered analysis. Supports PDF, DOCX, and TXT formats.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        uploaded_files = st.file_uploader(
-            "Choose your market research documents",
-            type=['pdf', 'txt', 'docx'],
-            accept_multiple_files=True,
-            help="Upload one or more market research documents for analysis"
-        )
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)  # Spacing
-        analyze_button = st.button(
-            "🔍 Process Document",
-            type="primary",
-            disabled=not uploaded_files,
-            use_container_width=True
-        )
+    uploaded_files = st.file_uploader(
+        "Choose your market research documents",
+        type=['pdf', 'txt', 'docx'],
+        accept_multiple_files=True,
+        help="Upload one or more market research documents for analysis",
+        label_visibility="collapsed"
+    )
+
+    analyze_button = st.button(
+        "🔍 Process",
+        type="primary",
+        disabled=not uploaded_files,
+        use_container_width=True
+    )
     
     if uploaded_files and analyze_button:
         processor = DocumentProcessor(bedrock_service)
@@ -929,15 +1477,23 @@ def create_document_upload_section(bedrock_service: BedrockService) -> bool:
                 
                 st.success(f"✅ Successfully processed {len(document_chunks)} chunks from {len(uploaded_files)} document(s)")
                 
-                # Show document statistics
+                # Show document statistics in a modern card
+                st.markdown("""
+                <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); 
+                            padding: 1.5rem; border-radius: 12px; margin: 1rem 0;
+                            border-left: 4px solid #1D8102;">
+                """, unsafe_allow_html=True)
+                
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Documents", len(uploaded_files))
+                    st.metric("📄 Documents", len(uploaded_files))
                 with col2:
-                    st.metric("Total Chunks", len(document_chunks))
+                    st.metric("📊 Total Chunks", len(document_chunks))
                 with col3:
                     avg_chunk_size = sum(len(chunk.page_content) for chunk in document_chunks) // len(document_chunks)
-                    st.metric("Avg Chunk Size", f"{avg_chunk_size} chars")
+                    st.metric("📏 Avg Chunk Size", f"{avg_chunk_size} chars")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
                 
                 # Document preview
                 with st.expander("📖 Document Preview", expanded=False):
@@ -962,11 +1518,62 @@ def create_analysis_tab(analyzer: MarketAnalyzer):
     if not st.session_state.document_processed:
         st.info("📄 Using sample data. Upload documents for personalized analysis.")
     
-    if st.button("Analyze Document"):
-        with st.spinner("Performing market analysis..."):
-            analysis = analyzer.analyze_document()
+    col1, col2 = st.columns([3, 1])
     
+    with col1:
+        analyze_button = st.button("🔍 Analyze Document", type="primary", use_container_width=True)
+    
+    with col2:
+        if st.session_state.analysis_results:
+            if st.button("🔄 Re-analyze", use_container_width=True):
+                st.session_state.analysis_results = None
+                st.rerun()
+    
+    if analyze_button:
+        # Progress tracking
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        steps = [
+            ("Extracting opportunities", 20),
+            ("Analyzing market insights", 40),
+            ("Identifying customer segments", 60),
+            ("Evaluating competition", 80),
+            ("Calculating feasibility", 100)
+        ]
+        
+        with st.spinner("Performing comprehensive market analysis..."):
+            analysis = {}
+            
+            for step_name, progress in steps:
+                status_text.text(f"🔄 {step_name}...")
+                progress_bar.progress(progress)
+                
+                if progress == 20:
+                    analysis['opportunities'] = analyzer._extract_opportunities()
+                elif progress == 40:
+                    analysis['market_insights'] = analyzer._extract_market_insights()
+                elif progress == 60:
+                    analysis['customer_segments'] = analyzer._extract_customer_segments()
+                elif progress == 80:
+                    analysis['competitive_landscape'] = analyzer._extract_competitive_landscape()
+                else:
+                    analysis['feasibility_score'] = analyzer._calculate_feasibility_score()
+            
+            status_text.text("✅ Analysis complete!")
+            progress_bar.progress(100)
+        
         st.session_state.analysis_results = analysis
+        st.success("✅ Analysis completed successfully!")
+        st.rerun()
+    
+    if st.session_state.analysis_results:
+        analysis = st.session_state.analysis_results
+        
+        # AI-Generated Insights
+        display_automated_insights(analysis)
+        
+        st.divider()
         
         # Key Metrics Dashboard
         col1, col2, col3, col4 = st.columns(4)
@@ -1001,59 +1608,64 @@ def create_analysis_tab(analyzer: MarketAnalyzer):
                 "Defined"
             )
         
+        st.divider()
+        
         # Detailed Analysis Sections
         tabs = st.tabs(["🚀 Opportunities", "📈 Market Insights", "👥 Customer Segments", "🏆 Competition"])
         
         with tabs[0]:
             st.markdown("### Market Opportunities")
             for i, opportunity in enumerate(analysis['opportunities'], 1):
+                # Clean any markdown formatting
+                clean_opp = clean_markdown_for_display(opportunity)
                 st.markdown(f"""
                 <div class="recommendation-item">
-                    <strong>{i}.</strong> {opportunity}
+                    <strong>{i}.</strong> {clean_opp}
                 </div>
                 """, unsafe_allow_html=True)
         
         with tabs[1]:
             st.markdown("### Key Market Trends")
             for trend in analysis['market_insights'].get('key_trends', []):
-                st.markdown(f"• {trend}")
+                # Clean any markdown formatting
+                clean_trend = clean_markdown_for_display(trend)
+                st.markdown(f"• {clean_trend}")
             
-            # Market metrics visualization - FIXED HERE
+            # Market metrics visualization - FIXED
             growth_rate_str = analysis['market_insights'].get('growth_rate', '')
             if growth_rate_str and growth_rate_str != "Not specified":
-                # Try to extract numeric value safely
-                growth_match = re.search(r'(\d+(?:\.\d+)?)', growth_rate_str)
-                if growth_match:
-                    try:
-                        growth_value = float(growth_match.group(1))
-                        fig = go.Figure(go.Indicator(
-                            mode="gauge+number",
-                            value=growth_value,
-                            title={'text': "Market Growth Rate (%)"},
-                            gauge={'axis': {'range': [None, 20]},
-                                'bar': {'color': "#3b82f6"},
-                                'steps': [
-                                    {'range': [0, 5], 'color': "#fee2e2"},
-                                    {'range': [5, 10], 'color': "#fef3c7"},
-                                    {'range': [10, 20], 'color': "#d1fae5"}]},
-                        ))
-                        fig.update_layout(height=300)
-                        st.plotly_chart(fig, use_container_width=True, key="plotly1")
-                    except ValueError:
-                        st.info("Growth rate data not available in numeric format")
+                growth_value = safe_extract_numeric(growth_rate_str, default=5.0)
+                if growth_value > 0:
+                    fig = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=growth_value,
+                        title={'text': "Market Growth Rate (%)"},
+                        gauge={'axis': {'range': [None, 20]},
+                            'bar': {'color': "#3b82f6"},
+                            'steps': [
+                                {'range': [0, 5], 'color': "#fee2e2"},
+                                {'range': [5, 10], 'color': "#fef3c7"},
+                                {'range': [10, 20], 'color': "#d1fae5"}]},
+                    ))
+                    fig.update_layout(height=300)
+                    st.plotly_chart(fig, use_container_width=True, key="chart_market_growth_gauge")
                 else:
                     st.info("Growth rate: " + growth_rate_str)
         
         with tabs[2]:
             st.markdown("### Customer Segments Analysis")
             for segment in analysis['customer_segments']:
-                with st.expander(f"📊 {segment['segment']}"):
+                # Clean markdown from segment name
+                clean_segment_name = clean_markdown_for_display(segment['segment'])
+                with st.expander(f"📊 {clean_segment_name}"):
                     col1, col2 = st.columns([1, 2])
                     with col1:
                         st.metric("Market Share", segment.get('size', 'N/A'))
                     with col2:
                         st.markdown("**Characteristics:**")
-                        st.write(segment.get('characteristics', 'Not specified'))
+                        # Clean markdown from characteristics
+                        clean_chars = clean_markdown_for_display(segment.get('characteristics', 'Not specified'))
+                        st.write(clean_chars)
         
         with tabs[3]:
             st.markdown("### Competitive Landscape")
@@ -1063,14 +1675,18 @@ def create_analysis_tab(analyzer: MarketAnalyzer):
             with col1:
                 st.markdown("**Major Players:**")
                 for player in analysis['competitive_landscape']['major_players'][:5]:
-                    st.markdown(f"• {player}")
+                    # Clean markdown from player names
+                    clean_player = clean_markdown_for_display(player)
+                    st.markdown(f"• {clean_player}")
             
             with col2:
                 st.markdown("**Market Gaps:**")
                 for gap in analysis['competitive_landscape']['market_gaps'][:3]:
-                    st.markdown(f"• {gap}")
+                    # Clean markdown from gaps
+                    clean_gap = clean_markdown_for_display(gap)
+                    st.markdown(f"• {clean_gap}")
             
-            # Competitive positioning visualization - FIXED HERE
+            # Competitive positioning visualization - FIXED
             if analysis['competitive_landscape']['major_players']:
                 # Get actual number of players (max 5)
                 players = analysis['competitive_landscape']['major_players'][:5]
@@ -1100,7 +1716,21 @@ def create_analysis_tab(analyzer: MarketAnalyzer):
                     title="Market Share Distribution (Illustrative)"
                 )
                 fig.update_layout(height=400)
-                st.plotly_chart(fig, use_container_width=True, key="plotly2")
+                st.plotly_chart(fig, use_container_width=True, key="chart_market_share_treemap")
+        
+        st.divider()
+        
+        # Scenario Comparison
+        create_comparison_mode(analysis)
+        
+        st.divider()
+        
+        # Export Section
+        create_export_section(
+            analysis,
+            st.session_state.recommendations,
+            st.session_state.specifications
+        )
 
 def create_justification_tab(analysis: Dict[str, Any]):
     """Create enhanced product justification tab"""
@@ -1171,7 +1801,7 @@ def create_justification_tab(analysis: Dict[str, Any]):
                 domain={'x': [0, 1], 'y': [0, 1]}
             ))
             fig.update_layout(height=150, margin=dict(l=20, r=20, t=0, b=0))
-            st.plotly_chart(fig, use_container_width=True, key=f"plotly_just_{idx}")  # Unique key
+            st.plotly_chart(fig, use_container_width=True, key=f"chart_justification_{idx}")
         
         with col2:
             st.markdown(f"""
@@ -1237,7 +1867,7 @@ def create_justification_tab(analysis: Dict[str, Any]):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
     
-    st.plotly_chart(fig, use_container_width=True, key="plotly_financial")  # Changed key
+    st.plotly_chart(fig, use_container_width=True, key="chart_financial_projection")
     
     # Risk Assessment
     st.markdown("### ⚠️ Risk Assessment")
@@ -1260,128 +1890,143 @@ def create_recommendations_tab(recommender: ProductRecommender, analysis: Dict[s
         st.warning("⚠️ Please complete market analysis first")
         return
     
-    with st.spinner("Generating strategic recommendations..."):
-        recommendations = recommender.generate_recommendations(analysis)
+    if st.button("🎯 Generate Recommendations", type="primary"):
+        with st.spinner("Generating strategic recommendations..."):
+            recommendations = recommender.generate_recommendations(analysis)
+            st.session_state.recommendations = recommendations
+        st.success("✅ Recommendations generated!")
+        st.rerun()
     
-    # Strategy Overview
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown("### 🎯 Target Market Strategy")
-        for i, segment in enumerate(recommendations['target_segments'][:3], 1):
+    if st.session_state.recommendations:
+        recommendations = st.session_state.recommendations
+        
+        # Strategy Overview
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.markdown("### 🎯 Target Market Strategy")
+            for i, segment in enumerate(recommendations['target_segments'][:3], 1):
+                # Clean markdown formatting
+                clean_segment = clean_markdown_for_display(segment)
+                st.markdown(f"""
+                <div class="recommendation-item">
+                    <strong>Segment {i}:</strong> {clean_segment}
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("### 💲 Pricing Strategy")
             st.markdown(f"""
-            <div class="recommendation-item">
-                <strong>Segment {i}:</strong> {segment}
+            <div class="specification-item">
+                <h4>{recommendations['pricing_strategy'].get('price_range', '$120-150')}</h4>
+                <p>{recommendations['pricing_strategy'].get('strategy', 'Premium Value')}</p>
             </div>
             """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("### 💲 Pricing Strategy")
+        
+        # Product Positioning
+        st.markdown("### 📍 Brand Positioning")
+        # Clean markdown from positioning
+        clean_positioning = clean_markdown_for_display(recommendations.get('positioning', 'Premium sustainable footwear for the conscious consumer'))
         st.markdown(f"""
-        <div class="specification-item">
-            <h4>{recommendations['pricing_strategy'].get('price_range', '$120-150')}</h4>
-            <p>{recommendations['pricing_strategy'].get('strategy', 'Premium Value')}</p>
+        <div class="analysis-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="color: white;">"{clean_positioning}"</h3>
         </div>
         """, unsafe_allow_html=True)
-    
-    # Product Positioning
-    st.markdown("### 📍 Brand Positioning")
-    st.markdown(f"""
-    <div class="analysis-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-        <h3 style="color: white;">"{recommendations.get('positioning', 'Premium sustainable footwear for the conscious consumer')}"</h3>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Key Product Attributes
-    st.markdown("### ⭐ Recommended Product Attributes")
-    
-    cols = st.columns(2)
-    for i, attribute in enumerate(recommendations['key_attributes'][:6]):
-        with cols[i % 2]:
-            st.markdown(f"""
-            <div class="recommendation-item">
-                ✓ {attribute}
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Competitive Positioning Map
-    st.markdown("### 📊 Market Positioning Analysis")
-    
-    # Create positioning data
-    feasibility = analysis.get('feasibility_score', 75)
-    
-    competitors_data = {
-        'Brand': ['Nike', 'Adidas', 'Allbirds', 'Veja', 'Your Product', 'Reebok', 'Puma'],
-        'Price_Index': [150, 145, 95, 125, 135, 110, 120],
-        'Sustainability_Score': [6.5, 7.0, 9.5, 9.0, 9.2, 5.5, 6.0],
-        'Performance_Score': [9.5, 9.3, 6.5, 7.2, 8.5, 7.8, 8.0],
-        'Market_Share': [25, 22, 8, 5, 10, 12, 18]
-    }
-    
-    df_competitors = pd.DataFrame(competitors_data)
-    
-    fig = px.scatter(
-        df_competitors,
-        x='Sustainability_Score',
-        y='Performance_Score',
-        size='Market_Share',
-        color='Brand',
-        hover_data=['Price_Index'],
-        title='Competitive Positioning Matrix',
-        labels={
-            'Sustainability_Score': 'Sustainability Score (0-10)',
-            'Performance_Score': 'Performance Score (0-10)',
-            'Market_Share': 'Market Share (%)',
-            'Price_Index': 'Price Index'
-        },
-        size_max=50
-    )
-    
-    # Add quadrant lines
-    fig.add_hline(y=7.5, line_dash="dash", line_color="gray", opacity=0.5)
-    fig.add_vline(x=7.5, line_dash="dash", line_color="gray", opacity=0.5)
-    
-    # Add quadrant labels
-    fig.add_annotation(x=9, y=9, text="Leaders", showarrow=False, font=dict(size=12, color="gray"))
-    fig.add_annotation(x=5, y=9, text="Performance Focus", showarrow=False, font=dict(size=12, color="gray"))
-    fig.add_annotation(x=9, y=5, text="Sustainability Focus", showarrow=False, font=dict(size=12, color="gray"))
-    fig.add_annotation(x=5, y=5, text="Value Segment", showarrow=False, font=dict(size=12, color="gray"))
-    
-    fig.update_layout(height=500)
-    st.plotly_chart(fig, use_container_width=True, key="plotly7")
-    
-    # Go-to-Market Strategy
-    st.markdown("### 🚀 Go-to-Market Strategy")
-    
-    gtm_strategies = [
-        {
-            'Phase': 'Pre-Launch',
-            'Duration': '3 months',
-            'Key Activities': 'Brand building, influencer partnerships, sustainability certification',
-            'Budget Allocation': '20%'
-        },
-        {
-            'Phase': 'Launch',
-            'Duration': '1 month',
-            'Key Activities': 'Product launch events, PR campaign, digital marketing blitz',
-            'Budget Allocation': '40%'
-        },
-        {
-            'Phase': 'Growth',
-            'Duration': '6 months',
-            'Key Activities': 'Customer acquisition, retail partnerships, community building',
-            'Budget Allocation': '30%'
-        },
-        {
-            'Phase': 'Optimization',
-            'Duration': 'Ongoing',
-            'Key Activities': 'Data-driven optimization, customer retention, product iteration',
-            'Budget Allocation': '10%'
+        
+        # Key Product Attributes
+        st.markdown("### ⭐ Recommended Product Attributes")
+        
+        cols = st.columns(2)
+        for i, attribute in enumerate(recommendations['key_attributes'][:6]):
+            with cols[i % 2]:
+                # Clean markdown formatting
+                clean_attr = clean_markdown_for_display(attribute)
+                st.markdown(f"""
+                <div class="recommendation-item">
+                    ✓ {clean_attr}
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Competitive Positioning Map
+        st.markdown("### 📊 Market Positioning Analysis")
+        
+        # Create positioning data
+        feasibility = analysis.get('feasibility_score', 75)
+        
+        competitors_data = {
+            'Brand': ['Nike', 'Adidas', 'Allbirds', 'Veja', 'Your Product', 'Reebok', 'Puma'],
+            'Price_Index': [150, 145, 95, 125, 135, 110, 120],
+            'Sustainability_Score': [6.5, 7.0, 9.5, 9.0, 9.2, 5.5, 6.0],
+            'Performance_Score': [9.5, 9.3, 6.5, 7.2, 8.5, 7.8, 8.0],
+            'Market_Share': [25, 22, 8, 5, 10, 12, 18]
         }
-    ]
-    
-    gtm_df = pd.DataFrame(gtm_strategies)
-    st.dataframe(gtm_df, use_container_width=True, hide_index=True)
+        
+        df_competitors = pd.DataFrame(competitors_data)
+        
+        fig = px.scatter(
+            df_competitors,
+            x='Sustainability_Score',
+            y='Performance_Score',
+            size='Market_Share',
+            color='Brand',
+            hover_data=['Price_Index'],
+            title='Competitive Positioning Matrix',
+            labels={
+                'Sustainability_Score': 'Sustainability Score (0-10)',
+                'Performance_Score': 'Performance Score (0-10)',
+                'Market_Share': 'Market Share (%)',
+                'Price_Index': 'Price Index'
+            },
+            size_max=50
+        )
+        
+        # Add quadrant lines
+        fig.add_hline(y=7.5, line_dash="dash", line_color="gray", opacity=0.5)
+        fig.add_vline(x=7.5, line_dash="dash", line_color="gray", opacity=0.5)
+        
+        # Add quadrant labels
+        fig.add_annotation(x=9, y=9, text="Leaders", showarrow=False, font=dict(size=12, color="gray"))
+        fig.add_annotation(x=5, y=9, text="Performance Focus", showarrow=False, font=dict(size=12, color="gray"))
+        fig.add_annotation(x=9, y=5, text="Sustainability Focus", showarrow=False, font=dict(size=12, color="gray"))
+        fig.add_annotation(x=5, y=5, text="Value Segment", showarrow=False, font=dict(size=12, color="gray"))
+        
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True, key="chart_competitive_positioning")
+        
+        # Go-to-Market Strategy
+        st.markdown("### 🚀 Go-to-Market Strategy")
+        
+        gtm_strategies = [
+            {
+                'Phase': 'Pre-Launch',
+                'Duration': '3 months',
+                'Key Activities': 'Brand building, influencer partnerships, sustainability certification',
+                'Budget Allocation': '20%'
+            },
+            {
+                'Phase': 'Launch',
+                'Duration': '1 month',
+                'Key Activities': 'Product launch events, PR campaign, digital marketing blitz',
+                'Budget Allocation': '40%'
+            },
+            {
+                'Phase': 'Growth',
+                'Duration': '6 months',
+                'Key Activities': 'Customer acquisition, retail partnerships, community building',
+                'Budget Allocation': '30%'
+            },
+            {
+                'Phase': 'Optimization',
+                'Duration': 'Ongoing',
+                'Key Activities': 'Data-driven optimization, customer retention, product iteration',
+                'Budget Allocation': '10%'
+            }
+        ]
+        
+        gtm_df = pd.DataFrame(gtm_strategies)
+        st.dataframe(gtm_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("👆 Click 'Generate Recommendations' to create strategic recommendations based on your analysis.")
 
 def create_specifications_tab(recommender: ProductRecommender, analysis: Dict[str, Any]):
     """Create enhanced specifications tab"""
@@ -1391,266 +2036,518 @@ def create_specifications_tab(recommender: ProductRecommender, analysis: Dict[st
         st.warning("⚠️ Please complete market analysis first")
         return
     
-    with st.spinner("Generating product specifications..."):
-        specs = recommender.generate_specifications(analysis)
+    if st.button("📐 Generate Specifications", type="primary"):
+        with st.spinner("Generating product specifications..."):
+            specs = recommender.generate_specifications(analysis)
+            st.session_state.specifications = specs
+        st.success("✅ Specifications generated!")
+        st.rerun()
     
-    # Product Overview
-    st.markdown("### 🎨 Product Concept")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown(f"""
-        <div class="specification-item">
-            <h4>Product Line</h4>
-            <h3>{specs['product_concept']['name']}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"""
-        <div class="specification-item">
-            <h4>Category</h4>
-            <h3>{specs['product_concept']['category']}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-        <div class="specification-item">
-            <h4>Price Range</h4>
-            <h3>{specs['product_concept']['target_price']}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Technical Specifications Tabs
-    spec_tabs = st.tabs(["🧵 Materials", "⚙️ Features", "📊 Performance", "🌱 Sustainability"])
-    
-    with spec_tabs[0]:
-        st.markdown("### Materials & Construction")
-        for material in specs['technical_specs']['materials']:
+    if st.session_state.specifications:
+        specs = st.session_state.specifications
+        
+        # Product Overview
+        st.markdown("### 🎨 Product Concept")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
             st.markdown(f"""
-            <div class="recommendation-item">
-                • {material}
+            <div class="specification-item">
+                <h4>Product Line</h4>
+                <h3>{specs['product_concept']['name']}</h3>
             </div>
             """, unsafe_allow_html=True)
         
-        # Material composition chart
-        materials_data = {
-            'Material': ['Recycled Plastic', 'Bio-based Foam', 'Natural Rubber', 'Organic Cotton', 'Other'],
-            'Percentage': [35, 25, 20, 15, 5]
-        }
-        
-        fig = px.pie(
-            pd.DataFrame(materials_data),
-            values='Percentage',
-            names='Material',
-            title='Material Composition',
-            color_discrete_sequence=px.colors.qualitative.Set3
-        )
-        fig.update_layout(height=350)
-        st.plotly_chart(fig, use_container_width=True, key="plotly8")
-    
-    with spec_tabs[1]:
-        st.markdown("### Technical Features")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Core Features:**")
-            for feature in specs['technical_specs']['features'][:3]:
-                st.markdown(f"• {feature}")
-        
         with col2:
-            st.markdown("**Additional Features:**")
-            for feature in specs['technical_specs']['features'][3:]:
-                st.markdown(f"• {feature}")
+            st.markdown(f"""
+            <div class="specification-item">
+                <h4>Category</h4>
+                <h3>{specs['product_concept']['category']}</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
-        st.markdown("**Size & Color Options:**")
-        col1, col2 = st.columns(2)
+        with col3:
+            st.markdown(f"""
+            <div class="specification-item">
+                <h4>Price Range</h4>
+                <h3>{specs['product_concept']['target_price']}</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
-        with col1:
-            st.info(f"📏 Sizes: {specs['technical_specs']['sizes']}")
+        # Technical Specifications Tabs
+        spec_tabs = st.tabs(["🧵 Materials", "⚙️ Features", "📊 Performance", "🌱 Sustainability"])
         
-        with col2:
-            colors_str = ', '.join(specs['technical_specs']['colors'])
-            st.info(f"🎨 Colors: {colors_str}")
-    
-    with spec_tabs[2]:
-        st.markdown("### Performance Metrics")
+        with spec_tabs[0]:
+            st.markdown("### Materials & Construction")
+            for material in specs['technical_specs']['materials']:
+                st.markdown(f"""
+                <div class="recommendation-item">
+                    • {material}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Material composition chart
+            materials_data = {
+                'Material': ['Recycled Plastic', 'Bio-based Foam', 'Natural Rubber', 'Organic Cotton', 'Other'],
+                'Percentage': [35, 25, 20, 15, 5]
+            }
+            
+            fig = px.pie(
+                pd.DataFrame(materials_data),
+                values='Percentage',
+                names='Material',
+                title='Material Composition',
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            fig.update_layout(height=350)
+            st.plotly_chart(fig, use_container_width=True, key="chart_material_composition_pie")
         
-        metrics = specs['performance_metrics']
-        
-        # Create performance radar chart
-        categories = list(metrics.keys())
-        values = [85, 90, 75, 88, 92]  # Normalized scores for visualization
-        
-        fig = go.Figure(data=go.Scatterpolar(
-            r=values,
-            theta=[k.replace('_', ' ').title() for k in categories],
-            fill='toself',
-            name='Product Performance'
-        ))
-        
-        fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, 100]
-                )),
-            showlegend=False,
-            title="Performance Ratings",
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True, key="plotly9")
-        
-        # Performance specifications
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.metric("Weight", metrics['weight'])
-            st.metric("Durability", metrics['durability'])
-        
-        with col2:
-            st.metric("Water Resistance", metrics['water_resistance'])
-            st.metric("Energy Return", metrics.get('energy_return', '85%'))
-    
-    with spec_tabs[3]:
-        st.markdown("### Sustainability Metrics")
-        
-        if 'sustainability_metrics' in specs:
-            sustainability = specs['sustainability_metrics']
+        with spec_tabs[1]:
+            st.markdown("### Technical Features")
             
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown(f"""
-                <div class="specification-item">
-                    <h4>♻️ Recycled Content</h4>
-                    <h3>{sustainability['recycled_content']}</h3>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="specification-item">
-                    <h4>📦 Packaging</h4>
-                    <p>{sustainability['packaging']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("**Core Features:**")
+                for feature in specs['technical_specs']['features'][:3]:
+                    st.markdown(f"• {feature}")
             
             with col2:
-                st.markdown(f"""
-                <div class="specification-item">
-                    <h4>🌍 Carbon Footprint</h4>
-                    <h3>{specs['performance_metrics']['carbon_footprint']}</h3>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="specification-item">
-                    <h4>🔄 End-of-Life</h4>
-                    <p>{sustainability['end_of_life']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("**Additional Features:**")
+                for feature in specs['technical_specs']['features'][3:]:
+                    st.markdown(f"• {feature}")
+            
+            st.markdown("**Size & Color Options:**")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.info(f"📏 Sizes: {specs['technical_specs']['sizes']}")
+            
+            with col2:
+                colors_str = ', '.join(specs['technical_specs']['colors'])
+                st.info(f"🎨 Colors: {colors_str}")
         
-        # Sustainability comparison chart
-        comparison_data = {
-            'Metric': ['Carbon Footprint', 'Water Usage', 'Waste Reduction', 'Recyclability'],
-            'Our Product': [58, 45, 75, 85],
-            'Industry Average': [100, 100, 100, 45]
+        with spec_tabs[2]:
+            st.markdown("### Performance Metrics")
+            
+            metrics = specs['performance_metrics']
+            
+            # Create performance radar chart
+            categories = list(metrics.keys())
+            values = [85, 90, 75, 88, 92]  # Normalized scores for visualization
+            
+            fig = go.Figure(data=go.Scatterpolar(
+                r=values,
+                theta=[k.replace('_', ' ').title() for k in categories],
+                fill='toself',
+                name='Product Performance'
+            ))
+            
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100]
+                    )),
+                showlegend=False,
+                title="Performance Ratings",
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True, key="chart_performance_radar")
+            
+            # Performance specifications
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric("Weight", metrics['weight'])
+                st.metric("Durability", metrics['durability'])
+            
+            with col2:
+                st.metric("Water Resistance", metrics['water_resistance'])
+                st.metric("Energy Return", metrics.get('energy_return', '85%'))
+        
+        with spec_tabs[3]:
+            st.markdown("### Sustainability Metrics")
+            
+            if 'sustainability_metrics' in specs:
+                sustainability = specs['sustainability_metrics']
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"""
+                    <div class="specification-item">
+                        <h4>♻️ Recycled Content</h4>
+                        <h3>{sustainability['recycled_content']}</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown(f"""
+                    <div class="specification-item">
+                        <h4>📦 Packaging</h4>
+                        <p>{sustainability['packaging']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown(f"""
+                    <div class="specification-item">
+                        <h4>🌍 Carbon Footprint</h4>
+                        <h3>{specs['performance_metrics']['carbon_footprint']}</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown(f"""
+                    <div class="specification-item">
+                        <h4>🔄 End-of-Life</h4>
+                        <p>{sustainability['end_of_life']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Sustainability comparison chart
+            comparison_data = {
+                'Metric': ['Carbon Footprint', 'Water Usage', 'Waste Reduction', 'Recyclability'],
+                'Our Product': [58, 45, 75, 85],
+                'Industry Average': [100, 100, 100, 45]
+            }
+            
+            df_comparison = pd.DataFrame(comparison_data)
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(name='Our Product', x=df_comparison['Metric'], y=df_comparison['Our Product'],
+                                marker_color='#10b981'))
+            fig.add_trace(go.Bar(name='Industry Average', x=df_comparison['Metric'], y=df_comparison['Industry Average'],
+                                marker_color='#ef4444'))
+            
+            fig.update_layout(
+                title='Sustainability Performance vs Industry Average',
+                yaxis_title='Index (Industry Avg = 100)',
+                barmode='group',
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True, key="chart_sustainability_comparison_bar")
+        
+        # Development Timeline - Alternative simpler version
+        st.markdown("### 📅 Development Timeline")
+        
+        timeline_data = {
+            'Phase': ['Research & Design', 'Prototyping', 'Testing & Validation', 'Production Setup', 'Launch Preparation'],
+            'Duration': ['3 months', '2 months', '2 months', '3 months', '1 month'],
+            'Start Month': ['Month 1', 'Month 4', 'Month 6', 'Month 8', 'Month 11'],
+            'Status': ['✅ Completed', '🔄 In Progress', '📅 Planned', '📅 Planned', '📅 Planned'],
+            'Key Deliverables': [
+                'Market analysis, design concepts',
+                'Working prototypes, initial feedback',
+                'Performance testing, user trials',
+                'Manufacturing setup, quality control',
+                'Marketing materials, launch event'
+            ]
         }
         
-        df_comparison = pd.DataFrame(comparison_data)
+        df_timeline = pd.DataFrame(timeline_data)
         
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name='Our Product', x=df_comparison['Metric'], y=df_comparison['Our Product'],
-                            marker_color='#10b981'))
-        fig.add_trace(go.Bar(name='Industry Average', x=df_comparison['Metric'], y=df_comparison['Industry Average'],
-                            marker_color='#ef4444'))
-        
-        fig.update_layout(
-            title='Sustainability Performance vs Industry Average',
-            yaxis_title='Index (Industry Avg = 100)',
-            barmode='group',
-            height=400
+        # Style the dataframe
+        st.dataframe(
+            df_timeline.style.applymap(
+                lambda x: 'color: #10b981' if '✅' in str(x) else 
+                         'color: #3b82f6' if '🔄' in str(x) else 
+                         'color: #64748b',
+                subset=['Status']
+            ),
+            use_container_width=True,
+            hide_index=True
         )
         
-        st.plotly_chart(fig, use_container_width=True, key="plotly5")
-    
-    # Development Timeline - Alternative simpler version
-    st.markdown("### 📅 Development Timeline")
-    
-    timeline_data = {
-        'Phase': ['Research & Design', 'Prototyping', 'Testing & Validation', 'Production Setup', 'Launch Preparation'],
-        'Duration': ['3 months', '2 months', '2 months', '3 months', '1 month'],
-        'Start Month': ['Month 1', 'Month 4', 'Month 6', 'Month 8', 'Month 11'],
-        'Status': ['✅ Completed', '🔄 In Progress', '📅 Planned', '📅 Planned', '📅 Planned'],
-        'Key Deliverables': [
-            'Market analysis, design concepts',
-            'Working prototypes, initial feedback',
-            'Performance testing, user trials',
-            'Manufacturing setup, quality control',
-            'Marketing materials, launch event'
+        # Timeline visualization as a simple bar chart
+        months = list(range(1, 12))
+        fig = go.Figure()
+        
+        # Add bars for each phase
+        phase_data = [
+            {'name': 'Research & Design', 'start': 1, 'duration': 3, 'color': '#10b981'},
+            {'name': 'Prototyping', 'start': 4, 'duration': 2, 'color': '#3b82f6'},
+            {'name': 'Testing & Validation', 'start': 6, 'duration': 2, 'color': '#94a3b8'},
+            {'name': 'Production Setup', 'start': 8, 'duration': 3, 'color': '#94a3b8'},
+            {'name': 'Launch Preparation', 'start': 11, 'duration': 1, 'color': '#94a3b8'}
         ]
-    }
+        
+        for phase in phase_data:
+            fig.add_trace(go.Scatter(
+                x=list(range(phase['start'], phase['start'] + phase['duration'])),
+                y=[phase['name']] * phase['duration'],
+                mode='lines',
+                line=dict(color=phase['color'], width=20),
+                name=phase['name'],
+                showlegend=False,
+                hovertemplate='%{y}<br>Months %{x}<extra></extra>'
+            ))
+        
+        fig.update_layout(
+            title='Development Timeline (12 Months)',
+            xaxis_title='Month',
+            yaxis_title='Phase',
+            height=300,
+            xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+            yaxis=dict(categoryorder='array', categoryarray=['Research & Design', 'Prototyping', 'Testing & Validation', 'Production Setup', 'Launch Preparation'][::-1])
+        )
+        
+        st.plotly_chart(fig, use_container_width=True, key="chart_development_timeline_gantt")
     
-    df_timeline = pd.DataFrame(timeline_data)
-    
-    # Style the dataframe
-    st.dataframe(
-        df_timeline.style.applymap(
-            lambda x: 'color: #10b981' if '✅' in str(x) else 
-                     'color: #3b82f6' if '🔄' in str(x) else 
-                     'color: #64748b',
-            subset=['Status']
-        ),
-        use_container_width=True,
-        hide_index=True
-    )
-    
-    # Timeline visualization as a simple bar chart
-    months = list(range(1, 12))
-    fig = go.Figure()
-    
-    # Add bars for each phase
-    phase_data = [
-        {'name': 'Research & Design', 'start': 1, 'duration': 3, 'color': '#10b981'},
-        {'name': 'Prototyping', 'start': 4, 'duration': 2, 'color': '#3b82f6'},
-        {'name': 'Testing & Validation', 'start': 6, 'duration': 2, 'color': '#94a3b8'},
-        {'name': 'Production Setup', 'start': 8, 'duration': 3, 'color': '#94a3b8'},
-        {'name': 'Launch Preparation', 'start': 11, 'duration': 1, 'color': '#94a3b8'}
-    ]
-    
-    for phase in phase_data:
-        fig.add_trace(go.Scatter(
-            x=list(range(phase['start'], phase['start'] + phase['duration'])),
-            y=[phase['name']] * phase['duration'],
-            mode='lines',
-            line=dict(color=phase['color'], width=20),
-            name=phase['name'],
-            showlegend=False,
-            hovertemplate='%{y}<br>Months %{x}<extra></extra>'
-        ))
-    
-    fig.update_layout(
-        title='Development Timeline (12 Months)',
-        xaxis_title='Month',
-        yaxis_title='Phase',
-        height=300,
-        xaxis=dict(tickmode='linear', tick0=1, dtick=1),
-        yaxis=dict(categoryorder='array', categoryarray=['Research & Design', 'Prototyping', 'Testing & Validation', 'Production Setup', 'Launch Preparation'][::-1])
-    )
-    
-    st.plotly_chart(fig, use_container_width=True, key="plotly4")
+    else:
+        st.info("👆 Click 'Generate Specifications' to create detailed product specifications based on your analysis.")
 
 def create_footer():
-    """Create modern footer"""
+    """Create compact footer with AWS copyright"""
     st.markdown("""
     <div class="footer">
-        <p>© 2025 Shoe Industry Market Research Analyzer | Powered by AWS Bedrock & LangChain</p>
+        <div class="footer-content">
+            <p class="footer-text" style="margin: 0; font-size: 0.875rem; opacity: 0.9;">
+                © 2026, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
+
+def create_export_section(analysis: Dict[str, Any], recommendations: Dict[str, Any] = None, specs: Dict[str, Any] = None):
+    """Add export functionality"""
+    st.markdown("### 📥 Export Results")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Export as JSON
+        if st.button("📄 Export JSON", use_container_width=True):
+            export_data = {
+                'analysis': analysis,
+                'recommendations': recommendations,
+                'specifications': specs,
+                'export_date': datetime.now().isoformat()
+            }
+            
+            json_str = json.dumps(export_data, indent=2, default=str)
+            st.download_button(
+                label="Download JSON",
+                data=json_str,
+                file_name=f"market_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+    
+    with col2:
+        # Export as CSV (simplified data)
+        if st.button("📊 Export CSV", use_container_width=True):
+            # Create simplified CSV data
+            csv_data = []
+            
+            # Add opportunities
+            for i, opp in enumerate(analysis.get('opportunities', []), 1):
+                csv_data.append({
+                    'Category': 'Opportunity',
+                    'Item': i,
+                    'Description': opp,
+                    'Score': analysis.get('feasibility_score', 0)
+                })
+            
+            # Add segments
+            for seg in analysis.get('customer_segments', []):
+                csv_data.append({
+                    'Category': 'Customer Segment',
+                    'Item': seg.get('segment', ''),
+                    'Description': seg.get('characteristics', ''),
+                    'Score': seg.get('size', '')
+                })
+            
+            df = pd.DataFrame(csv_data)
+            csv_str = df.to_csv(index=False)
+            
+            st.download_button(
+                label="Download CSV",
+                data=csv_str,
+                file_name=f"market_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+    
+    with col3:
+        # Export summary as text
+        if st.button("📝 Export Summary", use_container_width=True):
+            summary = f"""MARKET RESEARCH ANALYSIS SUMMARY
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+FEASIBILITY SCORE: {analysis.get('feasibility_score', 0)}%
+
+MARKET INSIGHTS:
+- Market Size: {analysis.get('market_insights', {}).get('market_size', 'N/A')}
+- Growth Rate: {analysis.get('market_insights', {}).get('growth_rate', 'N/A')}
+
+TOP OPPORTUNITIES:
+"""
+            for i, opp in enumerate(analysis.get('opportunities', [])[:5], 1):
+                summary += f"{i}. {opp}\n"
+            
+            summary += f"\nCUSTOMER SEGMENTS: {len(analysis.get('customer_segments', []))}\n"
+            summary += f"MAJOR COMPETITORS: {len(analysis.get('competitive_landscape', {}).get('major_players', []))}\n"
+            
+            st.download_button(
+                label="Download Summary",
+                data=summary,
+                file_name=f"market_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+
+def create_chat_assistant(rag_engine: RAGQueryEngine):
+    """Add interactive chat for document Q&A"""
+    st.markdown("### 💬 Ask Questions About Your Analysis")
+    
+    # Display chat history
+    for message in st.session_state.chat_history:
+        # Safety check for message format
+        if isinstance(message, dict) and 'role' in message and 'content' in message:
+            with st.chat_message(message['role']):
+                st.markdown(message['content'])
+    
+    # Chat input
+    if prompt := st.chat_input("Ask a question about the market research..."):
+        # Add user message
+        st.session_state.chat_history.append({'role': 'user', 'content': prompt})
+        
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # Generate response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                system_prompt = "You are a market research expert. Answer questions based on the provided context. Be concise and specific."
+                response = rag_engine.query(prompt, system_prompt, k=4)
+                
+                if response:
+                    st.markdown(response)
+                    st.session_state.chat_history.append({'role': 'assistant', 'content': response})
+                else:
+                    error_msg = "I apologize, but I'm having trouble generating a response. Please try rephrasing your question."
+                    st.error(error_msg)
+                    st.session_state.chat_history.append({'role': 'assistant', 'content': error_msg})
+    
+    # Clear chat button
+    if len(st.session_state.chat_history) > 0:
+        if st.button("🗑️ Clear Chat History"):
+            st.session_state.chat_history = []
+            st.rerun()
+
+def create_comparison_mode(analysis: Dict[str, Any]):
+    """Allow users to compare multiple analyses"""
+    st.markdown("### 🔄 Scenario Comparison")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        scenario_name = st.text_input("Scenario Name", placeholder="e.g., Premium Market Entry")
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("💾 Save Scenario", use_container_width=True):
+            if analysis and scenario_name:
+                st.session_state.comparison_analyses.append({
+                    'name': scenario_name,
+                    'analysis': analysis,
+                    'timestamp': datetime.now()
+                })
+                st.success(f"✅ Saved: {scenario_name}")
+                st.rerun()
+    
+    # Display comparison
+    if len(st.session_state.comparison_analyses) >= 1:
+        st.markdown("#### Saved Scenarios")
+        
+        comparison_data = []
+        for idx, scenario in enumerate(st.session_state.comparison_analyses):
+            comparison_data.append({
+                'Scenario': scenario['name'],
+                'Feasibility': f"{scenario['analysis']['feasibility_score']}%",
+                'Opportunities': len(scenario['analysis']['opportunities']),
+                'Market Size': scenario['analysis']['market_insights'].get('market_size', 'N/A'),
+                'Saved': scenario['timestamp'].strftime('%Y-%m-%d %H:%M')
+            })
+        
+        df_comparison = pd.DataFrame(comparison_data)
+        st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+        
+        # Side-by-side comparison charts
+        if len(st.session_state.comparison_analyses) >= 2:
+            fig = go.Figure()
+            for scenario in st.session_state.comparison_analyses:
+                fig.add_trace(go.Bar(
+                    name=scenario['name'],
+                    x=['Feasibility', 'Opportunities', 'Segments'],
+                    y=[
+                        scenario['analysis']['feasibility_score'],
+                        len(scenario['analysis']['opportunities']) * 10,
+                        len(scenario['analysis']['customer_segments']) * 20
+                    ]
+                ))
+            
+            fig.update_layout(
+                title='Scenario Comparison',
+                barmode='group',
+                height=400,
+                yaxis_title='Score'
+            )
+            st.plotly_chart(fig, use_container_width=True, key="chart_scenario_comparison")
+        
+        # Clear scenarios button
+        if st.button("🗑️ Clear All Scenarios"):
+            st.session_state.comparison_analyses = []
+            st.rerun()
+
+def generate_automated_insights(analysis: Dict[str, Any]) -> List[str]:
+    """Generate automated insights from analysis"""
+    insights = []
+    
+    # Feasibility insight
+    feasibility = analysis.get('feasibility_score', 0)
+    if feasibility > 80:
+        insights.append(f"🎯 **Strong Market Opportunity**: With a feasibility score of {feasibility}%, this market shows excellent potential for entry.")
+    elif feasibility > 60:
+        insights.append(f"⚠️ **Moderate Opportunity**: Feasibility score of {feasibility}% suggests careful positioning is needed.")
+    else:
+        insights.append(f"🔴 **High Risk**: Feasibility score of {feasibility}% indicates significant challenges.")
+    
+    # Growth insight
+    growth_rate = analysis.get('market_insights', {}).get('growth_rate', '')
+    if growth_rate and growth_rate != "Not specified":
+        insights.append(f"📈 **Market Growth**: {growth_rate} indicates expanding market opportunities.")
+    
+    # Competition insight
+    num_competitors = len(analysis.get('competitive_landscape', {}).get('major_players', []))
+    if num_competitors > 5:
+        insights.append(f"🏆 **Competitive Market**: {num_competitors} major players identified - differentiation is critical.")
+    elif num_competitors > 0:
+        insights.append(f"🏆 **Moderate Competition**: {num_competitors} major players - strategic positioning opportunities exist.")
+    
+    # Opportunity insight
+    num_opportunities = len(analysis.get('opportunities', []))
+    if num_opportunities >= 5:
+        insights.append(f"💡 **Rich Opportunity Landscape**: {num_opportunities} distinct opportunities identified for market entry.")
+    
+    # Segment insight
+    num_segments = len(analysis.get('customer_segments', []))
+    if num_segments >= 3:
+        insights.append(f"👥 **Diverse Target Market**: {num_segments} customer segments provide multiple entry points.")
+    
+    return insights
+
+def display_automated_insights(analysis: Dict[str, Any]):
+    """Display automated insights prominently"""
+    insights = generate_automated_insights(analysis)
+    
+    st.markdown("### 🤖 AI-Generated Insights")
+    
+    for insight in insights:
+        st.info(insight)
 
 def main():
     """Main application with modern architecture"""
@@ -1671,49 +2568,87 @@ def main():
         return
     
     # Sidebar configuration
-    model_id, k_chunks = create_sidebar()
+    create_sidebar()
     
     # Main header
-    st.markdown('<h1 class="main-header">👟 Shoe Industry Market Research Analyzer</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">AI-Powered Market Analysis & Product Development Intelligence</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <h1 class="main-header">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="display: inline-block; vertical-align: middle; margin-right: 12px;">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#gradient1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M2 17L12 22L22 17" stroke="url(#gradient1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="url(#gradient1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22">
+                        <stop offset="0%" style="stop-color:#FF9900;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#146EB4;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            Shoe Industry Market Research Analyzer
+        </h1>
+        <p class="subtitle">
+            AI-Powered Market Analysis & Product Development Intelligence
+            <br/>
+            <span style="font-size: 0.875rem; color: #9CA3AF; margin-top: 0.5rem; display: inline-block;">
+                Powered by Amazon Bedrock • Advanced RAG Technology • Real-time Insights
+            </span>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Document upload section
-    document_processed = create_document_upload_section(st.session_state.bedrock_service)
+    # Create 70/30 split layout
+    col_main, col_side = st.columns([7, 3])
     
-    # Initialize analysis components
-    rag_engine = RAGQueryEngine(
-        st.session_state.vectorstore,
-        st.session_state.bedrock_service,
-        model_id
-    )
+    with col_side:
+        # Model selection panel
+        with st.container(border=True):
+            model_id, k_chunks = create_model_selection_panel()
     
-    analyzer = MarketAnalyzer(rag_engine)
-    recommender = ProductRecommender(rag_engine)
-    
-    # Main content tabs
-    tab_names = ["📊 Market Analysis", "🎯 Justification", "💡 Recommendations", "📋 Specifications"]
-    tabs = st.tabs(tab_names)
-    
-    with tabs[0]:
-        create_analysis_tab(analyzer)
-    
-    with tabs[1]:
-        if st.session_state.analysis_results:
-            create_justification_tab(st.session_state.analysis_results)
-        else:
-            st.info("📊 Please complete the Market Analysis first to view justifications.")
-    
-    with tabs[2]:
-        if st.session_state.analysis_results:
-            create_recommendations_tab(recommender, st.session_state.analysis_results)
-        else:
-            st.info("📊 Please complete the Market Analysis first to view recommendations.")
-    
-    with tabs[3]:
-        if st.session_state.analysis_results:
-            create_specifications_tab(recommender, st.session_state.analysis_results)
-        else:
-            st.info("📊 Please complete the Market Analysis first to view specifications.")
+    with col_main:
+        # Document upload section
+        document_processed = create_document_upload_section(st.session_state.bedrock_service)
+        
+        # Initialize analysis components
+        rag_engine = RAGQueryEngine(
+            st.session_state.vectorstore,
+            st.session_state.bedrock_service,
+            model_id
+        )
+        
+        analyzer = MarketAnalyzer(rag_engine)
+        recommender = ProductRecommender(rag_engine)
+        
+        # Main content tabs
+        tab_names = ["📊 Market Analysis", "🎯 Justification", "💡 Recommendations", "📋 Specifications", "💬 Chat Assistant"]
+        tabs = st.tabs(tab_names)
+        
+        with tabs[0]:
+            create_analysis_tab(analyzer)
+        
+        with tabs[1]:
+            if st.session_state.analysis_results:
+                create_justification_tab(st.session_state.analysis_results)
+            else:
+                st.info("📊 Please complete the Market Analysis first to view justifications.")
+        
+        with tabs[2]:
+            if st.session_state.analysis_results:
+                create_recommendations_tab(recommender, st.session_state.analysis_results)
+            else:
+                st.info("📊 Please complete the Market Analysis first to view recommendations.")
+        
+        with tabs[3]:
+            if st.session_state.analysis_results:
+                create_specifications_tab(recommender, st.session_state.analysis_results)
+            else:
+                st.info("📊 Please complete the Market Analysis first to view specifications.")
+        
+        with tabs[4]:
+            if st.session_state.vectorstore or st.session_state.analysis_results:
+                create_chat_assistant(rag_engine)
+            else:
+                st.info("📄 Please upload and process documents first to use the chat assistant.")
     
     # Footer
     create_footer()

@@ -5,6 +5,7 @@ matplotlib
 langchain
 langchain_aws
 langchain_community
+langchain_text_splitters
 seaborn
 pandas
 scikit-learn
@@ -12,3 +13,4 @@ pypdf
 plotly
 structlog
 faiss-cpu
+strands-agents
