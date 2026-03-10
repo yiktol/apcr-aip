@@ -81,7 +81,7 @@ Resources:
       VPCZoneIdentifier:
         - !Ref PrivateSubnetId
       MinSize: 1
-      MaxSize: 4
+      MaxSize: 1
       DesiredCapacity: 1
       TargetGroupARNs:
         - !Ref TargetGroup80
@@ -106,7 +106,7 @@ Resources:
           - InstanceType: t3.large
           - InstanceType: t3a.large
         InstancesDistribution:
-          OnDemandBaseCapacity: 0
+          OnDemandBaseCapacity: 1
           OnDemandPercentageAboveBaseCapacity: 0
           SpotAllocationStrategy: capacity-optimized-prioritized
 
@@ -163,11 +163,7 @@ Resources:
               - systemctl enable apache2
               - chown -R ubuntu:root /home/ubuntu/environment
               - crontab mycrontab
-              - /bin/bash /home/ubuntu/environment/apcr-aip/session1/setup.sh &
-              - /bin/bash /home/ubuntu/environment/apcr-aip/session2/setup.sh &
-              - /bin/bash /home/ubuntu/environment/apcr-aip/session3/setup.sh &
-              - /bin/bash /home/ubuntu/environment/apcr-aip/session4/setup.sh &
-              - /bin/bash /home/ubuntu/environment/apcr-aip/session5/setup.sh &
+              - /bin/bash /home/ubuntu/environment/apcr-aip/run-all-sessions.sh
 
   # Auto Scaling Policies
   AIPWebServerScaleOutPolicy:

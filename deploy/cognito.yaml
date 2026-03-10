@@ -1,67 +1,166 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS Cognito configuration with multiple social identity providers
+Description: AWS Cognito configuration with multiple social identity providers (using SSM Parameter Store)
 
 Parameters:
-  CognitoUserEmail:
+  ParameterPrefix:
     Type: String
-
-  PublicHostedZone:
-    Type: String
-
-  CloudfrontDomainName:
-    Type: String
-
-  GenAIDomainName:  
-    Type: String
-    Description: Enter the domain name for the GenAI API.
-    Default: genai.aws.yikyakyuk.com
-
-  # Google parameters
-  GoogleClientId:
-    Type: String
-    Description: Google OAuth Client ID
-    NoEcho: false
-  GoogleClientSecret:
-    Type: String
-    Description: Google OAuth Client Secret
-    NoEcho: true
-  
-  # Facebook parameters
-  FacebookAppId:
-    Type: String
-    Description: Facebook App ID
-    NoEcho: false
-  FacebookAppSecret:
-    Type: String
-    Description: Facebook App Secret
-    NoEcho: true
-  
-  # Amazon Login parameters
-  AmazonAppId:
-    Type: String
-    Description: Amazon App ID
-    NoEcho: false
-  AmazonAppSecret:
-    Type: String
-    Description: Amazon App Secret
-    NoEcho: true
-
-  UserPoolName:
-    Type: String
-    Default: genai-ess-user-pool
-
+    Description: SSM Parameter Store prefix for Cognito configuration
+    Default: /genai/cognito
 
 Resources:
+  # Lambda function to retrieve SSM parameters
+  SSMParameterReaderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*'
+
+  SSMParameterReaderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt SSMParameterReaderRole.Arn
+      Timeout: 30
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          
+          ssm = boto3.client('ssm')
+          
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+                  
+                  parameter_name = event['ResourceProperties']['ParameterName']
+                  with_decryption = event['ResourceProperties'].get('WithDecryption', 'true').lower() == 'true'
+                  
+                  response = ssm.get_parameter(
+                      Name=parameter_name,
+                      WithDecryption=with_decryption
+                  )
+                  
+                  value = response['Parameter']['Value']
+                  
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                      'Value': value
+                  })
+              except Exception as e:
+                  print(f"Error: {str(e)}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {
+                      'Error': str(e)
+                  })
+
+  # Retrieve parameters from SSM
+  CognitoUserEmailParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/CognitoUserEmail'
+      WithDecryption: false
+
+  PublicHostedZoneParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/PublicHostedZone'
+      WithDecryption: false
+
+  CloudfrontDomainNameParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/CloudfrontDomainName'
+      WithDecryption: false
+
+  GenAIDomainNameParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/GenAIDomainName'
+      WithDecryption: false
+
+  GoogleClientIdParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/GoogleClientId'
+      WithDecryption: false
+
+  GoogleClientSecretParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/GoogleClientSecret'
+      WithDecryption: true
+
+  FacebookAppIdParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/FacebookAppId'
+      WithDecryption: false
+
+  FacebookAppSecretParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/FacebookAppSecret'
+      WithDecryption: true
+
+  AmazonAppIdParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/AmazonAppId'
+      WithDecryption: false
+
+  AmazonAppSecretParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/AmazonAppSecret'
+      WithDecryption: true
+
+  UserPoolNameParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/UserPoolName'
+      WithDecryption: false
+
+  # Rest of the Cognito configuration (same as cognito.yaml but using !GetAtt for parameter values)
   UserPool:
     Type: 'AWS::Cognito::UserPool'
     Properties:
-      UserPoolName: !Ref UserPoolName
+      UserPoolName: !GetAtt UserPoolNameParam.Value
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false  # Changed to false to allow users to sign up
+        AllowAdminCreateUserOnly: false
       AutoVerifiedAttributes:
-      - email
+        - email
       UsernameAttributes:
-      - email
+        - email
       Policies:
         PasswordPolicy:
           MinimumLength: 6
@@ -71,7 +170,6 @@ Resources:
           RequireUppercase: true
           TemporaryPasswordValidityDays: 10
 
-  # Define Google Identity Provider
   GoogleIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
     Properties:
@@ -79,8 +177,8 @@ Resources:
       ProviderName: Google
       ProviderType: Google
       ProviderDetails:
-        client_id: !Ref GoogleClientId
-        client_secret: !Ref GoogleClientSecret
+        client_id: !GetAtt GoogleClientIdParam.Value
+        client_secret: !GetAtt GoogleClientSecretParam.Value
         authorize_scopes: "email profile openid"
       AttributeMapping:
         email: email
@@ -89,7 +187,6 @@ Resources:
         family_name: family_name
         picture: picture
 
-  #Define Facebook Identity Provider
   FacebookIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
     Properties:
@@ -97,13 +194,12 @@ Resources:
       ProviderName: Facebook
       ProviderType: Facebook
       ProviderDetails:
-        client_id: !Ref FacebookAppId
-        client_secret: !Ref FacebookAppSecret
+        client_id: !GetAtt FacebookAppIdParam.Value
+        client_secret: !GetAtt FacebookAppSecretParam.Value
         authorize_scopes: "email public_profile"
       AttributeMapping:
         email: email
 
-  # Define Amazon Identity Provider
   AmazonIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
     Properties:
@@ -111,28 +207,33 @@ Resources:
       ProviderName: LoginWithAmazon
       ProviderType: LoginWithAmazon
       ProviderDetails:
-        client_id: !Ref AmazonAppId
-        client_secret: !Ref AmazonAppSecret
+        client_id: !GetAtt AmazonAppIdParam.Value
+        client_secret: !GetAtt AmazonAppSecretParam.Value
         authorize_scopes: "profile postal_code"
       AttributeMapping:
         email: email
         name: name
 
-  # Define Cognito User Pool Domain
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Sub auth.${PublicHostedZone}
+      Domain: !Sub 
+        - 'auth.${HostedZone}'
+        - HostedZone: !GetAtt PublicHostedZoneParam.Value
       UserPoolId: !Ref UserPool
-      ManagedLoginVersion: "2"
+      ManagedLoginVersion: 2
       CustomDomainConfig: 
         CertificateArn: arn:aws:acm:us-east-1:875692608981:certificate/417df345-28ea-4c39-8e5d-d985abb59908
 
   CognitoCNAMERecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Sub ${PublicHostedZone}.
-      Name: !Sub auth.${PublicHostedZone}
+      HostedZoneName: !Sub 
+        - '${HostedZone}.'
+        - HostedZone: !GetAtt PublicHostedZoneParam.Value
+      Name: !Sub 
+        - 'auth.${HostedZone}'
+        - HostedZone: !GetAtt PublicHostedZoneParam.Value
       Type: CNAME
       TTL: 60
       ResourceRecords:
@@ -144,7 +245,6 @@ Resources:
       - GoogleIdentityProvider
       - FacebookIdentityProvider
       - AmazonIdentityProvider
-      # - AppleIdentityProvider
     Properties:
       RefreshTokenValidity: 30
       IdTokenValidity: 30
@@ -162,104 +262,96 @@ Resources:
         - profile
         - aws.cognito.signin.user.admin
       CallbackURLs:
-        - !Sub https://${CloudfrontDomainName}/genai-1/
-        - !Sub https://${CloudfrontDomainName}/genai-2/
-        - !Sub https://${CloudfrontDomainName}/genai-3/
-        - !Sub https://${CloudfrontDomainName}/genai-4/
-        - !Sub https://${CloudfrontDomainName}/genai-5/
-        - !Sub https://${GenAIDomainName}/genai-1/
-        - !Sub https://${GenAIDomainName}/genai-2/
-        - !Sub https://${GenAIDomainName}/genai-3/
-        - !Sub https://${GenAIDomainName}/genai-4/
-        - !Sub https://${GenAIDomainName}/genai-5/
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-1/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-2/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-3/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-4/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-5/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-1/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-2/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-3/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-4/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-5/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
       LogoutURLs:
-        - !Sub https://${CloudfrontDomainName}/genai-1/
-        - !Sub https://${CloudfrontDomainName}/genai-2/
-        - !Sub https://${CloudfrontDomainName}/genai-3/
-        - !Sub https://${CloudfrontDomainName}/genai-4/
-        - !Sub https://${CloudfrontDomainName}/genai-5/
-        - !Sub https://${GenAIDomainName}/genai-1/
-        - !Sub https://${GenAIDomainName}/genai-2/
-        - !Sub https://${GenAIDomainName}/genai-3/
-        - !Sub https://${GenAIDomainName}/genai-4/
-        - !Sub https://${GenAIDomainName}/genai-5/
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-1/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-2/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-3/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-4/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${CloudfrontDomain}/genai-5/'
+          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-1/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-2/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-3/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-4/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 
+          - 'https://${GenAIDomain}/genai-5/'
+          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
       SupportedIdentityProviders:
         - COGNITO
         - Google
         - Facebook
         - LoginWithAmazon
-        # - SignInWithApple
       GenerateSecret: true
       UserPoolId: !Ref UserPool
 
-  # create admin user 
-  UserPoolUser:
-    Type: 'AWS::Cognito::UserPoolUser'
-    Properties:
-      UserPoolId: !Ref UserPool
-      Username: !Ref CognitoUserEmail
-      DesiredDeliveryMediums:
-        - EMAIL
-      UserAttributes:
-        - Name: email
-          Value: !Ref CognitoUserEmail
-        - Name: email_verified
-          Value: "true"
-
-  # Secrets Manager Resource to store Cognito info
-  CognitoSecrets:
-    Type: AWS::SecretsManager::Secret
-    DependsOn: UserPoolClient
-    Properties:
-      Name: genai/essentials
-      Description: "Amazon Cognito configuration information"
-      SecretString: !Sub |
-        {
-          "COGNITO_USER_POOL_ID": "${UserPool}",
-          "COGNITO_APP_CLIENT_ID": "${UserPoolClient}",
-          "COGNITO_APP_CLIENT_SECRET": "${UserPoolClient.ClientSecret}",
-          "COGNITO_DOMAIN": "https://auth.${PublicHostedZone}",
-          "COGNITO_REDIRECT_URI_1": "https://${GenAIDomainName}/genai-1/",
-          "COGNITO_REDIRECT_URI_2": "https://${GenAIDomainName}/genai-2/",
-          "COGNITO_REDIRECT_URI_3": "https://${GenAIDomainName}/genai-3/",
-          "COGNITO_REDIRECT_URI_4": "https://${GenAIDomainName}/genai-4/",
-          "COGNITO_REDIRECT_URI_5": "https://${GenAIDomainName}/genai-5/",
-          "COGNITO_IDENTITY_POOL_ID": "",
-          "AWS_REGION": "${AWS::Region}",
-          "AWS_ACCOUNT_ID": "${AWS::AccountId}"
-        }
-      Tags:
-        - Key: Application
-          Value: Auth
-
-
   ManagedLoginBranding:
     Type: AWS::Cognito::ManagedLoginBranding
+    DependsOn: UserPoolClient
     Properties:
-      Assets:
-        - Bytes: PHN2ZyB3aWR0aD0iMjAwMDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgMjAwMDAgNDAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBjbGlwLXBhdGg9InVybCgjY2xpcDBfMTcyNTlfMjM2Njc0KSI+CjxyZWN0IHdpZHRoPSIyMDAwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjcGFpbnQwX2xpbmVhcl8xNzI1OV8yMzY2NzQpIi8+CjxwYXRoIGQ9Ik0wIDBIMjAwMDBWNDAwSDBWMFoiIGZpbGw9IiMxMjIwMzciIGZpbGwtb3BhY2l0eT0iMC41Ii8+CjwvZz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQwX2xpbmVhcl8xNzI1OV8yMzY2NzQiIHgxPSItODk0LjI0OSIgeTE9IjE5OS45MzEiIHgyPSIxODAzNC41IiB5Mj0iLTU4OTkuNTciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0JGODBGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNGRjhGQUIiLz4KPC9saW5lYXJHcmFkaWVudD4KPGNsaXBQYXRoIGlkPSJjbGlwMF8xNzI1OV8yMzY2NzQiPgo8cmVjdCB3aWR0aD0iMjAwMDAiIGhlaWdodD0iNDAwIiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=
-          Category: PAGE_FOOTER_BACKGROUND
-          ColorMode: DARK
-          Extension: SVG
+      UserPoolId: !Ref UserPool
       ClientId: !Ref UserPoolClient
+      UseCognitoProvidedValues: false
       ReturnMergedResources: false
       Settings:
         categories:
           auth:
             authMethodOrder:
-              - - display: BUTTON
-                  type: FEDERATED
-                - display: INPUT
-                  type: USERNAME_PASSWORD
+              - - type: USERNAME_PASSWORD
+                  display: INPUT
+                - type: FEDERATED
+                  display: BUTTON
             federation:
               interfaceStyle: BUTTON_LIST
               order: []
           form:
             displayGraphics: true
-            instructions:
-              enabled: false
-            languageSelector:
-              enabled: false
             location:
               horizontal: CENTER
               vertical: CENTER
@@ -271,289 +363,92 @@ Resources:
             pageHeader:
               enabled: false
             spacingDensity: REGULAR
-          signUp:
-            acceptanceElements:
-              - enforcement: NONE
-                textKey: en
         componentClasses:
           buttons:
-            borderRadius: 8.0
+            borderRadius: 4
           divider:
             darkMode:
-              borderColor: 232b37ff
+              borderColor: D5DBDBff
             lightMode:
-              borderColor: ebebf0ff
-          dropDown:
-            borderRadius: 8.0
-            darkMode:
-              defaults:
-                itemBackgroundColor: 192534ff
-              hover:
-                itemBackgroundColor: 081120ff
-                itemBorderColor: 5f6b7aff
-                itemTextColor: e9ebedff
-              match:
-                itemBackgroundColor: d1d5dbff
-                itemTextColor: 89bdeeff
-            lightMode:
-              defaults:
-                itemBackgroundColor: ffffffff
-              hover:
-                itemBackgroundColor: f4f4f4ff
-                itemBorderColor: 7d8998ff
-                itemTextColor: 000716ff
-              match:
-                itemBackgroundColor: 414d5cff
-                itemTextColor: 0972d3ff
+              borderColor: D5DBDBff
           focusState:
             darkMode:
-              borderColor: 539fe5ff
+              borderColor: 0073BBff
             lightMode:
-              borderColor: 0972d3ff
+              borderColor: 0073BBff
           idpButtons:
             icons:
               enabled: true
           input:
-            borderRadius: 8.0
+            borderRadius: 4
             darkMode:
               defaults:
-                backgroundColor: 0f1b2aff
-                borderColor: 5f6b7aff
-              placeholderColor: 8d99a8ff
+                backgroundColor: FFFFFFff
+                borderColor: D5DBDBff
+              placeholderColor: 879596ff
             lightMode:
               defaults:
-                backgroundColor: ffffffff
-                borderColor: 7d8998ff
-              placeholderColor: 5f6b7aff
+                backgroundColor: FFFFFFff
+                borderColor: D5DBDBff
+              placeholderColor: 879596ff
           inputDescription:
             darkMode:
-              textColor: 8d99a8ff
+              textColor: 545B64ff
             lightMode:
-              textColor: 5f6b7aff
+              textColor: 545B64ff
           inputLabel:
             darkMode:
-              textColor: d1d5dbff
+              textColor: 232F3Eff
             lightMode:
-              textColor: 000716ff
+              textColor: 232F3Eff
           link:
             darkMode:
               defaults:
-                textColor: 539fe5ff
-              hover:
-                textColor: 89bdeeff
+                textColor: 0073BBff
             lightMode:
               defaults:
-                textColor: 0972d3ff
-              hover:
-                textColor: 033160ff
-          optionControls:
-            darkMode:
-              defaults:
-                backgroundColor: 0f1b2aff
-                borderColor: 7d8998ff
-              selected:
-                backgroundColor: 539fe5ff
-                foregroundColor: 000716ff
-            lightMode:
-              defaults:
-                backgroundColor: ffffffff
-                borderColor: 7d8998ff
-              selected:
-                backgroundColor: 0972d3ff
-                foregroundColor: ffffffff
-          statusIndicator:
-            darkMode:
-              error:
-                backgroundColor: 1a0000ff
-                borderColor: eb6f6fff
-                indicatorColor: eb6f6fff
-              pending:
-                indicatorColor: AAAAAAAA
-              success:
-                backgroundColor: 001a02ff
-                borderColor: 29ad32ff
-                indicatorColor: 29ad32ff
-              warning:
-                backgroundColor: 1d1906ff
-                borderColor: e0ca57ff
-                indicatorColor: e0ca57ff
-            lightMode:
-              error:
-                backgroundColor: fff7f7ff
-                borderColor: d91515ff
-                indicatorColor: d91515ff
-              pending:
-                indicatorColor: AAAAAAAA
-              success:
-                backgroundColor: f2fcf3ff
-                borderColor: 037f0cff
-                indicatorColor: 037f0cff
-              warning:
-                backgroundColor: fffce9ff
-                borderColor: 8d6605ff
-                indicatorColor: 8d6605ff
-        components:
-          alert:
-            borderRadius: 12.0
-            darkMode:
-              error:
-                backgroundColor: 1a0000ff
-                borderColor: eb6f6fff
-            lightMode:
-              error:
-                backgroundColor: fff7f7ff
-                borderColor: d91515ff
-          favicon:
-            enabledTypes:
-              - ICO
-              - SVG
-          form:
-            backgroundImage:
-              enabled: false
-            borderRadius: 8.0
-            darkMode:
-              backgroundColor: 0f1b2aff
-              borderColor: 424650ff
-            lightMode:
-              backgroundColor: ffffffff
-              borderColor: c6c6cdff
-            logo:
-              enabled: false
-              formInclusion: IN
-              location: CENTER
-              position: TOP
-          idpButton:
-            custom: {}
-            standard:
-              darkMode:
-                active:
-                  backgroundColor: 354150ff
-                  borderColor: 89bdeeff
-                  textColor: 89bdeeff
-                defaults:
-                  backgroundColor: 0f1b2aff
-                  borderColor: c6c6cdff
-                  textColor: c6c6cdff
-                hover:
-                  backgroundColor: 192534ff
-                  borderColor: 89bdeeff
-                  textColor: 89bdeeff
-              lightMode:
-                active:
-                  backgroundColor: d3e7f9ff
-                  borderColor: 033160ff
-                  textColor: 033160ff
-                defaults:
-                  backgroundColor: ffffffff
-                  borderColor: 424650ff
-                  textColor: 424650ff
-                hover:
-                  backgroundColor: f2f8fdff
-                  borderColor: 033160ff
-                  textColor: 033160ff
-          pageBackground:
-            darkMode:
-              color: 0f1b2aff
-            image:
-              enabled: true
-            lightMode:
-              color: ffffffff
-          pageFooter:
-            backgroundImage:
-              enabled: false
-            darkMode:
-              background:
-                color: 0f141aff
-              borderColor: 424650ff
-            lightMode:
-              background:
-                color: fafafaff
-              borderColor: d5dbdbff
-            logo:
-              enabled: false
-              location: START
-          pageHeader:
-            backgroundImage:
-              enabled: false
-            darkMode:
-              background:
-                color: 0f141aff
-              borderColor: 424650ff
-            lightMode:
-              background:
-                color: fafafaff
-              borderColor: d5dbdbff
-            logo:
-              enabled: false
-              location: START
-          pageText:
-            darkMode:
-              bodyColor: b6bec9ff
-              descriptionColor: b6bec9ff
-              headingColor: d1d5dbff
-            lightMode:
-              bodyColor: 414d5cff
-              descriptionColor: 414d5cff
-              headingColor: 000716ff
-          phoneNumberSelector:
-            displayType: TEXT
-          primaryButton:
-            darkMode:
-              active:
-                backgroundColor: 539fe5ff
-                textColor: 000716ff
-              defaults:
-                backgroundColor: 539fe5ff
-                textColor: 000716ff
-              disabled:
-                backgroundColor: ffffffff
-                borderColor: ffffffff
-              hover:
-                backgroundColor: 89bdeeff
-                textColor: 000716ff
-            lightMode:
-              active:
-                backgroundColor: 033160ff
-                textColor: ffffffff
-              defaults:
-                backgroundColor: 0972d3ff
-                textColor: ffffffff
-              disabled:
-                backgroundColor: ffffffff
-                borderColor: ffffffff
-              hover:
-                backgroundColor: 033160ff
-                textColor: ffffffff
-          secondaryButton:
-            darkMode:
-              active:
-                backgroundColor: 354150ff
-                borderColor: 89bdeeff
-                textColor: 89bdeeff
-              defaults:
-                backgroundColor: 0f1b2aff
-                borderColor: 539fe5ff
-                textColor: 539fe5ff
-              hover:
-                backgroundColor: 192534ff
-                borderColor: 89bdeeff
-                textColor: 89bdeeff
-            lightMode:
-              active:
-                backgroundColor: d3e7f9ff
-                borderColor: 033160ff
-                textColor: 033160ff
-              defaults:
-                backgroundColor: ffffffff
-                borderColor: 0972d3ff
-                textColor: 0972d3ff
-              hover:
-                backgroundColor: f2f8fdff
-                borderColor: 033160ff
-                textColor: 033160ff
-      UseCognitoProvidedValues: false
-      UserPoolId: !Ref UserPool
+                textColor: 0073BBff
 
+  UserPoolUser:
+    Type: 'AWS::Cognito::UserPoolUser'
+    Properties:
+      UserPoolId: !Ref UserPool
+      Username: !GetAtt CognitoUserEmailParam.Value
+      DesiredDeliveryMediums:
+        - EMAIL
+      UserAttributes:
+        - Name: email
+          Value: !GetAtt CognitoUserEmailParam.Value
+        - Name: email_verified
+          Value: "true"
+
+  CognitoSecrets:
+    Type: AWS::SecretsManager::Secret
+    DependsOn: UserPoolClient
+    Properties:
+      Name: genai/essentials
+      Description: "Amazon Cognito configuration information"
+      SecretString: !Sub 
+        - |
+          {
+            "COGNITO_USER_POOL_ID": "${UserPool}",
+            "COGNITO_APP_CLIENT_ID": "${UserPoolClient}",
+            "COGNITO_APP_CLIENT_SECRET": "${UserPoolClient.ClientSecret}",
+            "COGNITO_DOMAIN": "https://auth.${HostedZone}",
+            "COGNITO_REDIRECT_URI_1": "https://${GenAIDomain}/genai-1/",
+            "COGNITO_REDIRECT_URI_2": "https://${GenAIDomain}/genai-2/",
+            "COGNITO_REDIRECT_URI_3": "https://${GenAIDomain}/genai-3/",
+            "COGNITO_REDIRECT_URI_4": "https://${GenAIDomain}/genai-4/",
+            "COGNITO_REDIRECT_URI_5": "https://${GenAIDomain}/genai-5/",
+            "COGNITO_IDENTITY_POOL_ID": "",
+            "AWS_REGION": "${AWS::Region}",
+            "AWS_ACCOUNT_ID": "${AWS::AccountId}"
+          }
+        - HostedZone: !GetAtt PublicHostedZoneParam.Value
+          GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+      Tags:
+        - Key: Application
+          Value: Auth
 
 Outputs:
   UserPoolArn:
