@@ -1,0 +1,975 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: |
+  GenAI Streamlit Server Infrastructure - Deploys an Auto Scaling Group of EC2 instances 
+  running Streamlit applications behind an Application Load Balancer with HTTPS listeners 
+  on multiple ports (8081-8090) for multi-session GenAI workloads.
+
+Parameters:
+  # AMI Configuration
+  LatestAWSLinuxAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: '/aws/service/cloud9/amis/ubuntu-22.04-x86_64'
+    Description: AMI ID for Ubuntu 22.04 LTS (Do not change)
+    
+  # Domain and Certificate Configuration
+  Domain:
+    Type: String
+    Description: Root domain name for the application
+    
+  AlbName:
+    Type: String
+    Default: lbgenai
+    Description: Name for the Application Load Balancer
+    
+  CertId:
+    Type: String
+    Description: ACM Certificate ID for HTTPS listeners
+
+  TargetGroupName:
+    Type: String
+    Default: genai
+    Description: Name for the Application Load Balancer's target group
+
+  # Instance Configuration
+  InstanceType:
+    Type: String
+    Description: EC2 instance type for the Auto Scaling Group
+    Default: t3.large
+    AllowedValues:
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3a.medium
+      - t3a.large
+    
+  # Network Configuration (Missing Resources as Parameters)
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID where resources will be deployed
+    
+  PrivateSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private subnet ID for EC2 instances
+    
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: First public subnet ID for the load balancer
+    
+  PublicSubnetTwoId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Second public subnet ID for the load balancer (different AZ)
+
+  SourcePrefixListId:
+    Type: String
+    Description: Source prefix list id for network access control
+
+  CloudFrontALBSecretName:
+    Type: String
+    Description: Name of the secret containing headers for CloudFront-ALB origin verification
+
+Resources:
+  # ================================
+  # Auto Scaling Resources
+  # ================================
+  
+  AIPServerGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      AutoScalingGroupName: AIPServerGroup
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnetId
+      MinSize: 1
+      MaxSize: 4
+      DesiredCapacity: 1
+      TargetGroupARNs:
+        - !Ref TargetGroup80
+        - !Ref TargetGroup8081
+        - !Ref TargetGroup8082
+        - !Ref TargetGroup8083
+        - !Ref TargetGroup8084
+        - !Ref TargetGroup8085
+        - !Ref TargetGroup8086
+        - !Ref TargetGroup8087
+        - !Ref TargetGroup8088
+        - !Ref TargetGroup8089
+        - !Ref TargetGroup8090
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref AIPLaunchTemplate
+            Version: !GetAtt AIPLaunchTemplate.LatestVersionNumber
+          Overrides:   
+          - InstanceType: t3.medium
+          - InstanceType: t3a.medium
+          - InstanceType: t3.large
+          - InstanceType: t3a.large
+        InstancesDistribution:
+          OnDemandBaseCapacity: 0
+          OnDemandPercentageAboveBaseCapacity: 0
+          SpotAllocationStrategy: capacity-optimized-prioritized
+
+  AIPLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: AIPLaunchTemplate
+      LaunchTemplateData:
+        IamInstanceProfile: 
+          Arn: !GetAtt InstanceProfile.Arn
+        ImageId: !Ref LatestAWSLinuxAmiId
+        InstanceType: !Ref InstanceType
+        BlockDeviceMappings: 
+        - DeviceName: "/dev/sda1"
+          Ebs: 
+            VolumeType: gp2
+            DeleteOnTermination: true
+            VolumeSize: 100
+        SecurityGroupIds:
+          - !Ref InstanceSecurityGroup
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: AIPStreamlitServer
+        UserData:
+          Fn::Base64:
+            !Sub |
+              #cloud-config
+              package_update: true
+              package_upgrade: true
+
+              packages:
+              - git
+              - apache2
+
+              write_files:
+              - content: |
+                  @reboot /bin/bash /home/ubuntu/environment/apcr-aip/session1/setup.sh
+                  @reboot /bin/bash /home/ubuntu/environment/apcr-aip/session2/setup.sh
+                  @reboot /bin/bash /home/ubuntu/environment/apcr-aip/session3/setup.sh
+                  @reboot /bin/bash /home/ubuntu/environment/apcr-aip/session4/setup.sh
+                  @reboot /bin/bash /home/ubuntu/environment/apcr-aip/session5/setup.sh
+
+                owner: ubuntu:root
+                path: /home/ubuntu/environment/mycrontab
+                permissions: '0600'
+
+              runcmd:
+              - cd /home/ubuntu/environment
+              - git clone https://github.com/yiktol/apcr-aip.git
+              - cp -Rf /home/ubuntu/environment/apcr-aip/session0/* /var/www/html/
+              - systemctl start apache2
+              - systemctl enable apache2
+              - chown -R ubuntu:root /home/ubuntu/environment
+              - crontab mycrontab
+              - /bin/bash /home/ubuntu/environment/apcr-aip/session1/setup.sh &
+              - /bin/bash /home/ubuntu/environment/apcr-aip/session2/setup.sh &
+              - /bin/bash /home/ubuntu/environment/apcr-aip/session3/setup.sh &
+              - /bin/bash /home/ubuntu/environment/apcr-aip/session4/setup.sh &
+              - /bin/bash /home/ubuntu/environment/apcr-aip/session5/setup.sh &
+
+  # Auto Scaling Policies
+  AIPWebServerScaleOutPolicy:
+    Type: "AWS::AutoScaling::ScalingPolicy"
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AIPServerGroup
+      Cooldown: 60
+      ScalingAdjustment: 1
+
+  AIPWebServerScaleInPolicy:
+    Type: "AWS::AutoScaling::ScalingPolicy"
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AIPServerGroup
+      Cooldown: 60
+      ScalingAdjustment: -1
+
+  # ================================
+  # CloudWatch Alarms
+  # ================================
+
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${TargetGroupName}-scale-out-alarm"
+      ActionsEnabled: true
+      AlarmDescription: Scale-up if CPU >= 60% for 1 minute
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 60
+      AlarmActions:
+        - !Ref AIPWebServerScaleOutPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AIPServerGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${TargetGroupName}-scale-in-alarm"
+      ActionsEnabled: true
+      AlarmDescription: Scale-down if CPU <= 40% for 1 minute
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 40
+      AlarmActions:
+        - !Ref AIPWebServerScaleInPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AIPServerGroup
+      ComparisonOperator: LessThanThreshold
+
+  # ================================
+  # Security Groups
+  # ================================
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EC2 instances - allows ALB access to application ports
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8090
+          Description: Allow ALB access to application ports
+        - SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          Description: Allow ALB access to application ports
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ALB - allows public HTTPS access
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - SourcePrefixListId: !Ref SourcePrefixListId
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8090
+          Description: Allow access from S3 prefix list to application ports
+
+  # ================================
+  # IAM Resources
+  # ================================
+
+  InstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: StreamlitPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: BedrockPolicy
+                Effect: Allow
+                Action: bedrock:*
+                Resource: "*"
+              - Sid: LogPolicy
+                Effect: Allow
+                Action: 
+                 - logs:Describe*
+                 - logs:Create*
+                 - logs:Put*
+                Resource: '*'
+              - Sid: DDBPolicy
+                Effect: Allow
+                Action: 
+                 - dynamodb:PutItem
+                 - dynamodb:GetItem
+                 - dynamodb:UpdateItem
+                Resource: '*'
+              - Sid: GetSecret
+                Effect: Allow
+                Action: 
+                 - secretsmanager:GetSecretValue
+                Resource: '*'
+              - Sid: FISExperimentManagement
+                Effect: Allow
+                Action:
+                  - fis:StartExperiment
+                  - fis:StopExperiment
+                  - fis:GetExperiment
+                  - fis:ListExperiments
+                  - fis:ListExperimentTemplates
+                  - fis:GetExperimentTemplate
+                  - fis:ListTagsForResource
+                Resource: '*'
+              - Sid: ReadOnlyAccess
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeVpcs
+                  - rds:DescribeDBInstances
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - eks:DescribeCluster
+                  - lambda:ListFunctions
+                Resource: '*'
+              - Sid: CloudWatchLogsAccess
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: arn:aws:logs:*:*:log-group:/aws/fis/*
+              - Sid: IAMServiceRoleUsage
+                Effect: Allow
+                Action:
+                  - iam:GetRole
+                  - iam:PassRole
+                Resource: arn:aws:iam::*:role/aws-service-role/fis.amazonaws.com/AWSServiceRoleForFIS*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref InstanceRole
+
+  # ================================
+  # Load Balancer Resources
+  # ================================
+
+  LoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name: !Ref AlbName
+      Scheme: internet-facing
+      IpAddressType: dualstack
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
+      Subnets:
+        - !Ref PublicSubnetId
+        - !Ref PublicSubnetTwoId
+      SecurityGroups: 
+        - !Ref LoadBalancerSecurityGroup
+
+  LoadBalancerDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub ${Domain}.
+      Name: !Sub ${AlbName}.${Domain}
+      Type: A
+      AliasTarget:
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+        DNSName: !GetAtt LoadBalancer.DNSName
+        EvaluateTargetHealth: true
+
+  # ================================
+  # Target Groups (Ports 8081-8090)
+  # ================================
+  TargetGroup80:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-80"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+  TargetGroup8081:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8081"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8081
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+  TargetGroup8082:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8082"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8082
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8083:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8083"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8083
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8084:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8084"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8084
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8085:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8085"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8085
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8086:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8086"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8086
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8087:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8087"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8087
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8088:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8088"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8088
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8089:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8089"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8089
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+  TargetGroup8090:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Sub "${TargetGroupName}-tg-8090"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Port: 8090
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcId
+      TargetGroupAttributes: 
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+
+
+  # ================================
+  # HTTPS Listeners (Ports 8081-8090)
+  # ================================
+
+  Listener8080:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8080
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8081:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8081
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8082:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8082
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8083:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8083
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8084:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8084
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8085:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8085
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8086:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8086
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8087:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8087
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8088:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8088
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8089:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8089
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  Listener8090:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig: 
+          ContentType: text/html
+          MessageBody: Not Found
+          StatusCode: 404
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertId}'
+      Port: 8090
+      Protocol: HTTPS
+      SslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+  # ================================
+  # Listener Rules
+  # ================================
+  ListenerRule8080:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup80
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8080
+      Priority: 1
+  ListenerRule8081:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8081
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8081
+      Priority: 1
+
+  ListenerRule8082:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8082
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8082
+      Priority: 1
+
+  ListenerRule8083:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8083
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8083
+      Priority: 1
+
+  ListenerRule8084:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8084
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8084
+      Priority: 1
+
+  ListenerRule8085:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8085
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8085
+      Priority: 1
+
+  ListenerRule8086:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8086
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8086
+      Priority: 1
+
+  ListenerRule8087:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8087
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8087
+      Priority: 1
+
+  ListenerRule8088:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8088
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8088
+      Priority: 1
+
+  ListenerRule8089:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8089
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8089
+      Priority: 1
+
+  ListenerRule8090:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup8090
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_NAME}}']]
+            Values:
+              - !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBSecretName, ':SecretString:HEADER_VALUE}}']]
+      ListenerArn: !Ref Listener8090
+      Priority: 1
+
+Outputs:
+  # Load Balancer Outputs
+  LoadBalancerDNS:
+    Description: DNS name of the Application Load Balancer
+    Value: !GetAtt LoadBalancer.DNSName
+
+  LoadBalancerURL:
+    Description: URL of the Application Load Balancer
+    Value: !Sub "https://${LoadBalancer.DNSName}"
+
+  CustomDomainURL:
+    Description: Custom domain URL for the application
+    Value: !Sub "https://${AlbName}.${Domain}"
+
+  # Auto Scaling Group Outputs
+  AutoScalingGroupName:
+    Description: Name of the Auto Scaling Group
+    Value: !Ref AIPServerGroup
+
+  LaunchTemplateName:
+    Description: Name of the Launch Template
+    Value: !Ref AIPLaunchTemplate
+
+  # Security Group Outputs
+  InstanceSecurityGroupId:
+    Description: Security Group ID for EC2 instances
+    Value: !Ref InstanceSecurityGroup
+
+  LoadBalancerSecurityGroupId:
+    Description: Security Group ID for the Load Balancer
+    Value: !Ref LoadBalancerSecurityGroup
+
+  # Application Endpoints
+  StreamlitSession1URL:
+    Description: Streamlit Session 1 URL (Port 8081)
+    Value: !Sub "https://${AlbName}.${Domain}:8081"
+
+  StreamlitSession2URL:
+    Description: Streamlit Session 2 URL (Port 8082)
+    Value: !Sub "https://${AlbName}.${Domain}:8082"
+
+  StreamlitSession3URL:
+    Description: Streamlit Session 3 URL (Port 8083)
+    Value: !Sub "https://${AlbName}.${Domain}:8083"
+
+  StreamlitSession4URL:
+    Description: Streamlit Session 4 URL (Port 8084)
+    Value: !Sub "https://${AlbName}.${Domain}:8084"
+
+  StreamlitSession5URL:
+    Description: Streamlit Session 5 URL (Port 8085)
+    Value: !Sub "https://${AlbName}.${Domain}:8085"
+

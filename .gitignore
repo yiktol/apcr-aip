@@ -5,6 +5,13 @@ pid
 generated_image.png
 */mcp_client/output/
 chroma_db/
+
+# Sensitive deployment files
+delployment/*-parameters.json
+!delployment/*-parameters.example.json
+**/parameters.json
+!**/parameters.example.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

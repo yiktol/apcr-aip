@@ -1,0 +1,33 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template that creates a Route53 A record pointing to a CloudFront distribution for authentication subdomain'
+
+Parameters:
+  CloudFrontDistributionDomainName:
+    Type: String
+    Description: 'The root domain name (e.g., example.com)'
+    AllowedPattern: '^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$'
+    ConstraintDescription: 'Must be a valid domain name'
+  
+  DomainName:
+    Type: String
+    Description: 'The domain name for CloudFront distribution (e.g., your-app.amazonaws.com)'
+    
+
+Resources:
+  AuthCloudfrontRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      Name: !Sub 'auth.${DomainName}'
+      Type: A
+      AliasTarget:
+        DNSName: !Ref CloudFrontDistributionDomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront's hosted zone ID (always this value)
+        EvaluateTargetHealth: false
+
+Outputs:
+  AuthSubdomain:
+    Description: 'Authentication subdomain URL'
+    Value: !Sub 'https://auth.${DomainName}'
+

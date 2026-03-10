@@ -1,0 +1,453 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  CloudFront multi-tenant distribution for coffee shop demo with multiple origins and routing configurations
+
+Parameters:
+  # Parameters for secrets management
+  CloudFrontALBHandshakeSecretName:
+    Type: String
+    Description: Name for the secret containing CloudFront to ALB origin verification credentials
+    Default: "cloudfront/alb-handshake-genai-ess"
+  
+  # Parameters for domain configuration
+  DomainName:
+    Type: String
+    Description: Base domain name for all coffee shop applications
+
+  # Parameters for security configuration
+  WebApplicationFirewallACLArn:
+    Type: String
+    Description: ARN of the WAF Web ACL to protect CloudFront distribution
+  
+  CertificateId:
+    Type: String
+    Description: ACM certificate ID for SSL/TLS termination at CloudFront 
+  
+  # Parameters for resource configuration
+  AssetSourceBucketName:
+    Type: String
+    Description: Source bucket containing Lambda code and website assets
+    Default: yikyakyuk-ap-southeast-1-875692608981
+
+
+Resources:
+  #==================================
+  # Secrets Management
+  #==================================
+  # Secret containing header values for ALB origin verification
+  CloudFrontALBOriginSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref CloudFrontALBHandshakeSecretName
+      Description: "CloudFront to ALB origin verification credentials used to secure ALB access"
+      SecretString: !Sub |
+        {
+          "HEADER_VALUE": "${RandomSecretStringResource.RandomString}",
+          "HEADER_NAME": "X-CloudFront-Origin-Verify"
+        }
+      ReplicaRegions: 
+        - Region: us-east-1
+      Tags:
+        - Key: Name
+          Value: cf-alb-verification
+
+  #==================================
+  # Logging Configuration
+  #==================================
+  # S3 bucket for CloudFront distribution logs
+  CloudFrontLogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub genai-logging-${AWS::Region}-${AWS::AccountId}
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'AWS::NoValue'
+        LogFilePrefix: s3-access-logs/
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred  # Enable ACLs
+      Tags:
+        - Key: Name
+          Value: cloudfront-logging-bucket
+        - Key: Description
+          Value: "Stores CloudFront access logs for analysis and troubleshooting"
+
+  # Policy to allow CloudFront to write logs to the log bucket
+  CloudFrontLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref CloudFrontLogBucket
+      PolicyDocument: 
+        Statement:
+          - Action:
+              - "s3:*"
+            Effect: "Allow"
+            Resource: !Join [ "", [ "arn:aws:s3:::", !Ref CloudFrontLogBucket, "/*" ] ]
+            Principal: 
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                "aws:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  #==================================
+  # CloudFront Functions
+  #==================================
+  # CloudFront function to modify URI paths by removing the first segment
+  PathModifierFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: path_modifier_genai_ess
+      FunctionConfig:
+        Comment: Function to remove first path segment for proper backend routing
+        Runtime: cloudfront-js-2.0
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          request.uri = request.uri.replace(/^\/[^/]*\//, "/");
+          return request;
+        }
+
+  #==================================
+  # CloudFront Distribution
+  #==================================
+  # Main CloudFront distribution serving multiple origins and tenants
+  CloudFrontDistribution: 
+    DependsOn:
+      - CloudFrontALBOriginSecret
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: genai-ess
+      DistributionConfig:
+        Comment: CloudFront Distribution
+        ConnectionMode: direct
+        Aliases:
+          - !Sub genai.${DomainName}
+        ViewerCertificate: 
+          AcmCertificateArn: !Join ['',[!Sub 'arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/', !Ref CertificateId]]
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Enabled: true
+        DefaultRootObject: index.html
+        CustomErrorResponses: 
+          - ErrorCachingMinTTL: 10
+            ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: /403.html
+          - ErrorCachingMinTTL: 10
+            ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+          - ErrorCachingMinTTL: 10
+            ErrorCode: 502
+            ResponseCode: 502
+            ResponsePagePath: /502.html
+          - ErrorCachingMinTTL: 10
+            ErrorCode: 503
+            ResponseCode: 503
+            ResponsePagePath: /503.html
+          - ErrorCachingMinTTL: 10
+            ErrorCode: 504
+            ResponseCode: 504
+            ResponsePagePath: /504.html
+        HttpVersion: http2and3
+        WebACLId: !Ref WebApplicationFirewallACLArn
+        Logging: 
+          Bucket: !Sub ${CloudFrontLogBucket}.s3.amazonaws.com
+          IncludeCookies: true
+          Prefix: 'cloudfront-logs/'
+        Origins:
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: !Sub lbgenai.${DomainName}
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8080
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: genai-1
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8081
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: genai-2
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8082
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: genai-3
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8083
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: genai-4
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8084
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+          - DomainName: !Sub lbgenai.${DomainName}
+            Id: genai-5
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 8085
+            OriginCustomHeaders: 
+              - HeaderName: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_NAME}}']]
+                HeaderValue: !Join ['', ['{{resolve:secretsmanager:', !Ref CloudFrontALBHandshakeSecretName, ':SecretString:HEADER_VALUE}}']]
+                                             
+                          
+        # Default behavior for the main coffee shop domain
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - DELETE 
+            - POST
+            - OPTIONS
+            - PUT
+            - PATCH
+          TargetOriginId: !Sub lbgenai.${DomainName}
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad   # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+        CacheBehaviors:
+        - PathPattern: /genai-1/*
+          AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
+          TargetOriginId: genai-1
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+          FunctionAssociations: 
+            - EventType: viewer-request
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+        - PathPattern: /genai-2/*
+          AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
+          TargetOriginId: genai-2
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+          FunctionAssociations: 
+            - EventType: viewer-request
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+        - PathPattern: /genai-3/*
+          AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
+          TargetOriginId: genai-3
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+          FunctionAssociations: 
+            - EventType: viewer-request
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+        - PathPattern: /genai-4/*
+          AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
+          TargetOriginId: genai-4
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+          FunctionAssociations: 
+            - EventType: viewer-request
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+        - PathPattern: /genai-5/*
+          AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
+          TargetOriginId: genai-5
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
+          FunctionAssociations: 
+            - EventType: viewer-request
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+
+  CloudfrontRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub ${DomainName}.
+      Name: !Sub genai.${DomainName}
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront's hosted zone ID (always this value)
+        EvaluateTargetHealth: false
+
+
+  #==================================
+  # Utility Functions & Resources
+  #==================================
+  # IAM role for Lambda functions used in this stack
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaExecutionRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AccessPolicy
+                Effect: Allow
+                Action: "*"
+                Resource: "*"
+      Tags:
+        - Key: Name
+          Value: coffee-shop-lambda-role
+        - Key: Description
+          Value: "IAM role for Lambda functions used in coffee shop demo"
+
+  # Lambda function to generate random strings for secrets
+  RandomStringGenerator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Generates random strings for secure origin verification
+      Runtime: python3.13
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 600
+      Code:
+        S3Bucket: !Ref AssetSourceBucketName
+        S3Key: lambda/random_generator.zip
+      Tags:
+        - Key: Name
+          Value: random-string-generator
+        - Key: Description
+          Value: "Generates secure random strings for origin verification"
+
+  # Custom resource to generate a random string
+  RandomSecretStringResource:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      Length: 25
+      IncludePunctuation: false
+      ServiceToken: !GetAtt RandomStringGenerator.Arn
+
+  # Lambda function to clean up S3 buckets during stack deletion
+  S3CleanupFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: Empties and deletes S3 buckets during stack deletion
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 300
+      Code:
+        S3Bucket: !Ref AssetSourceBucketName
+        S3Key: lambda/deletes3.zip
+      Tags:
+        - Key: Name
+          Value: s3-cleanup-function
+        - Key: Description
+          Value: "Cleans up S3 buckets during stack deletion"
+
+  # Custom resource to handle S3 bucket cleanup
+  S3CleanupAction:
+    Type: Custom::S3Action
+    Properties:
+      ServiceToken: !GetAtt S3CleanupFunction.Arn
+      Buckets: 
+        - !Ref CloudFrontLogBucket
+
+
+
+Outputs:
+  # CloudFront Distribution Outputs
+  CloudFrontDistributionId:
+    Description: ID of the CloudFront distribution
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionId
+
+  CloudFrontDistributionDomainName:
+    Description: Domain name of the CloudFront distribution
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDomainName
+
+  CloudFrontDistributionURL:
+    Description: URL of the CloudFront distribution
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontURL
+
+  # Secrets Management Outputs
+  CloudFrontALBSecretArn:
+    Description: ARN of the secret containing CloudFront to ALB handshake credentials
+    Value: !Ref CloudFrontALBOriginSecret
+    Export:
+      Name: !Sub ${AWS::StackName}-ALBHandshakeSecretArn
+
+  CloudFrontALBSecretName:
+    Description: Name of the secret containing CloudFront to ALB handshake credentials
+    Value: !Ref CloudFrontALBHandshakeSecretName
+    Export:
+      Name: !Sub ${AWS::StackName}-ALBHandshakeSecretName
+
+  # Logging Outputs
+  CloudFrontLogBucketName:
+    Description: Name of the S3 bucket storing CloudFront access logs
+    Value: !Ref CloudFrontLogBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-LogBucketName
+
+  CloudFrontLogBucketArn:
+    Description: ARN of the S3 bucket storing CloudFront access logs
+    Value: !GetAtt CloudFrontLogBucket.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LogBucketArn
+
+  # CloudFront Function Outputs
+  PathModifierFunctionArn:
+    Description: ARN of the CloudFront function for path modification
+    Value: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+    Export:
+      Name: !Sub ${AWS::StackName}-PathModifierFunctionArn
+
+  # Configuration Reference Outputs
+  OriginDomain:
+    Description: Origin domain name used by CloudFront
+    Value: !Sub lbgenai.${DomainName}
+    Export:
+      Name: !Sub ${AWS::StackName}-OriginDomain
+
+  BaseDomainName:
+    Description: Base domain name for all coffee shop applications
+    Value: !Ref DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-BaseDomainName
+
+  # Security Configuration Outputs
+  WebACLArn:
+    Description: ARN of the WAF Web ACL protecting the CloudFront distribution
+    Value: !Ref WebApplicationFirewallACLArn
+    Export:
+      Name: !Sub ${AWS::StackName}-WebACLArn
+
+  # Stack Information
+  StackName:
+    Description: Name of this CloudFormation stack
+    Value: !Ref AWS::StackName
+
+  StackRegion:
+    Description: Region where this stack is deployed
+    Value: !Ref AWS::Region
+

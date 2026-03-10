@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Comprehensive Network Infrastructure with VPC, Multi-AZ Subnets, Security Groups, and Web Application Stack
+
+Parameters:
+  Bucket:
+    Type: String
+    Description: S3 Bucket for CloudFormation Template
+
+  Prefix:
+    Type: String
+    Description: Name to Prefix Resources
+
+  BucketRegion:
+    Type: String
+    Description: Region where S3 Bucket for CloudFormation Template exists
+
+  # Parameters for domain configuration
+  DomainName:
+    Type: String
+    Description: Base domain name for all coffee shop applications
+    Default: aws.yikyakyuk.com
+
+  WebApplicationFirewallACLArn:
+    Type: String
+    Description: ARN of the WAF Web ACL to protect CloudFront distribution
+    Default: arn:aws:wafv2:us-east-1:875692608981:global/webacl/TrainingWebACL/c1a632aa-32f6-49fe-b2cd-63927eb3131e
+  
+  CertificateId:
+    Type: String
+    Description: ACM certificate ID for SSL/TLS termination at CloudFront
+    Default: 417df345-28ea-4c39-8e5d-d985abb59908   
+
+  CognitoAdminEmail:
+    Type: String
+    Default: erictole@amazon.com
+
+
+Mappings:
+  NetworkMap:
+    ap-southeast-1: #Singapore
+      cidr: 10.1.0.0/16
+      cfprefixlist: pl-31a34658
+      certId: 8186a3c2-b2cb-4c40-9210-86f79070d7ba
+
+
+Resources:
+
+  CloudFrontDistributionStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cloudfront.yaml
+      Parameters:
+        DomainName: !Ref DomainName
+        WebApplicationFirewallACLArn: !Ref WebApplicationFirewallACLArn
+        CertificateId: !Ref CertificateId
+      Tags:
+        - Key: Name
+          Value: CloudfrontDistributionStack
+
+  CognitoStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cognito.yaml
+      Parameters:
+        CloudfrontDomainName: !GetAtt CloudFrontDistributionStack.Outputs.CloudFrontDistributionDomainName
+        PublicHostedZone: !Ref DomainName
+        CognitoUserEmail: !Ref CognitoAdminEmail
+      Tags:
+        - Key: Name
+          Value: CognitoStack
+
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/vpc.yaml
+      Parameters:
+        VpcCidrBlock: !FindInMap [NetworkMap, !Ref AWS::Region, cidr]
+      Tags:
+        - Key: Name
+          Value: VpcStack
+
+
+  AsgElbStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/apcr-aip.yaml
+      Parameters:
+        Domain: !Ref DomainName
+        CertId: !FindInMap [NetworkMap, !Ref AWS::Region, certId]
+        SourcePrefixListId: !FindInMap [NetworkMap, !Ref AWS::Region, cfprefixlist]
+        VpcId: !GetAtt VpcStack.Outputs.VpcId
+        PublicSubnetId: !GetAtt VpcStack.Outputs.PublicSubnetOne
+        PublicSubnetTwoId: !GetAtt VpcStack.Outputs.PublicSubnetTwo
+        PrivateSubnetId: !GetAtt VpcStack.Outputs.PrivateSubnetOne
+        CloudFrontALBSecretName: !GetAtt CloudFrontDistributionStack.Outputs.CloudFrontALBSecretName
+      Tags:
+        - Key: Name
+          Value: AsgElbStack
