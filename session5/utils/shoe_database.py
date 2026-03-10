@@ -20,7 +20,7 @@ class ShoeDatabase:
             # Get the directory where this file is located (utils/)
             current_dir = Path(__file__).parent
             # Go up one level to session3/ and set the db path
-            db_path = str(current_dir.parent / "shoe_inventory.db")
+            db_path = str(current_dir.parent / "data" / "shoe_inventory.db")
         
         self.db_path = db_path
         self.conn = sqlite3.connect(db_path, check_same_thread=False)

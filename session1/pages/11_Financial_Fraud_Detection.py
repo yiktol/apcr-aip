@@ -1548,11 +1548,11 @@ def main():
     
     # Generate or load data
     try:
-        df = pd.read_csv("financial_fraud_data.csv")
+        df = pd.read_csv("data/financial_fraud_data.csv")
         st.sidebar.success("Loaded existing transaction data.")
     except:
         df = generate_transaction_data(n_samples=10000, fraud_ratio=0.02)
-        df.to_csv("financial_fraud_data.csv", index=False)
+        df.to_csv("data/financial_fraud_data.csv", index=False)
         st.sidebar.success("Generated new synthetic transaction data.")
     
     # Preprocess data
