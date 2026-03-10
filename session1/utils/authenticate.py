@@ -4,6 +4,13 @@ AWS Cognito Authentication Module for Streamlit Applications
 This module provides functions to handle authentication with AWS Cognito in a Streamlit application.
 It manages the OAuth 2.0 flow, token management, and user session handling.
 
+Features:
+    - OAuth 2.0 Authorization Code Flow with PKCE
+    - CSRF protection via state parameter
+    - Token persistence and expiration handling
+    - Automatic token refresh
+    - Comprehensive error handling and logging
+
 Functions:
     - initialize_session: Initialize Streamlit session state variables
     - authenticate_user: Main function to handle the full authentication process
@@ -20,6 +27,9 @@ import requests
 import base64
 import json
 import logging
+import time
+import secrets
+import hashlib
 from typing import Dict, List, Tuple, Optional, Any
 from utils.cognito_credentials import get_cognito_credentials
 
@@ -37,6 +47,7 @@ AWS_TEXT = "#FFFFFF"
 def set_st_state_vars() -> None:
     """
     Initialize Streamlit session state variables for authentication flow.
+    Includes token storage, expiration tracking, and CSRF protection.
     """
     if "auth_code" not in st.session_state:
         st.session_state["auth_code"] = ""
@@ -46,6 +57,18 @@ def set_st_state_vars() -> None:
         st.session_state["user_cognito_groups"] = []
     if "user_info" not in st.session_state:
         st.session_state["user_info"] = {}
+    if "access_token" not in st.session_state:
+        st.session_state["access_token"] = ""
+    if "id_token" not in st.session_state:
+        st.session_state["id_token"] = ""
+    if "refresh_token" not in st.session_state:
+        st.session_state["refresh_token"] = ""
+    if "token_expiry" not in st.session_state:
+        st.session_state["token_expiry"] = 0
+    if "oauth_state" not in st.session_state:
+        st.session_state["oauth_state"] = ""
+    if "pkce_verifier" not in st.session_state:
+        st.session_state["pkce_verifier"] = ""
 
 def load_cognito_config() -> Dict[str, str]:
     """
@@ -80,33 +103,55 @@ def load_cognito_config() -> Dict[str, str]:
         logger.error(f"Failed to retrieve Cognito credentials: {str(e)}")
         raise RuntimeError(f"Authentication configuration error: {str(e)}")
 
-def get_auth_code() -> str:
+def generate_pkce_pair() -> Tuple[str, str]:
     """
-    Extract authorization code from query parameters.
+    Generate PKCE code verifier and challenge for enhanced security.
     
     Returns:
-        Authorization code string or empty string if not found
+        Tuple of (code_verifier, code_challenge)
+    """
+    # Generate a random code verifier (43-128 characters)
+    code_verifier = secrets.token_urlsafe(32)
+    
+    # Create code challenge using SHA256
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).decode().rstrip('=')
+    
+    return code_verifier, code_challenge
+
+def get_auth_code() -> Tuple[str, str]:
+    """
+    Extract authorization code and state from query parameters.
+    
+    Returns:
+        Tuple of (authorization_code, state) or empty strings if not found
     """
     try:
         auth_query_params = st.query_params
-        return auth_query_params.get("code", "")
+        code = auth_query_params.get("code", "")
+        state = auth_query_params.get("state", "")
+        return code, state
     except Exception as e:
         logger.error(f"Error extracting auth code: {str(e)}")
-        return ""
+        return "", ""
 
-def exchange_code_for_tokens(auth_code: str, config: Dict[str, str]) -> Tuple[str, str]:
+def exchange_code_for_tokens(auth_code: str, config: Dict[str, str], 
+                             code_verifier: Optional[str] = None) -> Tuple[str, str, str, int]:
     """
-    Exchange authorization code for access and ID tokens.
+    Exchange authorization code for access, ID, and refresh tokens.
     
     Args:
         auth_code: Authorization code from Cognito server
         config: Dictionary containing Cognito configuration
+        code_verifier: PKCE code verifier (optional)
         
     Returns:
-        Tuple containing access_token and id_token
+        Tuple containing (access_token, id_token, refresh_token, expires_in)
     """
     if not auth_code:
-        return "", ""
+        logger.warning("No authorization code provided for token exchange")
+        return "", "", "", 0
         
     token_url = f"{config['domain']}/oauth2/token"
     client_secret_string = f"{config['client_id']}:{config['client_secret']}"
@@ -126,18 +171,85 @@ def exchange_code_for_tokens(auth_code: str, config: Dict[str, str]) -> Tuple[st
         "redirect_uri": config['redirect_uri'],
     }
     
+    # Add PKCE verifier if provided
+    if code_verifier:
+        body["code_verifier"] = code_verifier
+    
     try:
-        token_response = requests.post(token_url, headers=headers, data=body)
+        token_response = requests.post(token_url, headers=headers, data=body, timeout=10)
         token_response.raise_for_status()
         
         response_data = token_response.json()
-        return response_data.get("access_token", ""), response_data.get("id_token", "")
+        access_token = response_data.get("access_token", "")
+        id_token = response_data.get("id_token", "")
+        refresh_token = response_data.get("refresh_token", "")
+        expires_in = response_data.get("expires_in", 3600)  # Default 1 hour
+        
+        if access_token and id_token:
+            logger.info("Successfully exchanged authorization code for tokens")
+        else:
+            logger.warning("Token exchange succeeded but tokens are missing")
+            
+        return access_token, id_token, refresh_token, expires_in
+        
     except requests.exceptions.RequestException as e:
         logger.error(f"Token exchange failed: {str(e)}")
         if hasattr(e, 'response') and e.response:
             logger.error(f"Response status: {e.response.status_code}")
-            logger.error(f"Response body: {e.response.text}")
-        return "", ""
+            # Don't log full response body as it may contain sensitive data
+        return "", "", "", 0
+
+def refresh_access_token(refresh_token: str, config: Dict[str, str]) -> Tuple[str, str, int]:
+    """
+    Refresh access token using refresh token.
+    
+    Args:
+        refresh_token: Refresh token from previous authentication
+        config: Dictionary containing Cognito configuration
+        
+    Returns:
+        Tuple containing (new_access_token, new_id_token, expires_in)
+    """
+    if not refresh_token:
+        logger.warning("No refresh token available")
+        return "", "", 0
+        
+    token_url = f"{config['domain']}/oauth2/token"
+    client_secret_string = f"{config['client_id']}:{config['client_secret']}"
+    client_secret_encoded = str(
+        base64.b64encode(client_secret_string.encode("utf-8")), "utf-8"
+    )
+    
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Basic {client_secret_encoded}",
+    }
+    
+    body = {
+        "grant_type": "refresh_token",
+        "client_id": config['client_id'],
+        "refresh_token": refresh_token,
+    }
+    
+    try:
+        token_response = requests.post(token_url, headers=headers, data=body, timeout=10)
+        token_response.raise_for_status()
+        
+        response_data = token_response.json()
+        access_token = response_data.get("access_token", "")
+        id_token = response_data.get("id_token", "")
+        expires_in = response_data.get("expires_in", 3600)
+        
+        if access_token:
+            logger.info("Successfully refreshed access token")
+        else:
+            logger.warning("Token refresh succeeded but access token is missing")
+            
+        return access_token, id_token, expires_in
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Token refresh failed: {str(e)}")
+        return "", "", 0
 
 def get_user_info(access_token: str, config: Dict[str, str]) -> Dict[str, Any]:
     """
@@ -151,6 +263,7 @@ def get_user_info(access_token: str, config: Dict[str, str]) -> Dict[str, Any]:
         Dictionary containing user information
     """
     if not access_token:
+        logger.warning("No access token provided for user info retrieval")
         return {}
         
     userinfo_url = f"{config['domain']}/oauth2/userInfo"
@@ -160,11 +273,15 @@ def get_user_info(access_token: str, config: Dict[str, str]) -> Dict[str, Any]:
     }
     
     try:
-        response = requests.get(userinfo_url, headers=headers)
+        response = requests.get(userinfo_url, headers=headers, timeout=10)
         response.raise_for_status()
-        return response.json()
+        user_info = response.json()
+        logger.info("Successfully retrieved user information")
+        return user_info
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to get user info: {str(e)}")
+        if hasattr(e, 'response') and e.response:
+            logger.error(f"Response status: {e.response.status_code}")
         return {}
 
 def decode_cognito_groups(id_token: str) -> List[str]:
@@ -178,11 +295,17 @@ def decode_cognito_groups(id_token: str) -> List[str]:
         List of Cognito groups the user belongs to
     """
     if not id_token:
+        logger.warning("No ID token provided for group extraction")
         return []
     
     try:
         # Split the JWT token
-        header, payload, signature = id_token.split(".")
+        parts = id_token.split(".")
+        if len(parts) != 3:
+            logger.error("Invalid JWT token format")
+            return []
+            
+        header, payload, signature = parts
         
         # Pad the base64 string if needed
         def pad_base64(data):
@@ -196,10 +319,50 @@ def decode_cognito_groups(id_token: str) -> List[str]:
         payload_dict = json.loads(decoded_payload)
         
         # Extract Cognito groups
-        return payload_dict.get("cognito:groups", [])
+        groups = payload_dict.get("cognito:groups", [])
+        logger.info(f"Extracted {len(groups)} Cognito groups from token")
+        return groups
+        
     except Exception as e:
         logger.error(f"Failed to decode token: {str(e)}")
         return []
+
+def is_token_expired() -> bool:
+    """
+    Check if the current access token has expired.
+    
+    Returns:
+        True if token is expired or expiry time not set, False otherwise
+    """
+    token_expiry = st.session_state.get("token_expiry", 0)
+    # Add 60 second buffer to refresh before actual expiry
+    return time.time() >= (token_expiry - 60)
+
+def validate_state(received_state: str) -> bool:
+    """
+    Validate OAuth state parameter to prevent CSRF attacks.
+    
+    Args:
+        received_state: State parameter received from OAuth callback
+        
+    Returns:
+        True if state is valid, False otherwise
+    """
+    expected_state = st.session_state.get("oauth_state", "")
+    
+    if not expected_state:
+        logger.warning("No OAuth state found in session")
+        return False
+        
+    if not received_state:
+        logger.warning("No state parameter received in callback")
+        return False
+        
+    if received_state != expected_state:
+        logger.error("OAuth state mismatch - possible CSRF attack")
+        return False
+        
+    return True
 
 def render_login_button(login_url: str) -> None:
     """
@@ -237,13 +400,41 @@ def render_login_button(login_url: str) -> None:
 
 def render_logout_button(logout_url: str) -> None:
     """
-    Render AWS-styled logout button.
+    Render AWS-styled logout button with user information.
     
     Args:
         logout_url: URL to initiate Cognito logout
     """
+    # Get user information from session state
+    user_info = st.session_state.get("user_info", {})
+    username = user_info.get("email", user_info.get("username", "User"))
+    
+    # Extract first name or use email prefix
+    if "@" in username:
+        display_name = username.split("@")[0].title()
+    else:
+        display_name = username
+    
     css = f"""
     <style>
+    .user-info-container {{
+        padding: 1em;
+        margin-bottom: 1em;
+        border-bottom: 1px solid #e0e0e0;
+    }}
+    .user-greeting {{
+        color: #232F3E;
+        font-size: 0.9em;
+        margin-bottom: 0.5em;
+        font-family: "Amazon Ember", Arial, sans-serif;
+    }}
+    .user-email {{
+        color: #545B64;
+        font-size: 0.8em;
+        margin-bottom: 0.75em;
+        font-family: "Amazon Ember", Arial, sans-serif;
+        word-break: break-word;
+    }}
     .aws-button {{
         background-color: {AWS_ORANGE};
         color: {AWS_TEXT} !important;
@@ -256,6 +447,7 @@ def render_logout_button(logout_url: str) -> None:
         border: none;
         font-family: "Amazon Ember", Arial, sans-serif;
         transition: background-color 0.3s;
+        width: 100%;
     }}
     .aws-button:hover {{
         background-color: {AWS_HOVER};
@@ -266,12 +458,26 @@ def render_logout_button(logout_url: str) -> None:
     }}
     </style>
     """
-    html = css + f"<a href='{logout_url}' class='aws-button' target='_self'>Sign Out</a>"
+    
+    html = css + f"""
+    <div class='user-info-container'>
+        <div class='user-greeting'>👤 Welcome, {display_name}!</div>
+        <div class='user-email'>{username}</div>
+        <a href='{logout_url}' class='aws-button' target='_self'>Sign Out</a>
+    </div>
+    """
+    
     st.sidebar.markdown(html, unsafe_allow_html=True)
 
 def login() -> bool:
     """
-    Main authentication function to handle Cognito auth flow.
+    Main authentication function to handle Cognito auth flow with enhanced security.
+    
+    Features:
+        - PKCE support for enhanced security
+        - CSRF protection via state parameter
+        - Token persistence and automatic refresh
+        - Comprehensive error handling
     
     Returns:
         Boolean indicating whether user is authenticated
@@ -286,34 +492,120 @@ def login() -> bool:
         # Load configuration
         config = load_cognito_config()
         
-        # Set up login/logout URLs
-        login_url = (
-            f"{config['domain']}/login?client_id={config['client_id']}"
-            f"&response_type=code&scope=email+openid&redirect_uri={config['redirect_uri']}"
-        )
+        # Check if we're already authenticated and token is still valid
+        if st.session_state.get("authenticated", False):
+            # Check token expiration
+            if is_token_expired():
+                logger.info("Access token expired, attempting refresh")
+                refresh_token = st.session_state.get("refresh_token", "")
+                
+                if refresh_token:
+                    new_access_token, new_id_token, expires_in = refresh_access_token(
+                        refresh_token, config
+                    )
+                    
+                    if new_access_token:
+                        # Update tokens and expiry
+                        st.session_state["access_token"] = new_access_token
+                        st.session_state["id_token"] = new_id_token
+                        st.session_state["token_expiry"] = time.time() + expires_in
+                        
+                        # Update user info and groups
+                        user_info = get_user_info(new_access_token, config)
+                        cognito_groups = decode_cognito_groups(new_id_token)
+                        st.session_state["user_info"] = user_info
+                        st.session_state["user_cognito_groups"] = cognito_groups
+                        
+                        logger.info("Token refreshed successfully")
+                    else:
+                        # Refresh failed, clear authentication
+                        logger.warning("Token refresh failed, clearing authentication")
+                        st.session_state["authenticated"] = False
+                        st.session_state["access_token"] = ""
+                        st.session_state["id_token"] = ""
+                        st.session_state["refresh_token"] = ""
+                        st.rerun()
+        
+        # Generate PKCE pair and state for new login flow
+        if not st.session_state.get("oauth_state"):
+            state = secrets.token_urlsafe(32)
+            st.session_state["oauth_state"] = state
+            
+            code_verifier, code_challenge = generate_pkce_pair()
+            st.session_state["pkce_verifier"] = code_verifier
+        else:
+            state = st.session_state["oauth_state"]
+            code_challenge = ""
+            if st.session_state.get("pkce_verifier"):
+                _, code_challenge = generate_pkce_pair()
+        
+        # Set up login/logout URLs with PKCE and state
+        login_params = [
+            f"client_id={config['client_id']}",
+            "response_type=code",
+            "scope=email+openid",
+            f"redirect_uri={config['redirect_uri']}",
+            f"state={state}"
+        ]
+        
+        # Add PKCE challenge if available
+        if code_challenge:
+            login_params.append(f"code_challenge={code_challenge}")
+            login_params.append("code_challenge_method=S256")
+        
+        login_url = f"{config['domain']}/login?" + "&".join(login_params)
+        
         logout_url = (
             f"{config['domain']}/logout?client_id={config['client_id']}"
             f"&logout_uri={config['redirect_uri']}"
         )
         
         # Check for authorization code in URL
-        auth_code = get_auth_code()
+        auth_code, received_state = get_auth_code()
         
         # If we have a new auth code, process it
         if auth_code and auth_code != st.session_state.get("auth_code", ""):
-            access_token, id_token = exchange_code_for_tokens(auth_code, config)
+            # Validate state parameter for CSRF protection
+            if not validate_state(received_state):
+                st.error("Authentication failed: Invalid state parameter. Please try again.")
+                logger.error("State validation failed during authentication")
+                return False
+            
+            # Exchange code for tokens with PKCE verifier
+            code_verifier = st.session_state.get("pkce_verifier", "")
+            access_token, id_token, refresh_token, expires_in = exchange_code_for_tokens(
+                auth_code, config, code_verifier
+            )
             
             if access_token and id_token:
+                # Get user information
                 user_info = get_user_info(access_token, config)
                 cognito_groups = decode_cognito_groups(id_token)
                 
-                # Update session state
+                if not user_info:
+                    st.error("Authentication failed: Unable to retrieve user information.")
+                    logger.error("Failed to retrieve user info after token exchange")
+                    return False
+                
+                # Update session state with tokens and user info
                 st.session_state["auth_code"] = auth_code
                 st.session_state["authenticated"] = True
+                st.session_state["access_token"] = access_token
+                st.session_state["id_token"] = id_token
+                st.session_state["refresh_token"] = refresh_token
+                st.session_state["token_expiry"] = time.time() + expires_in
                 st.session_state["user_cognito_groups"] = cognito_groups
                 st.session_state["user_info"] = user_info
                 
+                # Clear PKCE and state after successful authentication
+                st.session_state["pkce_verifier"] = ""
+                st.session_state["oauth_state"] = ""
+                
                 logger.info(f"User authenticated successfully. Groups: {cognito_groups}")
+            else:
+                st.error("Authentication failed: Unable to obtain access tokens. Please try again.")
+                logger.error("Token exchange failed - no tokens received")
+                return False
                 
         # Render appropriate UI based on authentication state
         if st.session_state.get("authenticated", False):
@@ -327,4 +619,8 @@ def login() -> bool:
     except RuntimeError as e:
         st.error(f"Authentication error: {str(e)}")
         logger.error(f"Authentication error: {str(e)}")
+        return False
+    except Exception as e:
+        st.error("An unexpected error occurred during authentication. Please try again.")
+        logger.error(f"Unexpected authentication error: {str(e)}", exc_info=True)
         return False

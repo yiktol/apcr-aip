@@ -509,6 +509,46 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
+    # Session 5 Topics Outline
+    st.markdown("""
+    <h2 style="color: #232F3E; font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem 0; text-align: center;">
+        📚 Session 5 Topics Overview
+    </h2>
+    """, unsafe_allow_html=True)
+    
+    # Create columns for topic categories
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div style='padding: 20px; background-color: #f0f2f6; border-radius: 10px; border-left: 4px solid #FF9900; margin-bottom: 15px;'>
+            <h4>📊 Market Research Analysis</h4>
+            <p style='margin: 5px 0; color: #4B5563;'>AI-powered document analysis using RAG technology to extract market insights, opportunities, and strategic recommendations from research documents</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style='padding: 20px; background-color: #f0f2f6; border-radius: 10px; border-left: 4px solid #232F3E; margin-bottom: 15px;'>
+            <h4>✍️ Product Description Generator</h4>
+            <p style='margin: 5px 0; color: #4B5563;'>Automated content creation with multiple foundation models, customizable tone and length, SEO optimization, and batch processing capabilities</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='padding: 20px; background-color: #f0f2f6; border-radius: 10px; border-left: 4px solid #1E8E3E; margin-bottom: 15px;'>
+            <h4>🎨 Product Image Generation</h4>
+            <p style='margin: 5px 0; color: #4B5563;'>Create professional product imagery using Stable Diffusion XL with style presets, negative prompts, and fine-tuned parameter control</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style='padding: 20px; background-color: #f0f2f6; border-radius: 10px; border-left: 4px solid #146EB4; margin-bottom: 15px;'>
+            <h4>💬 Sales Assistant Agent</h4>
+            <p style='margin: 5px 0; color: #4B5563;'>Conversational AI agent with user profile management, preference tracking, intelligent search, and personalized recommendations using Strands Agents SDK</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Technology Stack
     st.markdown("""
     <div class="tech-stack">

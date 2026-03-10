@@ -417,49 +417,139 @@ def create_knowledge_check():
 
 def render_home_tab():
     """Render the home tab content."""
-    st.markdown(custom_header("Fundamentals of Generative AI", 1), unsafe_allow_html=True)
+    st.markdown(custom_header("Session 2: Fundamentals of Generative AI", 1), unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("""
-        <div class='aws-card'>
-        <h2>Program Summary</h2>
-        <p>Welcome to Session 2 of the AWS Certified AI Practitioner preparation program. This session focuses on Domain 2: Fundamentals of Generative AI.</p>
+        st.header("Welcome to Session 2")
+        st.write("""
+        This session focuses on Domain 2: Fundamentals of Generative AI, covering transformer architectures, 
+        embeddings, and the core technologies powering modern generative AI systems.
         
-        <h3>Week 2 Digital Training Curriculum</h3>
-        <ul>
-            <li>Essentials of Prompt Engineering</li>
-            <li>Optimizing Foundation Models</li>
-            <li>Security, Compliance, and Governance for AI Solutions</li>
-            <li>Generative AI for Executives</li>
-            <li>Amazon Q Business Getting Started</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class='aws-card'>
-        <h2>Today's Learning Outcomes</h2>
-        <p>During this session, we will cover:</p>
-        <ul>
-            <li>Task Statement 2.1: Explain the basic concepts of generative AI</li>
-            <li>Task Statement 2.2: Understand the capabilities and limitations of generative AI for solving business problems</li>
-            <li>Task Statement 2.3: Describe AWS infrastructure and technologies for building generative AI applications</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        **Learning Outcomes:**
+        - Understand generative AI use cases and concerns
+        - Master transformer architecture and how it works
+        - Learn about embeddings and vector representations
+        - Explore AWS Titan embedding models
+        - Apply similarity metrics and context understanding
+        """)
     
     with col2:
         st.image("assets/images/AWS-Certified-AI-Practitioner_badge.png", caption="AWS Certified AI Practitioner")
+        st.info("Navigate through the pages in the sidebar to explore all topics!")
+    
+    # Session 2 Topics Outline
+    st.markdown("---")
+    st.header("📚 Session 2 Topics Overview")
+    
+    # Create tabs for different topic categories
+    tab1, tab2, tab3 = st.tabs(["🎯 GenAI Fundamentals", "🔧 Transformer Architecture", "🧮 Embeddings & Vectors"])
+    
+    with tab1:
+        st.subheader("Generative AI Concepts")
         
-        st.markdown("""
-        <div class='highlight'>
-        <h4>Interactive Learning</h4>
-        <p>This application is designed to help you learn the fundamentals of generative AI through interactive examples, visualizations, and knowledge checks.</p>
-        <p>Navigate through the tabs above to explore different topics.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        topics_genai = [
+            {
+                "icon": "💡",
+                "title": "Use Cases of GenAI",
+                "description": "Explore practical applications of generative AI including text generation, image creation, code synthesis, and content summarization"
+            },
+            {
+                "icon": "⚠️",
+                "title": "Concerns of GenAI",
+                "description": "Understand challenges including hallucinations, bias, ethical considerations, data privacy, and responsible AI practices"
+            }
+        ]
+        
+        for topic in topics_genai:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #FF9900;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab2:
+        st.subheader("Transformer Technology")
+        
+        topics_transformer = [
+            {
+                "icon": "🏗️",
+                "title": "Transformer Architecture",
+                "description": "Deep dive into encoder-decoder architecture, self-attention mechanisms, and the building blocks of modern LLMs"
+            },
+            {
+                "icon": "⚙️",
+                "title": "How Transformer Works",
+                "description": "Step-by-step explanation of tokenization, embeddings, attention layers, and text generation process"
+            },
+            {
+                "icon": "🎭",
+                "title": "Masked Language Model",
+                "description": "Understanding masked language modeling (MLM) for bidirectional context learning in models like BERT"
+            },
+            {
+                "icon": "🔄",
+                "title": "Context",
+                "description": "How transformers maintain and utilize context through attention mechanisms and positional encodings"
+            }
+        ]
+        
+        for topic in topics_transformer:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #232F3E;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab3:
+        st.subheader("Embeddings & Vector Representations")
+        
+        topics_embeddings = [
+            {
+                "icon": "📊",
+                "title": "Embedding Use Cases",
+                "description": "Applications of embeddings in semantic search, recommendation systems, clustering, and similarity detection"
+            },
+            {
+                "icon": "🔤",
+                "title": "Word Embeddings",
+                "description": "Converting words into dense vector representations that capture semantic meaning and relationships"
+            },
+            {
+                "icon": "🎯",
+                "title": "Word to Vector",
+                "description": "Techniques like Word2Vec and GloVe for learning word embeddings from large text corpora"
+            },
+            {
+                "icon": "🤖",
+                "title": "Titan Text Embedding",
+                "description": "AWS Bedrock's Titan model for generating high-quality text embeddings for semantic understanding"
+            },
+            {
+                "icon": "🖼️",
+                "title": "Titan MultiModal Embedding",
+                "description": "Unified embeddings for text and images enabling cross-modal search and understanding"
+            },
+            {
+                "icon": "📏",
+                "title": "Similarity Metrics",
+                "description": "Cosine similarity, Euclidean distance, and dot product for measuring vector similarity"
+            }
+        ]
+        
+        for topic in topics_embeddings:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #1E8E3E;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
 
 def render_foundation_models_tab():

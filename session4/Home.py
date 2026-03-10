@@ -55,59 +55,144 @@ def reset_knowledge_check():
 
 # Home Tab Content
 def home_tab():
-    st.markdown("# Guidelines for Responsible AI and Security, Compliance, and Governance for AI Solutions")
+    st.markdown(custom_header("Session 4: Responsible AI & Security, Compliance, and Governance", 1), unsafe_allow_html=True)
     
-    st.markdown("### Program Summary")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("#### Session 1")
-        st.markdown("- Kickoff")
-        st.markdown("- Domain 1: Fundamentals of AI and ML")
+        st.header("Welcome to Session 4")
+        st.write("""
+        This session covers Domain 4: Guidelines for Responsible AI and Domain 5: Security, Compliance, 
+        and Governance for AI Solutions.
+        
+        **Learning Outcomes:**
+        - Understand responsible AI principles and practices
+        - Learn to identify and mitigate bias in AI systems
+        - Master model explainability and transparency techniques
+        - Explore AWS governance and security tools
+        - Apply compliance frameworks for AI solutions
+        """)
     
     with col2:
-        st.markdown("#### Session 2")
-        st.markdown("- Domain 2: Fundamentals of Generative AI")
+        st.image("assets/images/AWS-Certified-AI-Practitioner_badge.png", caption="AWS Certified AI Practitioner")
+        st.info("Navigate through the pages in the sidebar to explore all topics!")
+    
+    # Session 4 Topics Outline
+    st.markdown("---")
+    st.header("📚 Session 4 Topics Overview")
+    
+    # Create tabs for different topic categories
+    tab1, tab2, tab3 = st.tabs(["🎯 Responsible AI", "🔒 Security & Protection", "⚖️ Governance & Compliance"])
+    
+    with tab1:
+        st.subheader("Responsible AI Principles")
+        
+        topics_responsible = [
+            {
+                "icon": "🤝",
+                "title": "Responsible AI",
+                "description": "Eight dimensions of responsible AI: fairness, explainability, controllability, privacy & security, governance, transparency, safety, and veracity & robustness"
+            },
+            {
+                "icon": "⚖️",
+                "title": "Bias vs Variance",
+                "description": "Understanding underfitting (high bias) and overfitting (high variance) in model generalization and how to achieve appropriate fitting"
+            },
+            {
+                "icon": "📊",
+                "title": "Dataset Bias Types",
+                "description": "Identifying sampling bias, historical bias, measurement bias, and strategies for creating balanced representative datasets"
+            },
+            {
+                "icon": "🖼️",
+                "title": "Mitigating Bias in Images",
+                "description": "Techniques for detecting and reducing bias in computer vision models and image datasets"
+            }
+        ]
+        
+        for topic in topics_responsible:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #FF9900;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab2:
+        st.subheader("Security & Vulnerability Protection")
+        
+        topics_security = [
+            {
+                "icon": "🛡️",
+                "title": "Protecting Against Vulnerabilities",
+                "description": "Defending against prompt injection, jailbreaking, data poisoning, model extraction, and adversarial attacks"
+            },
+            {
+                "icon": "🚧",
+                "title": "Bedrock Guardrails",
+                "description": "Implementing content filters, PII redaction, topic restrictions, and safety controls for responsible AI deployment"
+            }
+        ]
+        
+        for topic in topics_security:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #D13212;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab3:
+        st.subheader("Governance & Compliance Tools")
+        
+        topics_governance = [
+            {
+                "icon": "📋",
+                "title": "Governance with SageMaker",
+                "description": "Using SageMaker Role Manager, Model Cards, Model Dashboard, Clarify, Model Monitor, and Augmented AI for ML governance"
+            }
+        ]
+        
+        for topic in topics_governance:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #232F3E;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # AWS Tools for Responsible AI
+    st.markdown("---")
+    st.header("🛠️ AWS Tools for Responsible AI")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        **Amazon SageMaker Clarify**
+        - Detect bias in data and models
+        - Generate explainability reports
+        - Monitor drift over time
+        """)
+    
+    with col2:
+        st.markdown("""
+        **Amazon SageMaker Model Monitor**
+        - Monitor model quality
+        - Detect data drift
+        - Alert on anomalies
+        """)
     
     with col3:
-        st.markdown("#### Session 3")
-        st.markdown("- Domain 3: Applications of Foundation Models")
-    
-    with col4:
-        st.markdown("#### Session 4")
-        st.markdown("- Domain 4: Guidelines for Responsible AI")
-        st.markdown("- Domain 5: Security, Compliance, and Governance for AI Solutions")
-    
-    st.divider()
-    
-    st.markdown("### Today's Learning Outcomes")
-    st.markdown("""
-    During this session, we will cover:
-    - **Task Statement 4.1**: Explain the development of AI systems that are responsible
-    - **Task Statement 4.2**: Recognize the importance of transparent and explainable models
-    - **Task Statement 5.1**: Explain methods to secure AI systems
-    - **Task Statement 5.2**: Recognize governance and compliance regulations for AI systems
-    """)
-    
-    st.divider()
-    
-    st.markdown("### Final Digital Training Curriculum")
-    st.markdown("""
-    Do your best to finish these courses. Take notes and dive deep on topics as needed:
-    
-    **AWS Skill Builder Learning Plan Courses:**
-    - Amazon Bedrock Getting Started
-    - Exam Prep Standard Course: AWS Certified AI Practitioner
-    
-    **Enhanced Exam Prep Plan (Optional):**
-    - Finish – CloudQuest: Generative AI
-    - Amazon Bedrock Getting Started
-    - Complete Lab – Getting Started with Amazon Comprehend: Custom Classification
-    - Exam Prep Enhanced Course: AWS Certified AI Practitioner
-    - Complete the labs and Official Pretest
-    """)
-    
-    st.info("Access time for most of the digital resources is limited to the duration of this program. Make sure to complete them before the program ends.")
+        st.markdown("""
+        **Amazon Augmented AI (A2I)**
+        - Human review workflows
+        - Quality assurance
+        - Edge case handling
+        """)
     
 # Responsible AI Tab Content
 def responsible_ai_tab():

@@ -37,71 +37,158 @@ def init_session_state():
 # Home tab content
 def show_home_tab():
     """Show content for the Home tab"""
-    st.markdown(custom_header("Applications of Foundation Models", 1 ), unsafe_allow_html=True)
+    st.markdown(custom_header("Session 3: Applications of Foundation Models", 1), unsafe_allow_html=True)
     
     maincol1, maincol2 = st.columns([2, 1])
     with maincol1:
-        # Program Summary
-        st.header("Program Summary")
-        st.markdown("""
-        This program covers the essential components of Foundation Models and their applications:
-
-        - **Session 1**: Kickoff & Domain 1: Fundamentals of AI and ML
-        - **Session 2**: Domain 2: Fundamentals of Generative AI
-        - **Session 3**: Domain 3: Applications of Foundation Models
-        - **Session 4**: Domain 4: Guidelines for Responsible AI & Domain 5: Security, Compliance, and Governance for AI Solutions
-        """)
+        st.header("Welcome to Session 3")
+        st.write("""
+        This session focuses on Domain 3: Applications of Foundation Models, covering prompt engineering, 
+        model customization, RAG, and AWS Bedrock services.
         
-        # Week 3 Digital Training Curriculum
-        st.header("Week 3 Digital Training Curriculum")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("AWS Skill Builder Learning Plan Courses")
-            st.markdown("""
-            - Amazon Bedrock Getting Started
-            - Exam Prep Standard Course: AWS Certified AI Practitioner
-            """)
-        
-        with col2:
-            st.subheader("Enhanced Exam Prep Plan (Optional)")
-            st.markdown("""
-            - Finish – CloudQuest: Generative AI
-            - Amazon Bedrock Getting Started
-            - Complete Lab – Getting Started with Amazon Comprehend: Custom Classification
-            - Exam Prep Enhanced Course: AWS Certified AI Practitioner
-            - Complete the labs and Official Pretest
-            """)
-        
-        # Today's Learning Outcomes
-        st.header("Today's Learning Outcomes")
-        
-        st.markdown("""
-        During this session, we will cover:
-        
-        - **Task Statement 3.1**: Describe design considerations for applications that use foundation models
-        - **Task Statement 3.2**: Choose effective prompt engineering techniques
-        - **Task Statement 3.3**: Describe the training and fine-tuning process for foundation models
-        - **Task Statement 3.4**: Describe methods to evaluate foundation model performance
+        **Learning Outcomes:**
+        - Master prompt engineering techniques and best practices
+        - Understand model evaluation and fine-tuning processes
+        - Learn Retrieval Augmented Generation (RAG) architecture
+        - Explore AWS Bedrock Agents and Guardrails
+        - Apply security measures for LLM applications
         """)
     
     with maincol2:
         st.image("assets/images/AWS-Certified-AI-Practitioner_badge.png", caption="AWS Certified AI Practitioner")
-        # Interactive learning approach
-        st.subheader("Interactive Learning")
+        st.info("Navigate through the pages in the sidebar to explore all topics!")
+    
+    # Session 3 Topics Outline
+    st.markdown("---")
+    st.header("📚 Session 3 Topics Overview")
+    
+    # Create tabs for different topic categories
+    tab1, tab2, tab3, tab4 = st.tabs(["✍️ Prompt Engineering", "🔧 Model Customization", "🛡️ Security & Safety", "🤖 AWS Bedrock Services"])
+    
+    with tab1:
+        st.subheader("Prompt Engineering Techniques")
         
-        st.markdown("""
-        This interactive module allows you to:
+        topics_prompting = [
+            {
+                "icon": "📝",
+                "title": "Elements of Prompts",
+                "description": "Core components including instructions, context, input data, and output indicators for effective prompts"
+            },
+            {
+                "icon": "🎯",
+                "title": "Prompt Engineering Techniques",
+                "description": "Zero-shot, few-shot, and chain-of-thought prompting strategies for optimal model responses"
+            },
+            {
+                "icon": "🧠",
+                "title": "Chain-of-Thought (CoT) and Tree-of-Thought (ToT)",
+                "description": "Advanced reasoning techniques for complex problem-solving and multi-step logical tasks"
+            },
+            {
+                "icon": "🖼️",
+                "title": "Image Prompts",
+                "description": "Crafting effective prompts for image generation models including style, composition, and detail specifications"
+            },
+            {
+                "icon": "📋",
+                "title": "Prompt Templates",
+                "description": "Reusable prompt structures with placeholders for consistent and scalable prompt generation"
+            },
+            {
+                "icon": "🎮",
+                "title": "Exercise: Prompt Engineering",
+                "description": "Hands-on practice with real-world prompt engineering scenarios and optimization techniques"
+            }
+        ]
         
-        1. Explore the main concepts of Foundation Models
-        2. See examples of prompt engineering techniques
-        3. Understand Retrieval Augmented Generation (RAG)
-        4. Learn about model evaluation methods
-        5. Test your knowledge with interactive quizzes
+        for topic in topics_prompting:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #FF9900;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab2:
+        st.subheader("Model Training & Evaluation")
         
-        Navigate through the tabs above to explore each topic in detail!
-        """)
+        topics_customization = [
+            {
+                "icon": "📊",
+                "title": "Model Evaluation",
+                "description": "Metrics and methods for assessing model performance including accuracy, BLEU, ROUGE, and perplexity"
+            },
+            {
+                "icon": "🎓",
+                "title": "Fine-Tuning Dataset Guide",
+                "description": "Best practices for preparing, curating, and formatting datasets for effective model fine-tuning"
+            },
+            {
+                "icon": "🔍",
+                "title": "Retrieval Augmented Generation (RAG)",
+                "description": "Combining retrieval systems with LLMs to ground responses in external knowledge bases and reduce hallucinations"
+            }
+        ]
+        
+        for topic in topics_customization:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #232F3E;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab3:
+        st.subheader("LLM Security & Vulnerabilities")
+        
+        topics_security = [
+            {
+                "icon": "🔒",
+                "title": "LLM Security & Vulnerability",
+                "description": "Understanding prompt injection, jailbreaking, data leakage, and other security threats to LLM applications"
+            },
+            {
+                "icon": "🛡️",
+                "title": "Bedrock Guardrails",
+                "description": "Implementing content filters, PII detection, topic restrictions, and safety controls for responsible AI deployment"
+            }
+        ]
+        
+        for topic in topics_security:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #D13212;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    with tab4:
+        st.subheader("AWS Bedrock Platform")
+        
+        topics_bedrock = [
+            {
+                "icon": "🤖",
+                "title": "Bedrock Agents",
+                "description": "Building autonomous agents that can plan, execute actions, and use tools to accomplish complex tasks"
+            },
+            {
+                "icon": "✅",
+                "title": "Knowledge Check",
+                "description": "Test your understanding of foundation model applications with interactive quizzes and assessments"
+            }
+        ]
+        
+        for topic in topics_bedrock:
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 15px; margin: 10px 0; background-color: #f0f2f6; border-radius: 5px; border-left: 4px solid #1E8E3E;'>
+                    <h4>{topic['icon']} {topic['title']}</h4>
+                    <p style='margin: 5px 0;'>{topic['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
 # Customizing FMs tab content
 def show_customizing_fms_tab():
@@ -280,7 +367,7 @@ def show_prompt_engineering_tab():
     st.markdown("""
     > "Prompt engineering is an emerging field that focuses on developing, designing, and optimizing prompts to enhance the output of large language models for your needs."
     
-    Prompt engineering involves crafting effective instructions to guide the response of a foundation model without modifying the model itself. It's the simplest and most cost-effective method to customize model behavior.
+    Prompt engineering involves crafting effective instructions to guide the response of a foundation model without modifying the model itself. It is the simplest and most cost-effective method to customize model behavior.
     """)
     
     # Elements of a prompt
@@ -414,7 +501,7 @@ def display_few_shot_prompting():
     **Key points:**
     - Helps models understand patterns through examples
     - Improves performance for complex tasks
-    - Useful when zero-shot doesn't yield good results
+    - Useful when zero-shot does not yield good results
     - Especially helpful for specialized formats or domain-specific tasks
     
     **Example:**
@@ -469,7 +556,7 @@ def display_few_shot_prompting():
         Text: John Smith visited Paris last summer while working for Microsoft.
         Entities: {"persons": ["John Smith"], "locations": ["Paris"], "organizations": ["Microsoft"]}
         
-        Text: Sarah Johnson and Michael Brown met at Google's headquarters in Mountain View.
+        Text: Sarah Johnson and Michael Brown met at Google headquarters in Mountain View.
         Entities: {"persons": ["Sarah Johnson", "Michael Brown"], "locations": ["Mountain View"], "organizations": ["Google"]}
         
         Text: [YOUR TEXT HERE]
@@ -483,10 +570,10 @@ def display_few_shot_prompting():
         Translate the following English text to Spanish. Here are some examples:
         
         English: Hello, how are you today?
-        Spanish: Hola, ¿cómo estás hoy?
+        Spanish: Hola, como estas hoy?
         
         English: The restaurant is open until midnight.
-        Spanish: El restaurante está abierto hasta la medianoche.
+        Spanish: El restaurante esta abierto hasta la medianoche.
         
         English: [YOUR TEXT HERE]
         Spanish:
@@ -539,7 +626,7 @@ If a store is offering a 25% discount on an item that originally costs $80, and 
             **Chain-of-thought solution:**
             
             Step 1: Calculate the price after the 25% discount.
-            25% of $80 = 0.25 × $80 = $20
+            25% of $80 = 0.25 * $80 = $20
             Price after discount = $80 - $20 = $60
             
             Step 2: Apply the additional $10 coupon.
@@ -559,7 +646,7 @@ Ann is taller than Bob. Bob is taller than Charlie. David is shorter than Charli
             st.markdown("""
             **Chain-of-thought solution:**
             
-            Step 1: Let's organize what we know about heights.
+            Step 1: Organize what we know about heights.
             - Ann is taller than Bob
             - Bob is taller than Charlie
             - David is shorter than Charlie
