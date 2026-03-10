@@ -4,15 +4,18 @@
 
 - **Frontend Framework**: Streamlit 1.52.0
 - **Python Version**: 3.12+
-- **Deployment**: Docker, AWS ECS Fargate
+- **Deployment**: AWS CloudFormation with ALB/ASG
 
 ## AWS Services
 
 - Amazon Bedrock (48 foundation models across 11 providers)
 - Amazon SageMaker
-- Amazon Cognito (authentication)
+- Amazon Cognito (authentication with Managed Login v2 and custom branding)
 - Amazon S3, KMS, Macie, IAM
 - Amazon A2I, CloudTrail, CloudWatch
+- Amazon CloudFront (CDN with WAF)
+- Amazon Route 53 (DNS management)
+- AWS Certificate Manager (SSL/TLS certificates)
 
 ## Key Python Libraries
 
@@ -63,22 +66,6 @@ pip install -r requirements.txt
 streamlit run Home.py --server.port 808X
 ```
 
-### Docker
-
-```bash
-cd sessionX
-docker build -t session-name .
-docker run -p 8501:8501 session-name
-```
-
-### AWS ECS Deployment (Session 5)
-
-```bash
-cd session5/infrastructure
-# Update parameters.json with VPC and subnet IDs
-./scripts/deploy.sh
-```
-
 ## Port Configuration
 
 - Session 0: 8080 (HTTP server)
@@ -86,7 +73,7 @@ cd session5/infrastructure
 - Session 2: 8082
 - Session 3: 8083
 - Session 4: 8084
-- Session 5: 8501 (Docker default)
+- Session 5: 8085
 
 ## Environment Variables
 
@@ -95,3 +82,23 @@ Required for production:
 - `COGNITO_APP_CLIENT_ID`
 - `COGNITO_APP_CLIENT_SECRET`
 - `COGNITO_REDIRECT_URI_1`
+
+## Deployment
+
+### CloudFormation Infrastructure
+
+The `deploy/` directory contains CloudFormation templates for full infrastructure deployment:
+
+```bash
+cd deploy
+./deploy.sh
+```
+
+This deploys:
+- VPC with multi-AZ subnets
+- Cognito User Pool with Managed Login v2 and AWS-branded styling
+- CloudFront distribution with WAF
+- Application Load Balancer and Auto Scaling Group
+- Route 53 DNS records
+
+Templates are uploaded to S3 and deployed via nested stacks in the `ap-southeast-1` region.

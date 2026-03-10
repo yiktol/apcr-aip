@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>501 Not Implemented</title>
+    <style>
+        :root {
+            --aws-orange: #FF9900;
+            --aws-dark: #232F3E;
+            --aws-blue: #0073BB;
+            --aws-light-gray: #F8F9FA;
+            --text-primary: #232F3E;
+            --text-secondary: #545B64;
+            --background: #FFFFFF;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Amazon Ember', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--aws-light-gray);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+        
+        .error-container {
+            background-color: var(--background);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px var(--shadow);
+            max-width: 700px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error-header {
+            background: linear-gradient(135deg, var(--aws-dark) 0%, #3d4f66 100%);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--aws-orange);
+        }
+        
+        .error-code {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            color: var(--aws-orange);
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            opacity: 0.95;
+        }
+        
+        .error-content {
+            padding: 2rem;
+        }
+        
+        h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .info-box {
+            background-color: rgba(255, 153, 0, 0.08);
+            border-left: 4px solid var(--aws-orange);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h3 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .info-box p {
+            margin-bottom: 0.75rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--aws-orange);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ec7211;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 153, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid #D5DBDB;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--aws-light-gray);
+        }
+        
+        @media (max-width: 600px) {
+            .error-code {
+                font-size: 3.5rem;
+            }
+            
+            .error-title {
+                font-size: 1.25rem;
+            }
+            
+            .error-content {
+                padding: 1.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-code">501</div>
+            <div class="error-title">Not Implemented</div>
+        </div>
+        
+        <div class="error-content">
+            <h2>Feature Not Available</h2>
+            <p>
+                The server does not support the functionality required to fulfill your request. This error indicates that the server does not recognize the request method or lacks the ability to fulfill it.
+            </p>
+            
+            <div class="info-box">
+                <h3>What does this mean?</h3>
+                <p>
+                    A 501 error means the server either doesn't recognize the request method or it lacks the ability to fulfill the request. This is usually a temporary condition that will be fixed when the server is updated.
+                </p>
+                <p>
+                    This feature may be planned for future implementation or may require server configuration changes.
+                </p>
+            </div>
+            
+            <h2>What can I do?</h2>
+            <p>
+                Try using a different method to accomplish your task, or contact support to inquire about when this feature will be available.
+            </p>
+            
+            <div class="button-group">
+                <a href="/" class="btn btn-primary">← Back to Homepage</a>
+                <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

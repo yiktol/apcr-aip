@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Page Not Found</title>
+    <style>
+        :root {
+            --aws-orange: #FF9900;
+            --aws-dark: #232F3E;
+            --aws-blue: #0073BB;
+            --aws-light-gray: #F8F9FA;
+            --text-primary: #232F3E;
+            --text-secondary: #545B64;
+            --background: #FFFFFF;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Amazon Ember', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--aws-light-gray);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+        
+        .error-container {
+            background-color: var(--background);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px var(--shadow);
+            max-width: 700px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error-header {
+            background: linear-gradient(135deg, var(--aws-dark) 0%, #3d4f66 100%);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--aws-orange);
+        }
+        
+        .error-code {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            color: var(--aws-orange);
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            opacity: 0.95;
+        }
+        
+        .error-content {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .illustration {
+            width: 200px;
+            margin: 0 auto 2rem;
+        }
+        
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--aws-orange);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ec7211;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 153, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid #D5DBDB;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--aws-light-gray);
+        }
+        
+        @media (max-width: 600px) {
+            .error-code {
+                font-size: 3.5rem;
+            }
+            
+            .error-title {
+                font-size: 1.25rem;
+            }
+            
+            .error-content {
+                padding: 1.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-code">404</div>
+            <div class="error-title">Page Not Found</div>
+        </div>
+        
+        <div class="error-content">
+            <svg class="illustration" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="80" fill="#F8F9FA"/>
+                <path d="M100,20 C144.18,20 180,55.82 180,100 C180,144.18 144.18,180 100,180 C55.82,180 20,144.18 20,100 C20,55.82 55.82,20 100,20 Z M100,40 C66.86,40 40,66.86 40,100 C40,133.14 66.86,160 100,160 C133.14,160 160,133.14 160,100 C160,66.86 133.14,40 100,40 Z" fill="#FF9900" fill-rule="nonzero"/>
+                <path d="M80,90 L120,130" stroke="#FF9900" stroke-width="10" stroke-linecap="round"/>
+                <path d="M120,90 L80,130" stroke="#FF9900" stroke-width="10" stroke-linecap="round"/>
+            </svg>
+            
+            <h1>We couldn't find that page</h1>
+            <p>The page you are looking for doesn't exist or has been moved. Please check the URL or navigate back to the homepage.</p>
+            
+            <div class="button-group">
+                <a href="/" class="btn btn-primary">← Back to Homepage</a>
+                <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 Internal Server Error</title>
+    <style>
+        :root {
+            --aws-orange: #FF9900;
+            --aws-dark: #232F3E;
+            --aws-blue: #0073BB;
+            --aws-light-gray: #F8F9FA;
+            --text-primary: #232F3E;
+            --text-secondary: #545B64;
+            --background: #FFFFFF;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Amazon Ember', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--aws-light-gray);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+        
+        .error-container {
+            background-color: var(--background);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px var(--shadow);
+            max-width: 700px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .error-header {
+            background: linear-gradient(135deg, var(--aws-dark) 0%, #3d4f66 100%);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .error-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--aws-orange);
+        }
+        
+        .error-code {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            color: var(--aws-orange);
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            opacity: 0.95;
+        }
+        
+        .error-content {
+            padding: 2rem;
+        }
+        
+        h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .info-box {
+            background-color: rgba(255, 153, 0, 0.08);
+            border-left: 4px solid var(--aws-orange);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h3 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .info-box p {
+            margin-bottom: 0.75rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--aws-orange);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ec7211;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 153, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid #D5DBDB;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--aws-light-gray);
+        }
+        
+        .refresh-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #D5DBDB;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        #countdown {
+            font-weight: 600;
+            color: var(--aws-orange);
+        }
+        
+        @media (max-width: 600px) {
+            .error-code {
+                font-size: 3.5rem;
+            }
+            
+            .error-title {
+                font-size: 1.25rem;
+            }
+            
+            .error-content {
+                padding: 1.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-code">500</div>
+            <div class="error-title">Internal Server Error</div>
+        </div>
+        
+        <div class="error-content">
+            <h2>Something went wrong</h2>
+            <p>
+                The server encountered an unexpected condition that prevented it from fulfilling your request. This is a generic error message when the server cannot be more specific about the error condition.
+            </p>
+            
+            <div class="info-box">
+                <h3>What happened?</h3>
+                <p>
+                    An internal server error indicates that something has gone wrong on the server side, but the server cannot be more specific about what the exact problem is.
+                </p>
+                <p>
+                    This is not an issue with your request or connection. Our team has been notified and is working to resolve the issue.
+                </p>
+            </div>
+            
+            <h2>What can I do?</h2>
+            <p>
+                Please try again in a few moments. If the problem persists, contact support with details about what you were trying to do when the error occurred.
+            </p>
+            
+            <div class="button-group">
+                <a href="javascript:location.reload()" class="btn btn-primary">Try Again</a>
+                <a href="/" class="btn btn-secondary">← Back to Homepage</a>
+            </div>
+            
+            <div class="refresh-section">
+                Page will automatically refresh in <span id="countdown">45</span> seconds
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let seconds = 45;
+        const countdownElement = document.getElementById('countdown');
+        
+        const countdown = setInterval(() => {
+            seconds--;
+            countdownElement.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                location.reload();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -51,6 +51,9 @@ sessionX/
 - Production deployments check `st.context.headers["host"]` for localhost
 - Non-localhost environments require Cognito authentication via `authenticate.login()`
 - Authentication utilities are in `utils/authenticate.py`
+- Cognito Managed Login v2 provides modern, branded login pages
+- Custom AWS-themed branding with orange primary buttons and blue links
+- Supports username/password and federated identity providers (Google, Facebook, Amazon)
 
 ### Utilities Organization
 - `utils/common.py` - Shared UI components (sidebar, headers, etc.)
@@ -87,16 +90,17 @@ session0/
 
 ## Deployment Structure
 
-### Docker
-- Each session can have a `Dockerfile`
-- Scripts in `scripts/` directory for build and deployment
-
-### Infrastructure (Session 5)
+### CloudFormation (Root Level)
 ```
-session5/infrastructure/
-├── parameters.json            # CloudFormation parameters
-└── scripts/
-    └── deploy.sh             # Deployment script
+deploy/
+├── deploy.sh                  # Main deployment script
+├── validate-templates.sh      # Template validation
+├── main.yaml                  # Root stack (orchestrates nested stacks)
+├── cognito.yaml              # Cognito with Managed Login v2 branding
+├── cloudfront.yaml           # CloudFront distribution with WAF
+├── vpc.yaml                  # VPC and networking
+├── alb-asg.yaml              # Load balancer and auto scaling
+└── auth_route53.yaml         # DNS records
 ```
 
 ## File Naming Conventions
