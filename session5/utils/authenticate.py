@@ -533,21 +533,18 @@ def login() -> bool:
         # Check for authorization code in URL first
         auth_code, received_state = get_auth_code()
         
-        # Generate PKCE pair and state for new login flow (only if not in callback)
+        # Generate state for new login flow (only if not in callback)
+        # Note: PKCE is not used because Streamlit session state doesn't persist across OAuth redirects
+        # The client secret provides sufficient security for this confidential client
         if not auth_code:
-            # Fresh login - generate new state and PKCE
+            # Fresh login - generate new state
             state = secrets.token_urlsafe(32)
             st.session_state["oauth_state"] = state
-            
-            code_verifier, code_challenge = generate_pkce_pair()
-            st.session_state["pkce_verifier"] = code_verifier
         else:
             # We're in the callback - use received state
             state = received_state
-            code_verifier = st.session_state.get("pkce_verifier", "")
-            code_challenge = ""
         
-        # Set up login/logout URLs with PKCE and state
+        # Set up login/logout URLs with state
         login_params = [
             f"client_id={config['client_id']}",
             "response_type=code",
@@ -555,11 +552,6 @@ def login() -> bool:
             f"redirect_uri={config['redirect_uri']}",
             f"state={state}"
         ]
-        
-        # Add PKCE challenge if available
-        if code_challenge:
-            login_params.append(f"code_challenge={code_challenge}")
-            login_params.append("code_challenge_method=S256")
         
         login_url = f"{config['domain']}/login?" + "&".join(login_params)
         
@@ -576,10 +568,9 @@ def login() -> bool:
                 logger.error("State validation failed during authentication")
                 return False
             
-            # Exchange code for tokens with PKCE verifier
-            code_verifier = st.session_state.get("pkce_verifier", "")
+            # Exchange code for tokens (without PKCE since session state doesn't persist)
             access_token, id_token, refresh_token, expires_in = exchange_code_for_tokens(
-                auth_code, config, code_verifier
+                auth_code, config, None
             )
             
             if access_token and id_token:
@@ -602,8 +593,7 @@ def login() -> bool:
                 st.session_state["user_cognito_groups"] = cognito_groups
                 st.session_state["user_info"] = user_info
                 
-                # Clear PKCE and state after successful authentication
-                st.session_state["pkce_verifier"] = ""
+                # Clear OAuth state after successful authentication
                 st.session_state["oauth_state"] = ""
                 
                 logger.info(f"User authenticated successfully. Groups: {cognito_groups}")
