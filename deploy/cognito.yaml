@@ -6,155 +6,50 @@ Parameters:
     Type: String
     Description: SSM Parameter Store prefix for Cognito configuration
     Default: /genai/cognito
+  CognitoUserEmail:
+    Type: String
+    Description: Email address for the initial Cognito user
+    NoEcho: true
+  GoogleClientSecret:
+    Type: String
+    Description: Google OAuth client secret
+    NoEcho: true
+  FacebookAppSecret:
+    Type: String
+    Description: Facebook app secret
+    NoEcho: true
+  AmazonAppSecret:
+    Type: String
+    Description: Amazon app secret
+    NoEcho: true
+  PublicHostedZone:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/PublicHostedZone
+  CloudfrontDomainName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/CloudfrontDomainName
+  GenAIDomainName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/GenAIDomainName
+  GoogleClientId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/GoogleClientId
+  FacebookAppId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/FacebookAppId
+  AmazonAppId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/AmazonAppId
+  UserPoolName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/UserPoolName
 
 Resources:
-  # Lambda function to retrieve SSM parameters
-  SSMParameterReaderRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: SSMParameterAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameter
-                  - ssm:GetParameters
-                  - ssm:GetParametersByPath
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*'
 
-  SSMParameterReaderFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Runtime: python3.12
-      Handler: index.handler
-      Role: !GetAtt SSMParameterReaderRole.Arn
-      Timeout: 30
-      Code:
-        ZipFile: |
-          import boto3
-          import cfnresponse
-          
-          ssm = boto3.client('ssm')
-          
-          def handler(event, context):
-              try:
-                  if event['RequestType'] == 'Delete':
-                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
-                      return
-                  
-                  parameter_name = event['ResourceProperties']['ParameterName']
-                  with_decryption = event['ResourceProperties'].get('WithDecryption', 'true').lower() == 'true'
-                  
-                  response = ssm.get_parameter(
-                      Name=parameter_name,
-                      WithDecryption=with_decryption
-                  )
-                  
-                  value = response['Parameter']['Value']
-                  
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
-                      'Value': value
-                  })
-              except Exception as e:
-                  print(f"Error: {str(e)}")
-                  cfnresponse.send(event, context, cfnresponse.FAILED, {
-                      'Error': str(e)
-                  })
-
-  # Retrieve parameters from SSM
-  CognitoUserEmailParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/CognitoUserEmail'
-      WithDecryption: false
-
-  PublicHostedZoneParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/PublicHostedZone'
-      WithDecryption: false
-
-  CloudfrontDomainNameParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/CloudfrontDomainName'
-      WithDecryption: false
-
-  GenAIDomainNameParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/GenAIDomainName'
-      WithDecryption: false
-
-  GoogleClientIdParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/GoogleClientId'
-      WithDecryption: false
-
-  GoogleClientSecretParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/GoogleClientSecret'
-      WithDecryption: true
-
-  FacebookAppIdParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/FacebookAppId'
-      WithDecryption: false
-
-  FacebookAppSecretParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/FacebookAppSecret'
-      WithDecryption: true
-
-  AmazonAppIdParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/AmazonAppId'
-      WithDecryption: false
-
-  AmazonAppSecretParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/AmazonAppSecret'
-      WithDecryption: true
-
-  UserPoolNameParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/UserPoolName'
-      WithDecryption: false
-
-  # Rest of the Cognito configuration (same as cognito.yaml but using !GetAtt for parameter values)
   UserPool:
     Type: 'AWS::Cognito::UserPool'
     Properties:
-      UserPoolName: !GetAtt UserPoolNameParam.Value
+      UserPoolName: !Ref UserPoolName
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
       AutoVerifiedAttributes:
@@ -177,8 +72,8 @@ Resources:
       ProviderName: Google
       ProviderType: Google
       ProviderDetails:
-        client_id: !GetAtt GoogleClientIdParam.Value
-        client_secret: !GetAtt GoogleClientSecretParam.Value
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
         authorize_scopes: "email profile openid"
       AttributeMapping:
         email: email
@@ -194,8 +89,8 @@ Resources:
       ProviderName: Facebook
       ProviderType: Facebook
       ProviderDetails:
-        client_id: !GetAtt FacebookAppIdParam.Value
-        client_secret: !GetAtt FacebookAppSecretParam.Value
+        client_id: !Ref FacebookAppId
+        client_secret: !Ref FacebookAppSecret
         authorize_scopes: "email public_profile"
       AttributeMapping:
         email: email
@@ -207,8 +102,8 @@ Resources:
       ProviderName: LoginWithAmazon
       ProviderType: LoginWithAmazon
       ProviderDetails:
-        client_id: !GetAtt AmazonAppIdParam.Value
-        client_secret: !GetAtt AmazonAppSecretParam.Value
+        client_id: !Ref AmazonAppId
+        client_secret: !Ref AmazonAppSecret
         authorize_scopes: "profile postal_code"
       AttributeMapping:
         email: email
@@ -217,9 +112,7 @@ Resources:
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Sub 
-        - 'auth.${HostedZone}'
-        - HostedZone: !GetAtt PublicHostedZoneParam.Value
+      Domain: !Sub 'auth.${PublicHostedZone}'
       UserPoolId: !Ref UserPool
       ManagedLoginVersion: 2
       CustomDomainConfig: 
@@ -228,12 +121,8 @@ Resources:
   CognitoCNAMERecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Sub 
-        - '${HostedZone}.'
-        - HostedZone: !GetAtt PublicHostedZoneParam.Value
-      Name: !Sub 
-        - 'auth.${HostedZone}'
-        - HostedZone: !GetAtt PublicHostedZoneParam.Value
+      HostedZoneName: !Sub '${PublicHostedZone}.'
+      Name: !Sub 'auth.${PublicHostedZone}'
       Type: CNAME
       TTL: 60
       ResourceRecords:
@@ -262,67 +151,27 @@ Resources:
         - profile
         - aws.cognito.signin.user.admin
       CallbackURLs:
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-1/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-2/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-3/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-4/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-5/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-1/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-2/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-3/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-4/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-5/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 'https://${CloudfrontDomainName}/genai-1/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-2/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-3/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-4/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-5/'
+        - !Sub 'https://${GenAIDomainName}/genai-1/'
+        - !Sub 'https://${GenAIDomainName}/genai-2/'
+        - !Sub 'https://${GenAIDomainName}/genai-3/'
+        - !Sub 'https://${GenAIDomainName}/genai-4/'
+        - !Sub 'https://${GenAIDomainName}/genai-5/'
       LogoutURLs:
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-1/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-2/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-3/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-4/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${CloudfrontDomain}/genai-5/'
-          - CloudfrontDomain: !GetAtt CloudfrontDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-1/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-2/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-3/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-4/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
-        - !Sub 
-          - 'https://${GenAIDomain}/genai-5/'
-          - GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - !Sub 'https://${CloudfrontDomainName}/genai-1/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-2/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-3/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-4/'
+        - !Sub 'https://${CloudfrontDomainName}/genai-5/'
+        - !Sub 'https://${GenAIDomainName}/genai-1/'
+        - !Sub 'https://${GenAIDomainName}/genai-2/'
+        - !Sub 'https://${GenAIDomainName}/genai-3/'
+        - !Sub 'https://${GenAIDomainName}/genai-4/'
+        - !Sub 'https://${GenAIDomainName}/genai-5/'
       SupportedIdentityProviders:
         - COGNITO
         - Google
@@ -413,12 +262,12 @@ Resources:
     Type: 'AWS::Cognito::UserPoolUser'
     Properties:
       UserPoolId: !Ref UserPool
-      Username: !GetAtt CognitoUserEmailParam.Value
+      Username: !Ref CognitoUserEmail
       DesiredDeliveryMediums:
         - EMAIL
       UserAttributes:
         - Name: email
-          Value: !GetAtt CognitoUserEmailParam.Value
+          Value: !Ref CognitoUserEmail
         - Name: email_verified
           Value: "true"
 
@@ -428,24 +277,23 @@ Resources:
     Properties:
       Name: genai/essentials
       Description: "Amazon Cognito configuration information"
-      SecretString: !Sub 
+      SecretString: !Sub
         - |
           {
             "COGNITO_USER_POOL_ID": "${UserPool}",
             "COGNITO_APP_CLIENT_ID": "${UserPoolClient}",
             "COGNITO_APP_CLIENT_SECRET": "${UserPoolClient.ClientSecret}",
-            "COGNITO_DOMAIN": "https://auth.${HostedZone}",
-            "COGNITO_REDIRECT_URI_1": "https://${GenAIDomain}/genai-1/",
-            "COGNITO_REDIRECT_URI_2": "https://${GenAIDomain}/genai-2/",
-            "COGNITO_REDIRECT_URI_3": "https://${GenAIDomain}/genai-3/",
-            "COGNITO_REDIRECT_URI_4": "https://${GenAIDomain}/genai-4/",
-            "COGNITO_REDIRECT_URI_5": "https://${GenAIDomain}/genai-5/",
+            "COGNITO_DOMAIN": "https://auth.${PublicHostedZone}",
+            "COGNITO_REDIRECT_URI_1": "https://${GenAIDomainName}/genai-1/",
+            "COGNITO_REDIRECT_URI_2": "https://${GenAIDomainName}/genai-2/",
+            "COGNITO_REDIRECT_URI_3": "https://${GenAIDomainName}/genai-3/",
+            "COGNITO_REDIRECT_URI_4": "https://${GenAIDomainName}/genai-4/",
+            "COGNITO_REDIRECT_URI_5": "https://${GenAIDomainName}/genai-5/",
             "COGNITO_IDENTITY_POOL_ID": "",
             "AWS_REGION": "${AWS::Region}",
             "AWS_ACCOUNT_ID": "${AWS::AccountId}"
           }
-        - HostedZone: !GetAtt PublicHostedZoneParam.Value
-          GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+        - {}
       Tags:
         - Key: Application
           Value: Auth

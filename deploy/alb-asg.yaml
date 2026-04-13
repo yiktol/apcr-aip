@@ -36,11 +36,12 @@ Parameters:
   InstanceType:
     Type: String
     Description: EC2 instance type for the Auto Scaling Group
-    Default: t3.large
+    Default: t3.xlarge
     AllowedValues:
       - t3.small
       - t3.medium
       - t3.large
+      - t3.xlarge
       - t3a.medium
       - t3a.large
     
@@ -101,6 +102,7 @@ Resources:
             LaunchTemplateId: !Ref AIPLaunchTemplate
             Version: !GetAtt AIPLaunchTemplate.LatestVersionNumber
           Overrides:   
+          - InstanceType: t3.xlarge
           - InstanceType: t3.medium
           - InstanceType: t3a.medium
           - InstanceType: t3.large

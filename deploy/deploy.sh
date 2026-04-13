@@ -140,11 +140,12 @@ show_stack_events() {
 
 upload_templates() {
     local bucket=$1
+    local script_dir="$(dirname "$(readlink -f "$0")")"
     
-    log "Uploading CloudFormation templates to s3://$bucket/$TEMPLATE_PREFIX/"
+    log "Uploading CloudFormation templates from $script_dir to s3://$bucket/$TEMPLATE_PREFIX/"
     
-    # Upload all YAML files
-    if aws s3 cp ./ "s3://$bucket/$TEMPLATE_PREFIX/" \
+    # Upload all YAML files from the script's directory
+    if aws s3 cp "$script_dir/" "s3://$bucket/$TEMPLATE_PREFIX/" \
         --recursive \
         --exclude "*" \
         --include "*.yaml" \
@@ -281,7 +282,7 @@ main() {
     upload_templates "$BUCKET"
     
     # Construct template URL
-    TEMPLATE_URL="https://$BUCKET.s3-$REGION.amazonaws.com/$TEMPLATE_PREFIX/main.yaml"
+    TEMPLATE_URL="https://$BUCKET.s3.$REGION.amazonaws.com/$TEMPLATE_PREFIX/main.yaml"
     log "Template URL: $TEMPLATE_URL"
     
     # Validate template

@@ -16,6 +16,26 @@ Parameters:
     Description: SSM Parameter Store prefix for configuration
     Default: /genai/cognito
 
+  BucketName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/BucketName
+
+  DomainName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/DomainName
+
+  WebApplicationFirewallACLArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/WebApplicationFirewallACLArn
+
+  CertificateId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/CertificateId
+
+  CognitoUserEmail:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/CognitoUserEmail
+
 
 Mappings:
   NetworkMap:
@@ -27,8 +47,8 @@ Mappings:
 
 Resources:
 
-  # Lambda function to retrieve SSM parameters
-  SSMParameterReaderRole:
+  # Lambda to read SecureString SSM parameters (not supported by AWS::SSM::Parameter::Value)
+  SecureParamReaderRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -41,95 +61,66 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: SSMParameterAccess
+        - PolicyName: SSMSecureAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - ssm:GetParameter
-                  - ssm:GetParameters
-                  - ssm:GetParametersByPath
                 Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*'
 
-  SSMParameterReaderFunction:
+  SecureParamReaderFunction:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.12
       Handler: index.handler
-      Role: !GetAtt SSMParameterReaderRole.Arn
+      Role: !GetAtt SecureParamReaderRole.Arn
       Timeout: 30
       Code:
         ZipFile: |
           import boto3
           import cfnresponse
-          
-          ssm = boto3.client('ssm')
-          
           def handler(event, context):
               try:
                   if event['RequestType'] == 'Delete':
                       cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
                       return
-                  
-                  parameter_name = event['ResourceProperties']['ParameterName']
-                  with_decryption = event['ResourceProperties'].get('WithDecryption', 'true').lower() == 'true'
-                  
-                  response = ssm.get_parameter(
-                      Name=parameter_name,
-                      WithDecryption=with_decryption
-                  )
-                  
-                  value = response['Parameter']['Value']
-                  
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
-                      'Value': value
-                  })
+                  value = boto3.client('ssm').get_parameter(
+                      Name=event['ResourceProperties']['ParameterName'],
+                      WithDecryption=True
+                  )['Parameter']['Value']
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Value': value})
               except Exception as e:
-                  print(f"Error: {str(e)}")
-                  cfnresponse.send(event, context, cfnresponse.FAILED, {
-                      'Error': str(e)
-                  })
+                  print(f"Error: {e}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
 
-  # Retrieve parameters from SSM
-  BucketNameParam:
-    Type: Custom::SSMParameter
+  GoogleClientSecret:
+    Type: Custom::SSMSecureParam
     Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/BucketName'
-      WithDecryption: false
+      ServiceToken: !GetAtt SecureParamReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/GoogleClientSecret'
 
-  DomainNameParam:
-    Type: Custom::SSMParameter
+  FacebookAppSecret:
+    Type: Custom::SSMSecureParam
     Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/DomainName'
-      WithDecryption: false
+      ServiceToken: !GetAtt SecureParamReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/FacebookAppSecret'
 
-  WebApplicationFirewallACLArnParam:
-    Type: Custom::SSMParameter
+  AmazonAppSecret:
+    Type: Custom::SSMSecureParam
     Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/WebApplicationFirewallACLArn'
-      WithDecryption: false
-
-  CertificateIdParam:
-    Type: Custom::SSMParameter
-    Properties:
-      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
-      ParameterName: !Sub '${ParameterPrefix}/CertificateId'
-      WithDecryption: false
+      ServiceToken: !GetAtt SecureParamReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/AmazonAppSecret'
 
   CloudFrontDistributionStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-        - 'https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cloudfront.yaml'
-        - Bucket: !GetAtt BucketNameParam.Value
+      TemplateURL: !Sub 'https://${BucketName}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cloudfront.yaml'
       Parameters:
-        DomainName: !GetAtt DomainNameParam.Value
-        WebApplicationFirewallACLArn: !GetAtt WebApplicationFirewallACLArnParam.Value
-        CertificateId: !GetAtt CertificateIdParam.Value
+        DomainName: !Ref DomainName
+        WebApplicationFirewallACLArn: !Ref WebApplicationFirewallACLArn
+        CertificateId: !Ref CertificateId
       Tags:
         - Key: Name
           Value: CloudfrontDistributionStack
@@ -137,11 +128,13 @@ Resources:
   CognitoStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-        - 'https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cognito.yaml'
-        - Bucket: !GetAtt BucketNameParam.Value
+      TemplateURL: !Sub 'https://${BucketName}.s3.${BucketRegion}.amazonaws.com/${Prefix}/cognito.yaml'
       Parameters:
         ParameterPrefix: !Ref ParameterPrefix
+        CognitoUserEmail: !Ref CognitoUserEmail
+        GoogleClientSecret: !GetAtt GoogleClientSecret.Value
+        FacebookAppSecret: !GetAtt FacebookAppSecret.Value
+        AmazonAppSecret: !GetAtt AmazonAppSecret.Value
       Tags:
         - Key: Name
           Value: CognitoStack
@@ -149,24 +142,19 @@ Resources:
   VpcStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-        - 'https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/vpc.yaml'
-        - Bucket: !GetAtt BucketNameParam.Value
+      TemplateURL: !Sub 'https://${BucketName}.s3.${BucketRegion}.amazonaws.com/${Prefix}/vpc.yaml'
       Parameters:
         VpcCidrBlock: !FindInMap [NetworkMap, !Ref AWS::Region, cidr]
       Tags:
         - Key: Name
           Value: VpcStack
 
-
   AsgElbStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-        - 'https://${Bucket}.s3.${BucketRegion}.amazonaws.com/${Prefix}/alb-asg.yaml'
-        - Bucket: !GetAtt BucketNameParam.Value
+      TemplateURL: !Sub 'https://${BucketName}.s3.${BucketRegion}.amazonaws.com/${Prefix}/alb-asg.yaml'
       Parameters:
-        Domain: !GetAtt DomainNameParam.Value
+        Domain: !Ref DomainName
         CertId: !FindInMap [NetworkMap, !Ref AWS::Region, certId]
         SourcePrefixListId: !FindInMap [NetworkMap, !Ref AWS::Region, cfprefixlist]
         VpcId: !GetAtt VpcStack.Outputs.VpcId

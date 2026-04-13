@@ -806,25 +806,13 @@
             <i class="fas fa-flask" aria-hidden="true"></i>
             <span class="nav-label">Playgrounds</span>
           </button>
-          <button class="nav-tab" onclick="openSection('session1')">
-            <i class="fas fa-microchip" aria-hidden="true"></i>
-            <span class="nav-label">AI & ML</span>
+          <button class="nav-tab" onclick="openSection('references')">
+            <i class="fas fa-book" aria-hidden="true"></i>
+            <span class="nav-label">References</span>
           </button>
-          <button class="nav-tab" onclick="openSection('session2')">
-            <i class="fas fa-robot" aria-hidden="true"></i>
-            <span class="nav-label">Gen AI</span>
-          </button>
-          <button class="nav-tab" onclick="openSection('session3')">
-            <i class="fas fa-brain" aria-hidden="true"></i>
-            <span class="nav-label">Foundation Model</span>
-          </button>
-          <button class="nav-tab" onclick="openSection('session4')">
-            <i class="fas fa-shield-alt" aria-hidden="true"></i>
-            <span class="nav-label">Responsible AI</span>
-          </button>
-          <button class="nav-tab" onclick="openSection('resources')">
-            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-            <span class="nav-label">Resources</span>
+          <button class="nav-tab" onclick="openSection('labaccess')">
+            <i class="fas fa-laptop-code" aria-hidden="true"></i>
+            <span class="nav-label">Lab Access</span>
           </button>
         </div>
         <div class="nav-progress" id="navProgress"></div>
@@ -947,11 +935,11 @@
         </div>
       </section>
 
-      <!-- Session 1 Content -->
-      <section id="session1" class="content-section" aria-label="Session 1: AI and ML Fundamentals">
+      <!-- References (All Sessions + Resources Combined) -->
+      <section id="references" class="content-section" aria-label="References">
         <h2 class="section-title">
-          <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-          Session 1: AI & ML Fundamentals
+          <i class="fas fa-book" aria-hidden="true"></i>
+          References
         </h2>
         <div class="card-grid">
           <article class="card">
@@ -1049,16 +1037,7 @@
               </ul>
             </div>
           </article>
-        </div>
-      </section>
 
-      <!-- Session 2 Content -->
-      <section id="session2" class="content-section" aria-label="Session 2: Generative AI">
-        <h2 class="section-title">
-          <i class="fas fa-book" aria-hidden="true"></i>
-          Session 2: Generative AI
-        </h2>
-        <div class="card-grid">
           <article class="card">
             <div class="card-header">
               <h3>Foundation Models</h3>
@@ -1067,19 +1046,19 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/what-is/foundation-models/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">01</span>
+                    <span class="resource-index">12</span>
                     What are Foundation Models?
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/what-is/transformers-in-artificial-intelligence/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">02</span>
+                    <span class="resource-index">13</span>
                     What are Transformers in AI?
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/what-is/vector-databases/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">03</span>
+                    <span class="resource-index">14</span>
                     What is a Vector Database?
                   </a>
                 </li>
@@ -1095,20 +1074,26 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">04</span>
+                    <span class="resource-index">15</span>
                     What is Amazon Bedrock?
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">05</span>
+                    <span class="resource-index">16</span>
                     Influence response generation
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/bedrock/pricing/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">09</span>
+                    <span class="resource-index">17</span>
                     Amazon Bedrock pricing
+                  </a>
+                </li>
+                <li class="resource-item">
+                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models.html" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index">18</span>
+                    Customize models for your use case
                   </a>
                 </li>
               </ul>
@@ -1123,149 +1108,100 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/ai/generative-ai/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">06</span>
+                    <span class="resource-index">19</span>
                     Transform business with generative AI
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-customize.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">07</span>
+                    <span class="resource-index">20</span>
                     Foundation model customization
                   </a>
                 </li>
                 <li class="resource-item">
-                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">10</span>
-                    Customize models for your use case
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-header">
-              <h3>SageMaker</h3>
-            </div>
-            <div class="card-body">
-              <ul class="resource-list">
-                <li class="resource-item">
                   <a href="https://aws.amazon.com/sagemaker-ai/jumpstart/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">08</span>
+                    <span class="resource-index">21</span>
                     Amazon SageMaker JumpStart
                   </a>
                 </li>
               </ul>
             </div>
           </article>
-        </div>
-      </section>
 
-      <!-- Session 3 Content -->
-      <section id="session3" class="content-section" aria-label="Session 3: Foundation Models">
-        <h2 class="section-title">
-          <i class="fas fa-book" aria-hidden="true"></i>
-          Session 3: Foundation Models
-        </h2>
-        <div class="card-grid">
           <article class="card">
             <div class="card-header">
-              <h3>Application of Foundation Models</h3>
+              <h3>Prompt Engineering & RAG</h3>
             </div>
             <div class="card-body">
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/what-is/prompt-engineering/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">01</span>
+                    <span class="resource-index">22</span>
                     What is Prompt Engineering?
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/what-is/retrieval-augmented-generation/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">02</span>
+                    <span class="resource-index">23</span>
                     What is RAG (Retrieval-Augmented Generation)?
                   </a>
                 </li>
                 <li class="resource-item">
-                  <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">03</span>
-                    What is Amazon Bedrock?
-                  </a>
-                </li>
-                <li class="resource-item">
                   <a href="https://aws.amazon.com/blogs/aws/amazon-bedrock-model-evaluation-is-now-generally-available/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">04</span>
+                    <span class="resource-index">24</span>
                     Amazon Bedrock model evaluation
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-customize-prompt-engineering.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">05</span>
+                    <span class="resource-index">25</span>
                     Prompt engineering for foundation models
                   </a>
                 </li>
               </ul>
             </div>
           </article>
-        </div>
-      </section>
 
-      <!-- Session 4 Content -->
-      <section id="session4" class="content-section" aria-label="Session 4: Responsible AI">
-        <h2 class="section-title">
-          <i class="fas fa-book" aria-hidden="true"></i>
-          Session 4: Responsible AI
-        </h2>
-        <div class="card-grid">
           <article class="card">
             <div class="card-header">
-              <h3>Responsible AI, Security, and Governance</h3>
+              <h3>Responsible AI, Security & Governance</h3>
             </div>
             <div class="card-body">
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/ai/responsible-ai/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">01</span>
+                    <span class="resource-index">26</span>
                     Responsible AI
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/governance.html" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">02</span>
+                    <span class="resource-index">27</span>
                     Model governance
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html#model-monitor-how-it-works" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">03</span>
+                    <span class="resource-index">28</span>
                     How Amazon SageMaker Model Monitor works
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/blogs/enterprise-strategy/responsible-ai-best-practices-promoting-responsible-and-trustworthy-ai-systems/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">04</span>
+                    <span class="resource-index">29</span>
                     Responsible AI Best Practices
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://aws.amazon.com/blogs/security/securing-generative-ai-an-introduction-to-the-generative-ai-security-scoping-matrix/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">05</span>
+                    <span class="resource-index">30</span>
                     Securing generative AI
                   </a>
                 </li>
               </ul>
             </div>
           </article>
-        </div>
-      </section>
 
-      <!-- Useful Resources -->
-      <section id="resources" class="content-section" aria-label="Useful Resources">
-        <h2 class="section-title">
-          <i class="fas fa-link" aria-hidden="true"></i>
-          Useful Resources
-        </h2>
-        <div class="card-grid">
           <article class="card">
             <div class="card-header">
               <h3>Tools & Playgrounds</h3>
@@ -1274,13 +1210,13 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://aistylist.awsplayer.com/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">01</span>
+                    <span class="resource-index">31</span>
                     AWS AI Stylist
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://partyrock.aws/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">02</span>
+                    <span class="resource-index">32</span>
                     PartyRock
                   </a>
                 </li>
@@ -1296,20 +1232,20 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://artificialanalysis.ai/providers/amazon_bedrock" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">03</span>
+                    <span class="resource-index">33</span>
                     Amazon Bedrock: Models Comparison
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://crfm.stanford.edu/helm/lite/latest/#/leaderboard" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">04</span>
+                    <span class="resource-index">34</span>
                     HELM Leaderboard
                   </a>
                 </li>
               </ul>
             </div>
           </article>
-        
+
           <article class="card">
             <div class="card-header">
               <h3>Readings & Research</h3>
@@ -1318,13 +1254,13 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://www.amazon.science/blog/responsible-ai-in-the-generative-era" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">05</span>
+                    <span class="resource-index">35</span>
                     Responsible AI in the generative era
                   </a>
                 </li>
                 <li class="resource-item">
                   <a href="https://www.pinecone.io/learn/vector-embeddings/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">06</span>
+                    <span class="resource-index">36</span>
                     What are Vector Embeddings?
                   </a>
                 </li>
@@ -1340,8 +1276,33 @@
               <ul class="resource-list">
                 <li class="resource-item">
                   <a href="https://explore.skillbuilder.aws/" target="_blank" rel="noopener" class="resource-link">
-                    <span class="resource-index">01</span>
+                    <span class="resource-index">37</span>
                     Digital Training on SkillBuilder
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Lab Access -->
+      <section id="labaccess" class="content-section" aria-label="Lab Access">
+        <h2 class="section-title">
+          <i class="fas fa-laptop-code" aria-hidden="true"></i>
+          Lab Access
+        </h2>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-header">
+              <h3>AWS Training Lab</h3>
+            </div>
+            <div class="card-body">
+              <ul class="resource-list">
+                <li class="resource-item">
+                  <a href="https://us-east-1.student.classrooms.aws.training/class/uSfVuFQhQHzypNjf2J3neh?accessCode=8LA9k5Kea1Zf2cERp6CVEM" target="_blank" rel="noopener" class="resource-link">
+                    <span class="resource-index"><i class="fas fa-flask"></i></span>
+                    Access AWS Classroom Lab
                   </a>
                 </li>
               </ul>
