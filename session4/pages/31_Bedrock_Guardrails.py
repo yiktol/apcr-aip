@@ -315,7 +315,7 @@ def main():
                         </div>""", unsafe_allow_html=True)
 
             if selected_prompt != st.session_state.get('previous_selection'):
-                st.session_state.current_prompt = selected_prompt
+                st.session_state.user_input = selected_prompt
                 st.session_state.previous_selection = selected_prompt
                 st.rerun()
 
@@ -326,7 +326,6 @@ def main():
             height=100,
             placeholder="Type your message here...",
             key="user_input",
-            value=st.session_state.get("current_prompt", "")
         )
         
         col1, col2, col3 = st.columns([1, 1, 4])
