@@ -478,6 +478,7 @@ def login() -> bool:
     Main authentication function to handle Cognito auth flow with enhanced security.
     
     Features:
+        - Lambda@Edge SSO support via genai-ess-token cookie
         - PKCE support for enhanced security
         - CSRF protection via state parameter
         - Token persistence and automatic refresh
@@ -491,6 +492,82 @@ def login() -> bool:
     """
     # Initialize session state
     set_st_state_vars()
+    
+    # Check if user is already authenticated via Lambda@Edge (CloudFront SSO cookie)
+    edge_token = st.context.cookies.get("genai-ess-token", "")
+    if edge_token:
+        try:
+            parts = edge_token.split(".")
+            if len(parts) == 3:
+                payload = parts[1]
+                missing_padding = len(payload) % 4
+                if missing_padding:
+                    payload += "=" * (4 - missing_padding)
+                decoded = json.loads(base64.urlsafe_b64decode(payload))
+                exp = decoded.get("exp", 0)
+                
+                if time.time() < (exp - 60):
+                    if not st.session_state.get("authenticated", False):
+                        edge_email = decoded.get("email", "")
+                        st.session_state["authenticated"] = True
+                        st.session_state["user_info"] = {"email": edge_email} if edge_email else {}
+                        logger.info(f"User authenticated via Lambda@Edge SSO cookie: {edge_email}")
+                    
+                    user_info = st.session_state.get("user_info", {})
+                    email = user_info.get("email", "User")
+                    display_name = email.split("@")[0].title() if "@" in email else email
+                    
+                    css = f"""
+                    <style>
+                    .user-info-container {{
+                        padding: 1em;
+                        margin-bottom: 1em;
+                        border-bottom: 1px solid #e0e0e0;
+                    }}
+                    .user-greeting {{
+                        color: #232F3E;
+                        font-size: 0.9em;
+                        margin-bottom: 0.5em;
+                        font-family: "Amazon Ember", Arial, sans-serif;
+                    }}
+                    .user-email {{
+                        color: #545B64;
+                        font-size: 0.8em;
+                        margin-bottom: 0.75em;
+                        font-family: "Amazon Ember", Arial, sans-serif;
+                        word-break: break-word;
+                    }}
+                    .aws-button {{
+                        background-color: {AWS_ORANGE};
+                        color: {AWS_TEXT} !important;
+                        padding: 0.75em 1.25em;
+                        font-weight: bold;
+                        border-radius: 4px;
+                        text-decoration: none;
+                        text-align: center;
+                        display: inline-block;
+                        border: none;
+                        font-family: "Amazon Ember", Arial, sans-serif;
+                        transition: background-color 0.3s;
+                        width: 100%;
+                    }}
+                    .aws-button:hover {{
+                        background-color: {AWS_HOVER};
+                        text-decoration: none;
+                    }}
+                    </style>
+                    """
+                    html = css + f"""
+                    <div class='user-info-container'>
+                        <div class='user-greeting'>👤 Welcome, {display_name}!</div>
+                        <div class='user-email'>{email}</div>
+                        <a href='/auth/logout' class='aws-button' target='_self'>Sign Out</a>
+                    </div>
+                    """
+                    st.sidebar.markdown(html, unsafe_allow_html=True)
+                    return True
+        except Exception as e:
+            logger.warning(f"Failed to validate edge auth cookie: {e}")
     
     try:
         # Load configuration

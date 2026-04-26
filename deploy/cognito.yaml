@@ -161,6 +161,7 @@ Resources:
         - !Sub 'https://${GenAIDomainName}/genai-3/'
         - !Sub 'https://${GenAIDomainName}/genai-4/'
         - !Sub 'https://${GenAIDomainName}/genai-5/'
+        - !Sub 'https://${GenAIDomainName}/auth/callback'
       LogoutURLs:
         - !Sub 'https://${CloudfrontDomainName}/genai-1/'
         - !Sub 'https://${CloudfrontDomainName}/genai-2/'
@@ -172,6 +173,7 @@ Resources:
         - !Sub 'https://${GenAIDomainName}/genai-3/'
         - !Sub 'https://${GenAIDomainName}/genai-4/'
         - !Sub 'https://${GenAIDomainName}/genai-5/'
+        - !Sub 'https://${GenAIDomainName}/'
       SupportedIdentityProviders:
         - COGNITO
         - Google

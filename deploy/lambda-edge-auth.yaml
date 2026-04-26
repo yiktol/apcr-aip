@@ -1,0 +1,442 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  GenAI Essentials - Lambda@Edge functions for Cognito authentication at CloudFront edge.
+  Must be deployed in us-east-1 (Lambda@Edge requirement).
+
+Parameters:
+  ParameterPrefix:
+    Type: String
+    Description: SSM Parameter Store prefix for Cognito configuration
+    Default: /genai/cognito
+
+Resources:
+  # ================================
+  # SSM Parameter Reader (reused pattern)
+  # ================================
+  SSMParameterReaderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*'
+                  - !Sub 'arn:aws:ssm:ap-southeast-1:${AWS::AccountId}:parameter${ParameterPrefix}/*'
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub 'arn:aws:secretsmanager:*:${AWS::AccountId}:secret:genai/essentials*'
+
+  SSMParameterReaderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt SSMParameterReaderRole.Arn
+      Timeout: 30
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+                  
+                  source = event['ResourceProperties'].get('Source', 'ssm')
+                  region = event['ResourceProperties'].get('Region', 'ap-southeast-1')
+                  
+                  if source == 'secretsmanager':
+                      secret_name = event['ResourceProperties']['SecretName']
+                      sm_regional = boto3.client('secretsmanager', region_name=region)
+                      response = sm_regional.get_secret_value(SecretId=secret_name)
+                      import json
+                      secret = json.loads(response['SecretString'])
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, secret)
+                  else:
+                      parameter_name = event['ResourceProperties']['ParameterName']
+                      with_decryption = event['ResourceProperties'].get('WithDecryption', 'true').lower() == 'true'
+                      ssm_regional = boto3.client('ssm', region_name=region)
+                      response = ssm_regional.get_parameter(Name=parameter_name, WithDecryption=with_decryption)
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                          'Value': response['Parameter']['Value']
+                      })
+              except Exception as e:
+                  print(f"Error: {str(e)}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+
+  # Retrieve Cognito secrets
+  CognitoSecrets:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      Source: secretsmanager
+      SecretName: genai/essentials
+      Region: ap-southeast-1
+
+  GenAIDomainNameParam:
+    Type: Custom::SSMParameter
+    Properties:
+      ServiceToken: !GetAtt SSMParameterReaderFunction.Arn
+      ParameterName: !Sub '${ParameterPrefix}/GenAIDomainName'
+      Region: ap-southeast-1
+      WithDecryption: false
+
+  # ================================
+  # Lambda@Edge IAM Role
+  # ================================
+  LambdaEdgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: genai-ess-lambda-edge-auth-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ================================
+  # Lambda@Edge Functions
+  # ================================
+  AuthCheckFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: genai-ess-edge-auth-check
+      Description: Checks for valid Cognito JWT cookie on protected paths
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt LambdaEdgeRole.Arn
+      Timeout: 5
+      MemorySize: 128
+      Code:
+        ZipFile: !Sub
+          - |
+            import json
+            import base64
+            import time
+            import urllib.parse
+            import secrets as secrets_mod
+            
+            
+            def handler(event, context):
+                request = event['Records'][0]['cf']['request']
+                
+                token = get_cookie(request, 'genai-ess-token')
+                
+                if token and is_token_valid(token):
+                    request['headers']['x-genai-ess-auth'] = [{'key': 'X-Genai-Ess-Auth', 'value': 'true'}]
+                    try:
+                        payload = token.split('.')[1]
+                        pad = 4 - len(payload) % 4
+                        if pad != 4:
+                            payload += '=' * pad
+                        claims = json.loads(base64.urlsafe_b64decode(payload))
+                        email = claims.get('email', '')
+                        if email:
+                            request['headers']['x-genai-ess-auth-email'] = [{'key': 'X-Genai-Ess-Auth-Email', 'value': email}]
+                    except Exception:
+                        pass
+                    return request
+                
+                host = request['headers'].get('host', [{}])[0].get('value', '')
+                original_url = f"https://{host}/"
+                
+                state = base64.urlsafe_b64encode(
+                    json.dumps({
+                        'nonce': secrets_mod.token_urlsafe(16),
+                        'redirect': original_url
+                    }).encode()
+                ).decode().rstrip('=')
+                
+                callback_url = 'https://${GenAIDomain}/auth/callback'
+                
+                login_url = (
+                    f"${CognitoDomain}/login?"
+                    f"client_id=${ClientId}"
+                    f"&response_type=code"
+                    f"&scope=email+openid+profile"
+                    f"&redirect_uri={urllib.parse.quote(callback_url, safe='')}"
+                    f"&state={state}"
+                )
+                
+                return {
+                    'status': '302',
+                    'statusDescription': 'Found',
+                    'headers': {
+                        'location': [{'key': 'Location', 'value': login_url}],
+                        'cache-control': [{'key': 'Cache-Control', 'value': 'no-cache, no-store, must-revalidate'}],
+                    },
+                }
+            
+            
+            def get_cookie(request, cookie_name):
+                cookies = request.get('headers', {}).get('cookie', [])
+                for cookie_header in cookies:
+                    cookie_str = cookie_header.get('value', '')
+                    for part in cookie_str.split(';'):
+                        part = part.strip()
+                        if part.startswith(f'{cookie_name}='):
+                            return part[len(f'{cookie_name}='):]
+                return None
+            
+            
+            def is_token_valid(token):
+                try:
+                    parts = token.split('.')
+                    if len(parts) != 3:
+                        return False
+                    payload = parts[1]
+                    padding = 4 - len(payload) % 4
+                    if padding != 4:
+                        payload += '=' * padding
+                    decoded = json.loads(base64.urlsafe_b64decode(payload))
+                    exp = decoded.get('exp', 0)
+                    return time.time() < (exp - 60)
+                except Exception:
+                    return False
+          - CognitoDomain: !GetAtt CognitoSecrets.COGNITO_DOMAIN
+            ClientId: !GetAtt CognitoSecrets.COGNITO_APP_CLIENT_ID
+            GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+
+  AuthCheckVersionV1:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref AuthCheckFunction
+      Description: Auth check Lambda@Edge version - v1
+
+  AuthCallbackFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: genai-ess-edge-auth-callback
+      Description: Exchanges Cognito auth code for tokens and sets cookies
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt LambdaEdgeRole.Arn
+      Timeout: 5
+      MemorySize: 128
+      Code:
+        ZipFile: !Sub
+          - |
+            import json
+            import base64
+            import time
+            import urllib.parse
+            import urllib.request
+            
+            
+            COGNITO_DOMAIN = '${CognitoDomain}'
+            CLIENT_ID = '${ClientId}'
+            CLIENT_SECRET = '${ClientSecret}'
+            CALLBACK_URL = 'https://${GenAIDomain}/auth/callback'
+            
+            
+            def handler(event, context):
+                request = event['Records'][0]['cf']['request']
+                uri = request['uri']
+                
+                if uri != '/auth/callback':
+                    if uri == '/auth/login':
+                        import secrets as secrets_mod
+                        host = request['headers'].get('host', [{}])[0].get('value', '')
+                        state = base64.urlsafe_b64encode(
+                            json.dumps({
+                                'nonce': secrets_mod.token_urlsafe(16),
+                                'redirect': f"https://{host}/"
+                            }).encode()
+                        ).decode().rstrip('=')
+                        login_url = (
+                            f"{COGNITO_DOMAIN}/login?"
+                            f"client_id={CLIENT_ID}"
+                            f"&response_type=code"
+                            f"&scope=email+openid+profile"
+                            f"&redirect_uri={urllib.parse.quote(CALLBACK_URL, safe='')}"
+                            f"&state={state}"
+                        )
+                        return {
+                            'status': '302',
+                            'statusDescription': 'Found',
+                            'headers': {
+                                'location': [{'key': 'Location', 'value': login_url}],
+                                'cache-control': [{'key': 'Cache-Control', 'value': 'no-cache, no-store, must-revalidate'}],
+                            },
+                        }
+                    if uri == '/auth/logout':
+                        host = request['headers'].get('host', [{}])[0].get('value', '')
+                        landing_url = f"https://{host}/"
+                        logout_url = (
+                            f"{COGNITO_DOMAIN}/logout?"
+                            f"client_id={CLIENT_ID}"
+                            f"&logout_uri={urllib.parse.quote(landing_url, safe='')}"
+                        )
+                        clear_cookies = [
+                            "genai-ess-token=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax",
+                            "genai-ess-refresh=; Path=/auth/; Max-Age=0; Secure; HttpOnly; SameSite=Lax",
+                            "genai-ess-auth=; Path=/; Max-Age=0; Secure; SameSite=Lax",
+                        ]
+                        return {
+                            'status': '302',
+                            'statusDescription': 'Found',
+                            'headers': {
+                                'location': [{'key': 'Location', 'value': logout_url}],
+                                'cache-control': [{'key': 'Cache-Control', 'value': 'no-cache, no-store, must-revalidate'}],
+                                'set-cookie': [{'key': 'Set-Cookie', 'value': c} for c in clear_cookies],
+                            },
+                        }
+                    return request
+                
+                qs = request.get('querystring', '')
+                params = dict(urllib.parse.parse_qsl(qs))
+                code = params.get('code', '')
+                state = params.get('state', '')
+                
+                if not code:
+                    return error_response('Missing authorization code')
+                
+                redirect_url = '/'
+                if state:
+                    try:
+                        padded = state + '=' * (4 - len(state) % 4) if len(state) % 4 else state
+                        state_data = json.loads(base64.urlsafe_b64decode(padded))
+                        redirect_url = state_data.get('redirect', '/')
+                    except Exception:
+                        redirect_url = '/'
+                
+                tokens = exchange_code_for_tokens(code)
+                if not tokens:
+                    return error_response('Token exchange failed. Please try again.')
+                
+                id_token = tokens.get('id_token', '')
+                refresh_token = tokens.get('refresh_token', '')
+                expires_in = tokens.get('expires_in', 1800)
+                
+                if not id_token:
+                    return error_response('No ID token received')
+                
+                user_email = ''
+                try:
+                    payload = id_token.split('.')[1]
+                    padded = payload + '=' * (4 - len(payload) % 4) if len(payload) % 4 else payload
+                    decoded = json.loads(base64.urlsafe_b64decode(padded))
+                    user_email = decoded.get('email', '')
+                except Exception:
+                    pass
+                
+                cookies = []
+                cookies.append(
+                    f"genai-ess-token={id_token}; "
+                    f"Path=/; Max-Age={expires_in}; Secure; HttpOnly; SameSite=Lax"
+                )
+                if refresh_token:
+                    cookies.append(
+                        f"genai-ess-refresh={refresh_token}; "
+                        f"Path=/auth/; Max-Age=2592000; Secure; HttpOnly; SameSite=Lax"
+                    )
+                auth_info = base64.urlsafe_b64encode(
+                    json.dumps({'email': user_email, 'exp': int(time.time()) + expires_in}).encode()
+                ).decode().rstrip('=')
+                cookies.append(
+                    f"genai-ess-auth={auth_info}; "
+                    f"Path=/; Max-Age={expires_in}; Secure; SameSite=Lax"
+                )
+                
+                return {
+                    'status': '302',
+                    'statusDescription': 'Found',
+                    'headers': {
+                        'location': [{'key': 'Location', 'value': redirect_url}],
+                        'cache-control': [{'key': 'Cache-Control', 'value': 'no-cache, no-store, must-revalidate'}],
+                        'set-cookie': [{'key': 'Set-Cookie', 'value': c} for c in cookies],
+                    },
+                }
+            
+            
+            def exchange_code_for_tokens(code):
+                token_url = f"{COGNITO_DOMAIN}/oauth2/token"
+                auth_header = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
+                body = urllib.parse.urlencode({
+                    'grant_type': 'authorization_code',
+                    'client_id': CLIENT_ID,
+                    'code': code,
+                    'redirect_uri': CALLBACK_URL,
+                }).encode()
+                req = urllib.request.Request(
+                    token_url, data=body,
+                    headers={
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': f'Basic {auth_header}',
+                    },
+                    method='POST'
+                )
+                try:
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        return json.loads(resp.read().decode())
+                except Exception as e:
+                    print(f"Token exchange error: {e}")
+                    return None
+            
+            
+            def error_response(message):
+                body = f'''<!DOCTYPE html>
+            <html><head><title>Authentication Error</title>
+            <style>body{{font-family:Inter,sans-serif;text-align:center;padding:60px;color:#232f3e;}}
+            a{{color:#0073bb;}}</style></head>
+            <body><h2>Authentication Error</h2><p>{message}</p>
+            <p><a href="/">Return to Home</a></p></body></html>'''
+                return {
+                    'status': '400',
+                    'statusDescription': 'Bad Request',
+                    'headers': {
+                        'content-type': [{'key': 'Content-Type', 'value': 'text/html'}],
+                        'cache-control': [{'key': 'Cache-Control', 'value': 'no-cache'}],
+                    },
+                    'body': body,
+                }
+          - CognitoDomain: !GetAtt CognitoSecrets.COGNITO_DOMAIN
+            ClientId: !GetAtt CognitoSecrets.COGNITO_APP_CLIENT_ID
+            ClientSecret: !GetAtt CognitoSecrets.COGNITO_APP_CLIENT_SECRET
+            GenAIDomain: !GetAtt GenAIDomainNameParam.Value
+
+  AuthCallbackVersionV1:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref AuthCallbackFunction
+      Description: Auth callback Lambda@Edge version - v1 viewer-request
+
+Outputs:
+  AuthCheckFunctionArn:
+    Description: ARN of the auth check Lambda@Edge function version
+    Value: !Ref AuthCheckVersionV1
+    Export:
+      Name: GenaiEssAuthCheckVersionArn
+
+  AuthCallbackFunctionArn:
+    Description: ARN of the auth callback Lambda@Edge function version
+    Value: !Ref AuthCallbackVersionV1
+    Export:
+      Name: GenaiEssAuthCallbackVersionArn

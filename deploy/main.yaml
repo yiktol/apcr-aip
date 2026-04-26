@@ -16,6 +16,19 @@ Parameters:
     Description: SSM Parameter Store prefix for configuration
     Default: /genai/cognito
 
+  DeployNonce:
+    Type: String
+    Description: Nonce to force stack updates
+    Default: '0'
+
+  AuthCheckVersionArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/AuthCheckVersionArn
+
+  AuthCallbackVersionArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /genai/cognito/AuthCallbackVersionArn
+
   BucketName:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /genai/cognito/BucketName
@@ -121,6 +134,8 @@ Resources:
         DomainName: !Ref DomainName
         WebApplicationFirewallACLArn: !Ref WebApplicationFirewallACLArn
         CertificateId: !Ref CertificateId
+        AuthCheckVersionArn: !Ref AuthCheckVersionArn
+        AuthCallbackVersionArn: !Ref AuthCallbackVersionArn
       Tags:
         - Key: Name
           Value: CloudfrontDistributionStack

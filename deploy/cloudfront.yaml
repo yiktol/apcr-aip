@@ -29,6 +29,16 @@ Parameters:
     Description: Source bucket containing Lambda code and website assets
     Default: yikyakyuk-ap-southeast-1-875692608981
 
+  AuthCheckVersionArn:
+    Type: String
+    Description: ARN of the Lambda@Edge auth check function version
+    Default: ''
+
+  AuthCallbackVersionArn:
+    Type: String
+    Description: ARN of the Lambda@Edge auth callback function version (handles login, callback, logout)
+    Default: ''
+
 
 Resources:
   #==================================
@@ -224,6 +234,17 @@ Resources:
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad   # Managed-CachingDisabled
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
         CacheBehaviors:
+        # Auth callback/logout path - handled by Lambda@Edge
+        - PathPattern: /auth/*
+          AllowedMethods: [GET,HEAD]
+          TargetOriginId: !Sub lbgenai.${DomainName}
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              LambdaFunctionARN: !Ref AuthCallbackVersionArn
+              IncludeBody: false
         - PathPattern: /genai-1/*
           AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
           TargetOriginId: genai-1
@@ -232,7 +253,11 @@ Resources:
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
           FunctionAssociations: 
             - EventType: viewer-request
-              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref AuthCheckVersionArn
+              IncludeBody: false
         - PathPattern: /genai-2/*
           AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
           TargetOriginId: genai-2
@@ -241,7 +266,11 @@ Resources:
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
           FunctionAssociations: 
             - EventType: viewer-request
-              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref AuthCheckVersionArn
+              IncludeBody: false
         - PathPattern: /genai-3/*
           AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
           TargetOriginId: genai-3
@@ -250,7 +279,11 @@ Resources:
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
           FunctionAssociations: 
             - EventType: viewer-request
-              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref AuthCheckVersionArn
+              IncludeBody: false
         - PathPattern: /genai-4/*
           AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
           TargetOriginId: genai-4
@@ -259,7 +292,11 @@ Resources:
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
           FunctionAssociations: 
             - EventType: viewer-request
-              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref AuthCheckVersionArn
+              IncludeBody: false
         - PathPattern: /genai-5/*
           AllowedMethods: [GET,HEAD,DELETE,POST,OPTIONS,PUT,PATCH]
           TargetOriginId: genai-5
@@ -268,7 +305,11 @@ Resources:
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # Managed-AllViewer
           FunctionAssociations: 
             - EventType: viewer-request
-              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN 
+              FunctionARN: !GetAtt PathModifierFunction.FunctionMetadata.FunctionARN
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref AuthCheckVersionArn
+              IncludeBody: false
 
   CloudfrontRecord:
     Type: AWS::Route53::RecordSet

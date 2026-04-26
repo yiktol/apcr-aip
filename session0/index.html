@@ -790,11 +790,23 @@
           <p>Gen AI Learning Path</p>
         </div>
       </div>
+      <div class="header-auth" style="display:flex;align-items:center;gap:12px;">
+        <span class="header-user" id="header-user" style="display:none;color:#fff;font-size:0.9rem;font-family:'Inter',sans-serif;"></span>
+        <a href="/auth/logout" class="auth-btn" id="btn-signout" style="display:none;background:#FF9900;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-weight:600;font-size:0.875rem;font-family:'Inter',sans-serif;">Sign Out</a>
+        <a href="#" class="auth-btn" id="btn-signin" onclick="signIn(); return false;" style="background:#FF9900;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-weight:600;font-size:0.875rem;font-family:'Inter',sans-serif;">Sign In</a>
+      </div>
       <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu" aria-expanded="false">
         <i class="fas fa-bars"></i>
       </button>
     </div>
   </header>
+
+  <!-- Banner shown to unauthenticated users -->
+  <div class="auth-banner" id="auth-banner" style="background:#232f3e;color:#fff;text-align:center;padding:10px;font-size:0.9rem;font-family:'Inter',sans-serif;">
+    <i class="fas fa-lock" aria-hidden="true"></i>&nbsp;
+    <a href="#" onclick="signIn(); return false;" style="color:#FF9900;text-decoration:underline;">Sign in</a> to access the playgrounds
+  </div>
+  <style>.auth-banner.hidden{display:none;}.playground-button.locked{opacity:0.6;pointer-events:none;background:#6c757d;}</style>
 
   <!-- Main Content -->
   <main id="main-content">
@@ -1534,6 +1546,7 @@
       }
     })();
   </script>
+  <script src="js/main.js"></script>
 </body>
 
 </html>
