@@ -5,14 +5,14 @@
 # Description: Deploy GenAI Essentials infrastructure with Lambda@Edge auth
 #
 # Deployment order:
-#   1. Cognito stack (ap-southeast-1) — creates User Pool and genai/essentials secret
-#   2. Lambda@Edge auth stack (us-east-1) — reads genai/essentials for credentials
-#   3. Store Lambda@Edge ARNs in SSM (ap-southeast-1)
-#   4. Main stack (ap-southeast-1) — includes CloudFront, VPC, ALB
+#   1. Lambda@Edge auth stack (us-east-1) — reads genai/essentials for credentials
+#   2. Store Lambda@Edge ARNs in SSM (ap-southeast-1)
+#   3. Main stack (ap-southeast-1) — includes CloudFront, VPC, ALB, Cognito (nested)
+#
+# Note: Cognito is deployed as a nested stack inside main.yaml, not standalone.
 #
 # Usage:
-#   ./deploy.sh              # Deploy everything
-#   ./deploy.sh cognito      # Deploy Cognito stack only
+#   ./deploy.sh              # Deploy everything (edge + ssm + main)
 #   ./deploy.sh edge         # Deploy Lambda@Edge stack only
 #   ./deploy.sh ssm          # Store Lambda@Edge ARNs in SSM only
 #   ./deploy.sh main         # Deploy main stack only
@@ -241,79 +241,12 @@ cleanup_on_error() {
 }
 
 ################################################################################
-# Step 1: Deploy Cognito Stack (ap-southeast-1)
-################################################################################
-
-deploy_cognito_stack() {
-    log "=========================================="
-    log "Step 1: Deploy Cognito Stack"
-    log "Region: $REGION"
-    log "=========================================="
-    
-    local script_dir="$(dirname "$(readlink -f "$0")")"
-    local template_file="$script_dir/cognito.yaml"
-    
-    if [ ! -f "$template_file" ]; then
-        log_error "Template not found: $template_file"
-        exit 1
-    fi
-    
-    local bucket
-    bucket=$(get_ssm_parameter "${PARAMETER_PREFIX}/BucketName")
-    
-    log "Uploading Cognito template to S3..."
-    aws s3 cp "$template_file" "s3://$bucket/$TEMPLATE_PREFIX/cognito.yaml" \
-        --region "$REGION" 2>&1 | tee -a "$LOG_FILE"
-    log_success "Uploaded cognito.yaml"
-    
-    local template_url="https://$bucket.s3.$REGION.amazonaws.com/$TEMPLATE_PREFIX/cognito.yaml"
-    local cognito_stack_name="${STACK_NAME}-cognito"
-    
-    if check_stack_exists "$cognito_stack_name" "$REGION"; then
-        log "Stack '$cognito_stack_name' exists. Updating..."
-        
-        local update_output
-        update_output=$(aws cloudformation update-stack \
-            --region "$REGION" \
-            --stack-name "$cognito_stack_name" \
-            --template-url "$template_url" \
-            --parameters \
-                ParameterKey=ParameterPrefix,ParameterValue="$PARAMETER_PREFIX" \
-            --capabilities CAPABILITY_IAM \
-            2>&1) || true
-        
-        if echo "$update_output" | grep -q "No updates are to be performed"; then
-            log_warning "No updates needed for Cognito stack"
-        else
-            echo "$update_output" | tee -a "$LOG_FILE"
-            wait_for_stack "$cognito_stack_name" "update" "$REGION"
-        fi
-    else
-        log "Stack '$cognito_stack_name' does not exist. Creating..."
-        
-        aws cloudformation create-stack \
-            --region "$REGION" \
-            --stack-name "$cognito_stack_name" \
-            --template-url "$template_url" \
-            --parameters \
-                ParameterKey=ParameterPrefix,ParameterValue="$PARAMETER_PREFIX" \
-            --capabilities CAPABILITY_IAM \
-            2>&1 | tee -a "$LOG_FILE"
-        
-        wait_for_stack "$cognito_stack_name" "create" "$REGION"
-    fi
-    
-    show_stack_outputs "$cognito_stack_name" "$REGION"
-    log_success "Cognito stack deployed successfully"
-}
-
-################################################################################
-# Step 2: Deploy Lambda@Edge Auth Stack (us-east-1)
+# Step 1: Deploy Lambda@Edge Auth Stack (us-east-1)
 ################################################################################
 
 deploy_edge_stack() {
     log "=========================================="
-    log "Step 2: Deploy Lambda@Edge Auth Stack"
+    log "Step 1: Deploy Lambda@Edge Auth Stack"
     log "Region: $EDGE_REGION (required for Lambda@Edge)"
     log "=========================================="
     
@@ -379,7 +312,7 @@ deploy_edge_stack() {
 
 store_edge_arns_in_ssm() {
     log "=========================================="
-    log "Step 3: Store Lambda@Edge ARNs in SSM"
+    log "Step 2: Store Lambda@Edge ARNs in SSM"
     log "=========================================="
     
     local auth_check_arn
@@ -418,7 +351,7 @@ store_edge_arns_in_ssm() {
 
 deploy_main_stack() {
     log "=========================================="
-    log "Step 4: Deploy Main Stack"
+    log "Step 3: Deploy Main Stack"
     log "Region: $REGION"
     log "=========================================="
     
@@ -497,7 +430,6 @@ main() {
     log "Edge Region: $EDGE_REGION"
     log "Main Stack: $STACK_NAME"
     log "Edge Stack: $EDGE_STACK_NAME"
-    log "Cognito Stack: ${STACK_NAME}-cognito"
     log "Log File: $LOG_FILE"
     log "=========================================="
     
@@ -506,9 +438,6 @@ main() {
     check_aws_credentials
     
     case $target in
-        cognito)
-            deploy_cognito_stack
-            ;;
         edge)
             deploy_edge_stack
             ;;
@@ -519,14 +448,13 @@ main() {
             deploy_main_stack
             ;;
         all)
-            deploy_cognito_stack
             deploy_edge_stack
             store_edge_arns_in_ssm
             deploy_main_stack
             ;;
         *)
             log_error "Unknown target: $target"
-            log "Usage: $0 [cognito|edge|ssm|main|all]"
+            log "Usage: $0 [edge|ssm|main|all]"
             exit 1
             ;;
     esac

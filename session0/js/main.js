@@ -34,17 +34,22 @@
     }
 
     // Unlock all playground buttons
-    playgroundLinks.forEach(function (link) {
-      link.classList.remove('locked');
-      link.innerHTML = 'Explore Playground <i class="fas fa-arrow-right" aria-hidden="true"></i>';
-    });
+    unlockPlaygrounds(playgroundLinks);
   } else if (isLocal) {
     // Local dev — unlock everything, hide auth UI
     if (banner) banner.classList.add('hidden');
     if (btnSignin) btnSignin.style.display = 'none';
     if (btnSignout) btnSignout.style.display = 'none';
+    unlockPlaygrounds(playgroundLinks);
   }
   // else: default locked state from HTML (unauthenticated remote user)
+
+  function unlockPlaygrounds(links) {
+    links.forEach(function (link) {
+      link.classList.remove('locked');
+      link.innerHTML = 'Explore Playground <i class="fas fa-arrow-right" aria-hidden="true"></i>';
+    });
+  }
 })();
 
 function getAuthCookie() {
