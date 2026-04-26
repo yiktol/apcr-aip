@@ -129,6 +129,11 @@ def home_tab():
                 "description": "Defending against prompt injection, jailbreaking, data poisoning, model extraction, and adversarial attacks"
             },
             {
+                "icon": "🔓",
+                "title": "LLM Security & Vulnerability",
+                "description": "Interactive demos of prompt injection, prompt leaking, jailbreaking, hallucinations, bias, PII extraction, and data poisoning attacks against foundation models"
+            },
+            {
                 "icon": "🚧",
                 "title": "Bedrock Guardrails",
                 "description": "Implementing content filters, PII redaction, topic restrictions, and safety controls for responsible AI deployment"
@@ -152,6 +157,11 @@ def home_tab():
                 "icon": "📋",
                 "title": "Governance with SageMaker",
                 "description": "Using SageMaker Role Manager, Model Cards, Model Dashboard, Clarify, Model Monitor, and Augmented AI for ML governance"
+            },
+            {
+                "icon": "🔐",
+                "title": "Security, Governance & Compliance for GenAI",
+                "description": "AWS security services (IAM, KMS, CloudWatch, Audit Manager, Security Hub) for GenAI workloads, plus governance and compliance frameworks for regulated industries (Healthcare, Finance, Life Sciences, Government)"
             }
         ]
         
